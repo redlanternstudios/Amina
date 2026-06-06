@@ -1,37 +1,39 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
-const NAV = [
-  { href: '/home', label: 'Home', icon: '🏠' },
-  { href: '/guidance', label: 'Guidance', icon: '📖' },
-  { href: '/reflections', label: 'Reflections', icon: '📝' },
-  { href: '/circle', label: 'Circle', icon: '👥' },
-  { href: '/profile', label: 'Profile', icon: '👤' },
+const NAV_ITEMS = [
+  { label: 'Home', icon: '🏠', href: '/home' },
+  { label: 'Guidance', icon: '📖', href: '/guidance' },
+  { label: 'Reflections', icon: '📝', href: '/reflections' },
+  { label: 'Circle', icon: '👥', href: '/circle' },
+  { label: 'Profile', icon: '👤', href: '/profile' },
 ]
 
 export default function BottomNav() {
   const pathname = usePathname()
+  const router = useRouter()
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-cream border-t border-charcoal/10 pb-safe">
-      <div className="flex items-center justify-around px-2 pt-2 pb-3">
-        {NAV.map(item => {
-          const active = pathname.startsWith(item.href)
+    <nav className="fixed bottom-0 left-0 right-0 bg-cream border-t border-charcoal/10 pb-safe z-50">
+      <div className="flex items-center justify-around px-2 py-2">
+        {NAV_ITEMS.map(item => {
+          const isActive = pathname.startsWith(item.href)
           return (
-            <Link
+            <button
               key={item.href}
-              href={item.href}
-              className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-colors ${
-                active ? 'text-rose-amina' : 'text-charcoal/40'
+              onClick={() => router.push(item.href)}
+              className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
+                isActive ? 'text-rose-500' : 'text-charcoal/40'
               }`}
             >
               <span className="text-xl">{item.icon}</span>
-              <span className={`text-xs font-medium ${ active ? 'text-rose-amina' : 'text-charcoal/40' }`}>
+              <span className={`text-xs font-medium ${
+                isActive ? 'text-rose-500' : 'text-charcoal/40'
+              }`}>
                 {item.label}
               </span>
-            </Link>
+            </button>
           )
         })}
       </div>
