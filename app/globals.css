@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+@layer base {
+  :root {
+    --cream: #F7F2EB;
+    --ivory: #F2ECE4;
+    --rose: #C9796A;
+    --rose-light: #E8A89C;
+    --olive: #8E9878;
+    --charcoal: #2C2926;
+    --gold: #D7BA82;
+  }
+
+  html {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--cream);
+    color: var(--charcoal);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    min-height: 100dvh;
+    background-color: var(--cream);
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: 'Canela', Georgia, serif;
+  }
+
+  .text-rose-amina { color: var(--rose); }
+  .bg-rose-amina { background-color: var(--rose); }
+  .border-rose-amina { border-color: var(--rose); }
+
+  .text-gold { color: var(--gold); }
+  .bg-gold { background-color: var(--gold); }
+
+  .text-olive { color: var(--olive); }
+  .bg-olive { background-color: var(--olive); }
+
+  .bg-cream { background-color: var(--cream); }
+  .bg-ivory { background-color: var(--ivory); }
+
+  .btn-primary {
+    @apply bg-rose-amina text-white rounded-full px-6 py-3.5 font-body font-medium text-base
+           flex items-center justify-center gap-2
+           active:scale-95 transition-transform;
+  }
+
+  .btn-secondary {
+    @apply border border-charcoal/20 text-charcoal rounded-full px-6 py-3.5 font-body font-medium text-base
+           flex items-center justify-center gap-2 bg-white
+           active:scale-95 transition-transform;
+  }
+
+  .card {
+    @apply bg-ivory rounded-2xl p-4 shadow-sm;
+  }
+
+  .chip {
+    @apply bg-white border border-charcoal/10 rounded-full px-3.5 py-1.5 text-sm font-medium text-charcoal
+           flex items-center gap-1.5 whitespace-nowrap;
+  }
+
+  .chip-active {
+    @apply bg-rose-amina text-white border-rose-amina;
+  }
+}
