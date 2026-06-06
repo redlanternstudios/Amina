@@ -2,139 +2,146 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import OnboardingShell from '@/components/onboarding/OnboardingShell'
 
-const CADENCES = ['Daily', 'A few times a week', 'Weekly']
-const TOPICS = [
-  { id: 'faith', label: 'Faith & Belief' },
-  { id: 'peace', label: 'Inner Peace' },
-  { id: 'relationships', label: 'Relationships' },
-  { id: 'purpose', label: 'Purpose & Growth' },
-  { id: 'gratitude', label: 'Gratitude' },
-  { id: 'patience', label: 'Patience' },
+const frequencies = ['Daily', 'A few times a week', 'Weekly']
+const topics = [
+  { id: 'faith', label: 'Faith & Belief', icon: '🌙' },
+  { id: 'peace', label: 'Inner Peace', icon: '🌿' },
+  { id: 'relationships', label: 'Relationships', icon: '👥' },
+  { id: 'purpose', label: 'Purpose & Growth', icon: '🌱' },
+  { id: 'gratitude', label: 'Gratitude', icon: '🤍' },
+  { id: 'patience', label: 'Patience', icon: '⏳' },
 ]
-const ADDRESS_OPTIONS = ['Sister', 'My name', 'Friend']
+const addressOptions = ['Sister', 'My name', 'Friend']
 
 export default function PreferencesPage() {
   const router = useRouter()
-  const [cadence, setCadence] = useState('Daily')
-  const [topics, setTopics] = useState<string[]>(['faith'])
+  const [frequency, setFrequency] = useState('Daily')
+  const [selectedTopics, setSelectedTopics] = useState<string[]>(['faith'])
   const [address, setAddress] = useState('Sister')
   const [reminders, setReminders] = useState(true)
 
   function toggleTopic(id: string) {
-    setTopics(prev =>
+    setSelectedTopics(prev =>
       prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]
     )
   }
 
   function handleContinue() {
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('ob_prefs', JSON.stringify({ cadence, topics, address, reminders }))
-    }
+    sessionStorage.setItem('onboarding_prefs', JSON.stringify({ frequency, selectedTopics, address, reminders }))
     router.push('/onboarding/complete')
   }
 
   return (
-    <OnboardingShell step={3} totalSteps={4} onBack={() => router.back()}>
-      <div className="flex-1 flex flex-col gap-5">
-        <div>
-          <h2 className="font-display text-3xl text-charcoal mb-1">Let’s personalize</h2>
-          <h2 className="font-display text-3xl italic mb-2">
-            <span className="text-rose-amina">Amina</span> for you
-          </h2>
-          <p className="text-charcoal/50 text-sm">This helps Amina understand your journey better.</p>
-        </div>
+    <div className="min-h-screen bg-cream flex flex-col px-6 py-8">
+      {/* Back */}
+      <button onClick={() => router.back()} className="w-8 h-8 flex items-center justify-center mb-6">
+        <span className="text-charcoal text-lg">←</span>
+      </button>
 
-        {/* Reflection cadence */}
-        <div className="card">
+      {/* Progress */}
+      <div className="flex gap-1 mb-8">
+        {[1,2,3,4].map(i => (
+          <div key={i} className={`h-1 flex-1 rounded-full ${i <= 3 ? 'bg-rose-400' : 'bg-charcoal/15'}`} />
+        ))}
+      </div>
+
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="font-display text-3xl text-charcoal">Let\'s personalize</h1>
+        <h1 className="font-display text-3xl text-rose-600 mb-2">Amina for you</h1>
+        <p className="text-charcoal/60 text-sm">This helps Amina understand your journey better.</p>
+      </div>
+
+      <div className="space-y-6 flex-1">
+        {/* Reflection frequency */}
+        <div className="bg-ivory rounded-2xl p-4">
           <div className="flex items-center gap-3 mb-3">
-            <span className="text-rose-amina">📅</span>
+            <span className="text-xl">📅</span>
             <p className="font-semibold text-charcoal text-sm">How often would you like daily reflections?</p>
           </div>
-          <div className="flex gap-2 flex-wrap">
-            {CADENCES.map(c => (
+          <div className="flex gap-2">
+            {frequencies.map(f => (
               <button
-                key={c}
-                onClick={() => setCadence(c)}
-                className={`chip text-xs ${
-                  cadence === c ? 'chip-active' : ''
+                key={f}
+                onClick={() => setFrequency(f)}
+                className={`flex-1 py-2 px-2 rounded-full text-xs font-medium transition-all ${
+                  frequency === f ? 'bg-rose-400 text-white' : 'bg-cream text-charcoal/60 border border-charcoal/15'
                 }`}
               >
-                {c}
+                {f}
               </button>
             ))}
           </div>
         </div>
 
         {/* Topics */}
-        <div className="card">
+        <div className="bg-ivory rounded-2xl p-4">
           <div className="flex items-center gap-3 mb-3">
-            <span className="text-rose-amina">❤️</span>
+            <span className="text-xl">🤍</span>
             <div>
               <p className="font-semibold text-charcoal text-sm">What topics matter most to you?</p>
-              <p className="text-charcoal/40 text-xs">You can choose more than one</p>
+              <p className="text-charcoal/50 text-xs">You can choose more than one</p>
             </div>
           </div>
-          <div className="flex gap-2 flex-wrap">
-            {TOPICS.map(t => (
+          <div className="grid grid-cols-2 gap-2">
+            {topics.map(t => (
               <button
                 key={t.id}
                 onClick={() => toggleTopic(t.id)}
-                className={`chip text-xs ${
-                  topics.includes(t.id) ? 'chip-active' : ''
+                className={`flex items-center gap-2 p-3 rounded-xl border text-sm text-left transition-all ${
+                  selectedTopics.includes(t.id)
+                    ? 'border-rose-400 bg-rose-50 text-charcoal'
+                    : 'border-charcoal/10 bg-cream text-charcoal/60'
                 }`}
               >
-                {t.label}
+                <span>{t.icon}</span>
+                <span className="font-medium text-xs">{t.label}</span>
+                {selectedTopics.includes(t.id) && <span className="ml-auto text-rose-500 text-xs">✓</span>}
               </button>
             ))}
           </div>
         </div>
 
         {/* Address preference */}
-        <div className="card">
+        <div className="bg-ivory rounded-2xl p-4">
           <div className="flex items-center gap-3 mb-3">
-            <span className="text-rose-amina">👤</span>
+            <span className="text-xl">👤</span>
             <p className="font-semibold text-charcoal text-sm">How would you like Amina to address you?</p>
           </div>
           <select
             value={address}
             onChange={e => setAddress(e.target.value)}
-            className="w-full border border-charcoal/10 rounded-xl px-4 py-2.5 bg-cream text-charcoal text-sm appearance-none"
+            className="w-full bg-cream border border-charcoal/15 rounded-xl px-4 py-3 text-charcoal text-sm"
           >
-            {ADDRESS_OPTIONS.map(a => (
-              <option key={a} value={a}>{a}</option>
-            ))}
+            {addressOptions.map(o => <option key={o}>{o}</option>)}
           </select>
         </div>
 
         {/* Reminders */}
-        <div className="card">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-rose-amina">🔔</span>
-              <div>
-                <p className="font-semibold text-charcoal text-sm">Would you like gentle reminders?</p>
-                <p className="text-charcoal/40 text-xs">We’ll remind you to reflect and grow.</p>
-              </div>
-            </div>
-            <button
-              onClick={() => setReminders(r => !r)}
-              className={`w-12 h-6 rounded-full transition-colors ${
-                reminders ? 'bg-olive' : 'bg-charcoal/20'
-              } relative`}
-            >
-              <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                reminders ? 'translate-x-6' : 'translate-x-0.5'
-              }`} />
-            </button>
+        <div className="bg-ivory rounded-2xl p-4 flex items-center gap-3">
+          <span className="text-xl">🔔</span>
+          <div className="flex-1">
+            <p className="font-semibold text-charcoal text-sm">Would you like gentle reminders?</p>
+            <p className="text-charcoal/50 text-xs">We\'ll remind you to reflect and grow.</p>
           </div>
+          <button
+            onClick={() => setReminders(!reminders)}
+            className={`w-12 h-6 rounded-full transition-all relative ${
+              reminders ? 'bg-olive' : 'bg-charcoal/20'
+            }`}
+          >
+            <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${
+              reminders ? 'left-6' : 'left-0.5'
+            }`} />
+          </button>
         </div>
       </div>
 
-      <button onClick={handleContinue} className="btn-primary w-full mt-4">
-        Continue <span>→</span>
+      {/* CTA */}
+      <button onClick={handleContinue} className="btn-primary w-full mt-6">
+        Continue →
       </button>
-    </OnboardingShell>
+    </div>
   )
 }
