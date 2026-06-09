@@ -1,12 +1,15 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Leaf } from 'lucide-react'
 import AminaWordmark from '@/components/brand/AminaWordmark'
 import AminaIcon from '@/components/brand/AminaIcon'
+import SignInForm from '@/components/auth/SignInForm'
 
 export default function SplashPage() {
   const router = useRouter()
+  const [showSignIn, setShowSignIn] = useState(false)
 
   return (
     <div className="flex flex-col min-h-dvh bg-cream relative overflow-hidden">
@@ -43,13 +46,19 @@ export default function SplashPage() {
 
       {/* CTA stack */}
       <div className="px-6 pb-10 flex flex-col gap-3">
-        <button onClick={() => router.push('/welcome')} className="btn-primary w-full">
-          Continue <ArrowRight size={18} strokeWidth={1.75} />
-        </button>
+        {showSignIn ? (
+          <SignInForm onClose={() => setShowSignIn(false)} />
+        ) : (
+          <>
+            <button onClick={() => setShowSignIn(true)} className="btn-primary w-full">
+              Continue <ArrowRight size={18} strokeWidth={1.75} />
+            </button>
 
-        <button onClick={() => router.push('/welcome')} className="btn-secondary w-full">
-          Create an Account
-        </button>
+            <button onClick={() => router.push('/welcome')} className="btn-secondary w-full">
+              Create an Account
+            </button>
+          </>
+        )}
 
         <p className="text-center text-xs text-charcoal/40 mt-1">
           By continuing, you agree to our{' '}
