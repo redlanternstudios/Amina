@@ -1,7 +1,17 @@
 # AGENT REGISTRY — REDLANTERN STUDIOS
-**Version:** 2.0 | **Last updated:** 2026-06-08
+**Version:** 2.1 | **Last updated:** 2026-06-09
 **Purpose:** Canonical source of truth for all active agents, IDs, models, MCP assignments, and routing.
 **Rule:** If AGENT_REGISTRY conflicts with a soul file, the soul file wins. Update this file after every agent change.
+
+---
+
+## OPERATING DOCTRINE
+
+**All agents must read and operate under:**
+- [`AGENT_THOUGHT_PROCESS_v2.0.md`](redlantern-build-team/AGENT_THOUGHT_PROCESS_v2.0.md) — Preflight, Risk Tier classification, Collision Detection, all 5 Layers, Handoff Package, Final Review Checklist. **Non-negotiable. No exceptions.**
+- [`AMINA_NORTH_STAR_v1.0.md`](AMINA_NORTH_STAR_v1.0.md) — Decision authority tiers. Check before escalating to Ro.
+
+**Routing rule:** Before asking Ro anything, check NORTH_STAR. If it's a Tier 1 decision — make the call. Tier 2 — one sentence recommendation + one sentence reason. Tier 3 only — full escalation.
 
 ---
 
@@ -87,11 +97,26 @@
 
 ---
 
+## AGENT THOUGHT PROCESS — ROUTING BY ROLE
+
+Every agent applies `AGENT_THOUGHT_PROCESS_v2.0.md`. Role-specific addendums:
+
+| Role | Addendum section |
+|------|-----------------|
+| FRONTEND | Frontend Agent addendum — responsive, a11y, brand, states, component reuse |
+| BACKEND | Backend Agent addendum — schema integrity, RLS, rate limits, idempotency |
+| AI/Amina core | AI Agent addendum — prompt safety, hallucination bounds, cost ceiling, religious content |
+| QA | QA Agent addendum — regression matrix, abuse tests, edge case matrix, Pass/Fail output |
+| PM | PM Agent addendum — scope control, launch sequencing, success metrics, user promise |
+| SECURITY | Security Agent addendum — secrets, permissions, abuse vectors, dependency audit |
+
+---
+
 ## KNOWN ISSUES — 2026-06-08
 
 - **ROBBY had zero MCP servers** — root cause of all filesystem tool failures. Fixed 2026-06-08. MCP: GitHub/HireWire now assigned.
 - **401 invalid x-api-key** — recurring in SwarmClaw runs. Fix: re-inject Anthropic API key via System → Providers. Tier 1 decision — agents fix without asking Ro.
-- **AGENT_REGISTRY was stale** — reflected 12 agents, not 24. This file is v2.0, correct as of 2026-06-08.
+- **AGENT_REGISTRY was stale** — reflected 12 agents, not 24. Fixed in v2.0 on 2026-06-08.
 
 ---
 
@@ -101,8 +126,9 @@ If an agent needs to be recreated:
 1. Check soul file in `redlantern-build-team/souls/` in QBos repo
 2. Assign MCP: GitHub/HireWire (minimum)
 3. Set model: claude-sonnet-4-6
-4. Register ID here after creation
-5. Notify RUNTIME
+4. Load `AGENT_THOUGHT_PROCESS_v2.0.md` into system prompt or context
+5. Register ID here after creation
+6. Notify RUNTIME
 
 ---
 
