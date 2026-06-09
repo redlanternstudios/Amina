@@ -3,10 +3,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  ChevronLeft, ChevronRight, Pencil, Lock, Bell, Palette, Globe, LogOut,
+  ChevronRight, Pencil, Lock, Bell, Palette, Globe, LogOut,
   ShieldCheck, Download, Trash2,
 } from 'lucide-react'
 import BottomNav from '@/components/BottomNav'
+import AppHeader from '@/components/app/AppHeader'
+import { createClient } from '@/lib/supabase/client'
 
 const TABS = ['Profile', 'Preferences', 'Privacy', 'Support']
 
@@ -16,15 +18,22 @@ export default function ProfilePage() {
   const [theme] = useState('Light')
   const [language] = useState('English')
 
+  async function handleLogout() {
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+    } catch {
+      // ignore — still route to auth
+    }
+    router.push('/auth')
+  }
+
   return (
     <div className="flex flex-col min-h-dvh bg-cream pb-28">
-      {/* Header */}
-      <div className="px-4 pt-12 pb-3" style={{ borderBottom: '1px solid var(--amina-hairline)' }}>
-        <div className="flex items-center gap-3 mb-2">
-          <button onClick={() => router.back()} aria-label="Back" className="flex items-center gap-1 text-charcoal text-sm">
-            <ChevronLeft size={18} strokeWidth={1.5} /> Back
-          </button>
-        </div>
+      <AppHeader title="Profile" />
+
+      {/* Page heading + tabs */}
+      <div className="px-4 pt-4 pb-3" style={{ borderBottom: '1px solid var(--amina-hairline)' }}>
         <h1 className="font-display text-3xl text-charcoal text-center">Profile &amp; Settings</h1>
         <p className="text-charcoal/50 text-sm text-center">Manage your account and preferences.</p>
         {/* Tabs */}
@@ -94,7 +103,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Log Out */}
-            <button className="w-full flex items-center gap-3 card text-rose-amina">
+            <button onClick={handleLogout} className="w-full flex items-center gap-3 card text-rose-amina">
               <LogOut size={20} strokeWidth={1.5} />
               <span className="flex-1 text-left text-sm font-medium">Log Out</span>
             </button>
