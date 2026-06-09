@@ -77,6 +77,12 @@
 
   .bg-cream { background-color: var(--amina-soft-cream); }
   .bg-ivory { background-color: var(--amina-warm-ivory); }
+
+  .text-rose-action { color: var(--amina-primary-action); }
+  .bg-rose-action { background-color: var(--amina-primary-action); }
+  .bg-rose-selected { background-color: var(--amina-rose-selected); }
+  .bg-warm-highlight { background-color: var(--amina-warm-highlight); }
+  .text-cream { color: var(--amina-soft-cream); }
 }
 
 @layer components {

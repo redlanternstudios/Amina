@@ -1,93 +1,170 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowRight, Check, ShieldCheck, BookOpen, Moon, MessageCircle, HandHeart } from 'lucide-react'
+import Image from 'next/image'
+import {
+  ArrowRight,
+  Heart,
+  BookOpen,
+  ShieldCheck,
+  HandHeart,
+  MessageCircle,
+  Sparkles,
+  Lock,
+  Instagram,
+  Youtube,
+  Mail,
+} from 'lucide-react'
 import AminaWordmark from '@/components/brand/AminaWordmark'
-import AminaIcon from '@/components/brand/AminaIcon'
+
+const NAV_LINKS = [
+  { label: 'About', href: '#about' },
+  { label: 'Amina', href: '#about' },
+  { label: 'The Circle', href: 'https://theblondemuslim.com/circle' },
+  { label: 'Muslim Texas', href: '#' },
+  { label: 'Saudi Journey', href: '#' },
+  { label: 'Drops', href: '#' },
+  { label: 'Partnerships', href: '#' },
+]
+
+const HERO_BULLETS = [
+  { icon: Heart, text: 'Guidance for your heart and mind' },
+  { icon: Sparkles, text: 'Rooted in Islam. Built with love.' },
+  { icon: ShieldCheck, text: 'Private, safe, and sisters-only' },
+]
 
 const SUPPORTS = [
-  { icon: BookOpen, title: 'New Muslim Guidance', desc: 'Helpful answers and gentle explanations for those learning Islam.' },
-  { icon: Moon, title: 'Daily Reflections', desc: 'Inspiration, reminders, and reflections to keep your heart grounded.' },
-  { icon: MessageCircle, title: 'Faith Q&A', desc: 'Ask your questions and get faith-centered responses with wisdom and care.' },
-  { icon: HandHeart, title: 'Sisterly Support', desc: 'A safe space to talk, reflect, and feel understood — anytime.' },
+  {
+    icon: HandHeart,
+    title: 'New Muslim Guidance',
+    desc: 'Helpful answers and gentle explanations for those learning Islam.',
+    tone: 'olive' as const,
+  },
+  {
+    icon: BookOpen,
+    title: 'Daily Reflections',
+    desc: 'Inspiration, reminders, and reflections to keep your heart grounded.',
+    tone: 'rose' as const,
+  },
+  {
+    icon: MessageCircle,
+    title: 'Faith Q&A',
+    desc: 'Ask your questions and get faith-centered responses with wisdom and care.',
+    tone: 'olive' as const,
+  },
+  {
+    icon: HandHeart,
+    title: 'Sisterly Support',
+    desc: 'A safe space to talk, reflect, and feel understood — anytime.',
+    tone: 'rose' as const,
+  },
 ]
 
 export default function LandingPage() {
   return (
     <div className="min-h-dvh bg-cream font-body">
       {/* Nav */}
-      <nav className="flex items-center justify-between px-6 py-4 max-w-6xl mx-auto">
-        <AminaWordmark size="sm" tone="charcoal" showSignature={false} className="!items-start" />
-        <div className="hidden md:flex gap-8 text-sm text-charcoal">
-          <a href="#about" className="hover:text-rose-amina transition-colors">About</a>
-          <a href="#how" className="hover:text-rose-amina transition-colors">How It Works</a>
-          <a href="#access" className="hover:text-rose-amina transition-colors">Access</a>
+      <nav className="flex items-center justify-between gap-6 px-6 lg:px-12 py-5 max-w-7xl mx-auto">
+        <AminaWordmark size="md" tone="gradient" className="!items-start !text-left" />
+        <div className="hidden lg:flex items-center gap-7 text-sm text-charcoal/80">
+          {NAV_LINKS.map((link) => (
+            <a key={link.label} href={link.href} className="hover:text-rose-amina transition-colors whitespace-nowrap">
+              {link.label}
+            </a>
+          ))}
         </div>
-        <Link href="/auth" className="btn-primary text-sm px-5 py-2.5">
+        <Link href="/auth" className="btn-primary text-sm px-5 py-2.5 whitespace-nowrap">
           Join The Circle
+          <HandHeart size={16} strokeWidth={1.75} />
         </Link>
       </nav>
 
       {/* Hero */}
-      <section id="about" className="max-w-6xl mx-auto px-6 pt-16 pb-24 grid md:grid-cols-2 gap-12 items-center">
+      <section id="about" className="max-w-7xl mx-auto px-6 lg:px-12 pt-10 pb-16 grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
         <div>
-          <p className="label-eyebrow text-rose-amina mb-4">Meet Amina</p>
-          <h1 className="font-display text-5xl md:text-6xl text-charcoal leading-tight mb-6 text-balance">
-            You&apos;re not meant to navigate this journey <span className="text-rose-amina">alone.</span>
-          </h1>
-          <p className="text-charcoal/70 text-lg mb-8 leading-relaxed">
-            Meet Amina, your faith-centered reflection companion for questions, encouragement, and support — whenever you need it.
+          <p className="label-eyebrow text-rose-amina mb-5 flex items-center gap-2">
+            <span className="w-7 h-7 rounded-lg bg-warm-highlight flex items-center justify-center">
+              <Lock size={13} strokeWidth={1.75} className="text-rose-action" />
+            </span>
+            Meet Amina
           </p>
-          <ul className="space-y-3 mb-10">
-            {[
-              'Guidance for your heart and mind',
-              'Rooted in Islam. Built with love.',
-              'Private, safe, and sisters-only',
-            ].map(item => (
-              <li key={item} className="flex items-center gap-3 text-charcoal/80">
-                <span className="w-5 h-5 rounded-full bg-ivory flex items-center justify-center flex-shrink-0">
-                  <Check size={12} strokeWidth={2.5} className="text-rose-amina" />
-                </span>
-                {item}
-              </li>
-            ))}
+          <h1 className="font-display text-5xl md:text-6xl text-charcoal leading-[1.05] mb-6 text-balance">
+            You&apos;re not meant to navigate this journey <span className="text-rose-action">alone.</span>
+          </h1>
+          <p className="text-charcoal/70 text-lg mb-8 leading-relaxed max-w-md">
+            Meet Amina, your faith-centered reflection companion for questions, encouragement, and support — whenever you
+            need it.
+          </p>
+          <ul className="space-y-4 mb-10">
+            {HERO_BULLETS.map((item) => {
+              const Icon = item.icon
+              return (
+                <li key={item.text} className="flex items-center gap-3 text-charcoal/85">
+                  <span className="w-9 h-9 rounded-full bg-ivory flex items-center justify-center flex-shrink-0" style={{ border: '1px solid var(--amina-hairline)' }}>
+                    <Icon size={16} strokeWidth={1.5} className="text-rose-action" />
+                  </span>
+                  {item.text}
+                </li>
+              )
+            })}
           </ul>
           <div className="flex flex-wrap gap-4">
             <Link href="/auth" className="btn-primary">
               Access Amina <ArrowRight size={18} strokeWidth={1.75} />
             </Link>
-            <a href="#how" className="btn-secondary">Learn More</a>
+            <a href="#how" className="btn-secondary">
+              Learn More
+            </a>
           </div>
         </div>
+
         <div className="relative">
-          <div className="aspect-square rounded-3xl bg-ivory flex items-center justify-center" style={{ border: '1px solid var(--amina-hairline)' }}>
-            <div className="text-center p-8">
-              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: 'var(--amina-warm-highlight)' }}>
-                <AminaIcon size={36} />
-              </div>
-              <p className="font-display text-2xl text-charcoal mb-2">Amina is here to walk</p>
-              <p className="text-charcoal/70">beside you on your beautiful journey of faith, growth, and healing.</p>
+          <div className="relative aspect-[4/5] rounded-3xl overflow-hidden">
+            <Image
+              src="/marketing/hero-woman.png"
+              alt="A woman in a hijab sitting peacefully on a balcony, gazing at mountains at sunrise"
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover"
+            />
+          </div>
+          {/* Floating quote card */}
+          <div className="absolute -bottom-6 -left-2 sm:left-6 max-w-[16rem] bg-cream rounded-3xl p-6 text-center shadow-xl" style={{ border: '1px solid var(--amina-hairline)' }}>
+            <div className="w-12 h-12 rounded-full bg-rose-selected flex items-center justify-center mx-auto mb-3">
+              <Sparkles size={20} strokeWidth={1.5} className="text-rose-action" />
             </div>
+            <p className="font-display text-lg text-charcoal leading-snug mb-3">
+              Amina is here to walk beside you on your beautiful journey of faith, growth, and healing.
+            </p>
+            <Heart size={16} strokeWidth={1.5} className="text-rose-action mx-auto" />
           </div>
         </div>
       </section>
 
       {/* How it supports you */}
-      <section id="how" className="bg-ivory py-20">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-12">
-            <h2 className="font-display text-4xl text-charcoal mb-4">How Amina Supports You</h2>
-            <p className="text-charcoal/60">A personal companion created for women on their journey to Allah.</p>
+      <section id="how" className="max-w-7xl mx-auto px-6 lg:px-12 pt-16">
+        <div className="bg-ivory rounded-[2rem] px-6 sm:px-12 py-14" style={{ border: '1px solid var(--amina-hairline)' }}>
+          <div className="text-center mb-12 max-w-xl mx-auto">
+            <h2 className="font-display text-4xl text-charcoal mb-3">How Amina Supports You</h2>
+            <p className="text-charcoal/60">A personal AI companion created for women on their journey to Allah.</p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {SUPPORTS.map(item => {
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-10 gap-x-6">
+            {SUPPORTS.map((item, i) => {
               const Icon = item.icon
               return (
-                <div key={item.title} className="bg-cream rounded-3xl p-6 text-center" style={{ border: '1px solid var(--amina-hairline)' }}>
-                  <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: 'var(--amina-rose-selected)' }}>
-                    <Icon size={24} strokeWidth={1.5} className="text-charcoal" />
+                <div
+                  key={item.title}
+                  className="text-center px-2 lg:px-6"
+                  style={i < SUPPORTS.length - 1 ? { borderRight: '1px solid var(--amina-hairline)' } : undefined}
+                >
+                  <div
+                    className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
+                    style={{ backgroundColor: item.tone === 'olive' ? 'var(--amina-soft-olive)' : 'var(--amina-primary-action)' }}
+                  >
+                    <Icon size={24} strokeWidth={1.5} className="text-cream" />
                   </div>
-                  <h3 className="font-semibold text-charcoal mb-2">{item.title}</h3>
+                  <h3 className="font-display text-lg text-charcoal mb-2">{item.title}</h3>
                   <p className="text-sm text-charcoal/60 leading-relaxed">{item.desc}</p>
                 </div>
               )
@@ -97,65 +174,102 @@ export default function LandingPage() {
       </section>
 
       {/* Access Gate */}
-      <section id="access" className="max-w-6xl mx-auto px-6 py-20 grid md:grid-cols-2 gap-12 items-center">
-        <div className="rounded-3xl p-10 text-center bg-ivory" style={{ border: '1px solid var(--amina-hairline)' }}>
-          <p className="font-display text-4xl text-olive mb-2">أمينة</p>
-          <p className="text-charcoal/60 italic font-display text-lg">A faithful companion on your journey to Allah.</p>
-          <div className="mt-6 flex justify-center">
-            <AminaIcon size={32} />
-          </div>
+      <section id="access" className="max-w-7xl mx-auto px-6 lg:px-12 py-16 grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
+        <div className="relative aspect-[5/4] rounded-3xl overflow-hidden">
+          <Image
+            src="/marketing/access-arch.png"
+            alt="An Islamic arch tablet with Arabic calligraphy reading Amina, beside a lantern and white flowers"
+            fill
+            sizes="(max-width: 1024px) 100vw, 50vw"
+            className="object-cover"
+          />
         </div>
         <div>
-          <p className="label-eyebrow text-rose-amina mb-4">Member Access</p>
-          <h2 className="font-display text-4xl text-charcoal mb-4">Access Amina</h2>
-          <p className="text-charcoal/60 mb-8">
-            Amina is available exclusively to The Circle members. Download the app and sign in to begin.
+          <p className="label-eyebrow text-rose-action mb-4 flex items-center gap-2">
+            <Lock size={14} strokeWidth={1.75} />
+            Member Access
           </p>
-          <Link href="/auth" className="btn-primary w-full mb-4">
-            Access Amina <ArrowRight size={18} strokeWidth={1.75} />
-          </Link>
-          <p className="text-sm text-center text-charcoal/50">
+          <h2 className="font-display text-4xl md:text-5xl text-charcoal mb-4">Access Amina</h2>
+          <p className="text-charcoal/60 mb-8 max-w-md">
+            Amina is available exclusively to The Circle members. Enter your access code to begin.
+          </p>
+          <form action="/auth" className="space-y-4 max-w-md">
+            <div className="relative">
+              <input
+                type="text"
+                name="code"
+                placeholder="Enter Access Code"
+                className="input-field pr-12"
+                aria-label="Access code"
+              />
+              <Lock size={18} strokeWidth={1.5} className="text-charcoal/40 absolute right-4 top-1/2 -translate-y-1/2" />
+            </div>
+            <button type="submit" className="btn-primary w-full justify-center">
+              Access Amina <ArrowRight size={18} strokeWidth={1.75} />
+            </button>
+          </form>
+          <p className="text-sm text-charcoal/55 mt-5">
             Not a member yet?{' '}
-            <a href="https://theblondemuslim.com/circle" className="text-rose-amina hover:underline">Join The Circle</a>
+            <a href="https://theblondemuslim.com/circle" className="text-rose-action underline underline-offset-2 hover:opacity-80">
+              Join The Circle
+            </a>
           </p>
         </div>
       </section>
 
       {/* Disclaimer */}
-      <section className="max-w-6xl mx-auto px-6 pb-12">
-        <div className="bg-ivory rounded-3xl p-6 flex gap-4 items-start" style={{ border: '1px solid var(--amina-hairline)' }}>
-          <ShieldCheck size={20} strokeWidth={1.5} className="text-olive mt-0.5 flex-shrink-0" />
-          <p className="text-sm text-charcoal/60 leading-relaxed">
-            Amina is a companion designed to support your spiritual journey. For detailed religious rulings (fatwas),
-            please consult qualified scholars. For emotional support needs, please seek professional support. Amina is
-            not a replacement for human connection, scholarly guidance, or professional care.
+      <section className="max-w-7xl mx-auto px-6 lg:px-12 pb-16">
+        <div className="rounded-[2rem] p-7 flex gap-5 items-start" style={{ backgroundColor: 'var(--amina-rose-selected)' }}>
+          <span className="w-11 h-11 rounded-full bg-rose-action flex items-center justify-center flex-shrink-0">
+            <ShieldCheck size={20} strokeWidth={1.5} className="text-cream" />
+          </span>
+          <p className="text-sm text-charcoal/65 leading-relaxed">
+            Amina is an AI companion designed to support your spiritual journey. For detailed religious rulings (fatwas),
+            please consult qualified scholars. For emotional support needs, please seek professional support. Amina is not
+            a replacement for human connection, scholarly guidance, or professional care.
           </p>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-12" style={{ borderTop: '1px solid var(--amina-border)' }}>
-        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-start gap-8">
+      <footer className="bg-ivory" style={{ borderTop: '1px solid var(--amina-border)' }}>
+        <div className="max-w-7xl mx-auto px-6 lg:px-12 py-14 grid gap-10 md:grid-cols-2 lg:grid-cols-4">
           <div>
-            <p className="font-display italic text-2xl text-charcoal mb-1">Amina</p>
-            <p className="text-sm text-charcoal/50">by RedLantern Studios™</p>
-            <p className="text-sm text-olive mt-2">Faith. Purpose. Sisterhood.</p>
+            <AminaWordmark size="md" tone="gradient" className="!items-start !text-left" />
+            <p className="font-display text-charcoal mt-4">Faith. Purpose. Sisterhood.</p>
+            <p className="text-sm text-charcoal/55 mt-1">Building a legacy of light.</p>
           </div>
-          <div className="flex gap-12 text-sm">
-            <div>
-              <p className="font-semibold text-charcoal mb-3">Quick Links</p>
-              <ul className="space-y-2 text-charcoal/60">
-                <li><a href="#about" className="hover:text-rose-amina">About</a></li>
-                <li><Link href="/auth" className="hover:text-rose-amina">Access Amina</Link></li>
-                <li><a href="https://theblondemuslim.com/circle" className="hover:text-rose-amina">The Circle</a></li>
-              </ul>
-            </div>
-            <div>
-              <p className="font-semibold text-charcoal mb-3">Legal</p>
-              <ul className="space-y-2 text-charcoal/60">
-                <li><Link href="/privacy" className="hover:text-rose-amina">Privacy Policy</Link></li>
-                <li><Link href="/terms" className="hover:text-rose-amina">Terms of Use</Link></li>
-              </ul>
+          <div>
+            <p className="label-eyebrow text-charcoal/50 mb-4">Quick Links</p>
+            <ul className="space-y-2.5 text-sm text-charcoal/70">
+              <li><a href="#about" className="hover:text-rose-action">About</a></li>
+              <li><a href="#about" className="hover:text-rose-action">Amina</a></li>
+              <li><a href="https://theblondemuslim.com/circle" className="hover:text-rose-action">The Circle</a></li>
+              <li><a href="#" className="hover:text-rose-action">Muslim Texas</a></li>
+            </ul>
+          </div>
+          <div>
+            <p className="label-eyebrow text-charcoal/50 mb-4">Resources</p>
+            <ul className="space-y-2.5 text-sm text-charcoal/70">
+              <li><a href="#" className="hover:text-rose-action">Saudi Journey</a></li>
+              <li><a href="#" className="hover:text-rose-action">Drops</a></li>
+              <li><a href="#" className="hover:text-rose-action">Partnerships</a></li>
+            </ul>
+          </div>
+          <div>
+            <p className="label-eyebrow text-charcoal/50 mb-4">Connect</p>
+            <div className="flex gap-3">
+              {[Instagram, Youtube, Mail].map((Icon, i) => (
+                <a
+                  key={i}
+                  href="#"
+                  className="w-10 h-10 rounded-full bg-cream flex items-center justify-center text-charcoal/70 hover:text-rose-action transition-colors"
+                  style={{ border: '1px solid var(--amina-hairline)' }}
+                  aria-label="Social link"
+                >
+                  <Icon size={18} strokeWidth={1.5} />
+                </a>
+              ))}
             </div>
           </div>
         </div>
