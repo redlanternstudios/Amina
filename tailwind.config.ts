@@ -25,7 +25,7 @@ const config: Config = {
         gold: '#D7BA82',
       },
       fontFamily: {
-        display: ['var(--font-display)', 'Fraunces', 'Playfair Display', 'Georgia', 'serif'],
+        display: ['var(--font-display)', 'Newsreader', 'Georgia', 'serif'],
         body: ['var(--font-inter)', 'Inter', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
