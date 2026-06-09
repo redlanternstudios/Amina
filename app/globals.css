@@ -55,7 +55,7 @@
 
 @layer utilities {
   .font-display {
-    font-family: var(--font-display), 'Cormorant Garamond', Georgia, serif;
+    font-family: var(--font-display), 'Fraunces', 'Playfair Display', Georgia, serif;
   }
   .font-body {
     font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
@@ -85,7 +85,7 @@
   .text-cream { color: var(--amina-soft-cream); }
 
   .accent-italic {
-    font-family: var(--font-display), 'Cormorant Garamond', Georgia, serif;
+    font-family: var(--font-display), 'Fraunces', 'Playfair Display', Georgia, serif;
     font-style: italic;
   }
   .gold-divider {
