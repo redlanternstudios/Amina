@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { ChevronLeft, Heart, MessageCircle, MoreHorizontal, CalendarDays, Users } from 'lucide-react'
+import { Heart, MessageCircle, MoreHorizontal, CalendarDays, Users } from 'lucide-react'
 import BottomNav from '@/components/BottomNav'
+import AppHeader from '@/components/app/AppHeader'
 
 const TABS = ['Community', 'Groups', 'Events']
 
@@ -48,19 +48,15 @@ function Avatar({ initial }: { initial: string }) {
 }
 
 export default function CirclePage() {
-  const router = useRouter()
   const [activeTab, setActiveTab] = useState('Community')
   const [postText, setPostText] = useState('')
 
   return (
     <div className="flex flex-col min-h-dvh bg-cream pb-28">
-      {/* Header */}
-      <div className="px-4 pt-12 pb-3" style={{ borderBottom: '1px solid var(--amina-hairline)' }}>
-        <div className="flex items-center gap-3 mb-2">
-          <button onClick={() => router.back()} aria-label="Back" className="flex items-center gap-1 text-charcoal text-sm">
-            <ChevronLeft size={18} strokeWidth={1.5} /> Back
-          </button>
-        </div>
+      <AppHeader title="The Circle" />
+
+      {/* Page heading + tabs */}
+      <div className="px-4 pt-4 pb-3" style={{ borderBottom: '1px solid var(--amina-hairline)' }}>
         <h1 className="font-display text-3xl text-charcoal text-center">The Circle</h1>
         <p className="text-charcoal/50 text-sm text-center">A safe space of faith, support, and sisterhood.</p>
 
