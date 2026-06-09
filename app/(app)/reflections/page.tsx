@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Heart, NotebookPen } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { ChevronLeft, Search, Heart, NotebookPen } from 'lucide-react'
 import BottomNav from '@/components/BottomNav'
-import AppHeader from '@/components/app/AppHeader'
 
 const FILTERS = ['All Reflections', 'By Topic', 'By Date', 'Favorites']
 
@@ -15,6 +15,7 @@ const SAMPLE_REFLECTIONS = [
 ]
 
 export default function ReflectionsPage() {
+  const router = useRouter()
   const [activeFilter, setActiveFilter] = useState('All Reflections')
   const [reflections, setReflections] = useState(SAMPLE_REFLECTIONS)
   const [search, setSearch] = useState('')
@@ -31,10 +32,13 @@ export default function ReflectionsPage() {
 
   return (
     <div className="flex flex-col min-h-dvh bg-cream pb-28">
-      <AppHeader title="Reflections" />
-
-      {/* Page heading */}
-      <div className="px-4 pt-4 pb-4">
+      {/* Header */}
+      <div className="px-4 pt-12 pb-4">
+        <div className="flex items-center gap-3 mb-4">
+          <button onClick={() => router.back()} aria-label="Back" className="flex items-center gap-1 text-charcoal text-sm">
+            <ChevronLeft size={18} strokeWidth={1.5} /> Back
+          </button>
+        </div>
         <h1 className="font-display text-3xl text-charcoal">Reflections</h1>
         <p className="text-charcoal/50 text-sm">Your personal space for growth and clarity.</p>
       </div>

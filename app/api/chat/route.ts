@@ -29,10 +29,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
     }
 
-    const apiKey = process.env.GROQ_API_KEY
+    const gatewayKey = process.env.AI_GATEWAY_API_KEY
+    const groqKey = process.env.GROQ_API_KEY
 
-    // Dev stub when no API key configured
-    if (!apiKey) {
+    // Prefer the Vercel AI Gateway (zero-config Groq access) when available,
+    // fall back to a direct Groq call, then to the dev stub.
+    const provider = gatewayKey
+      ? {
+          url: 'https://ai-gateway.vercel.sh/v1/chat/completions',
+          key: gatewayKey,
+          model: 'groq/llama-3.3-70b-versatile',
+        }
+      : groqKey
+        ? {
+            url: 'https://api.groq.com/openai/v1/chat/completions',
+            key: groqKey,
+            model: 'llama-3.3-70b-versatile',
+          }
+        : null
+
+    // Dev stub when no provider configured
+    if (!provider) {
       const lastUserMessage = messages[messages.length - 1]?.content || ''
       const stubResponses = [
         "Assalamu alaykum, sister. I'm so glad you're here. Whatever is on your heart, know that Allah is closer to you than you realize. Would you like to share more about what you're feeling?",
@@ -44,15 +61,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ content: response, source: 'stub' })
     }
 
-    // Groq API call
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    // AI Gateway / Groq call (OpenAI-compatible)
+    const response = await fetch(provider.url, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${provider.key}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: provider.model,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           ...messages,
@@ -79,7 +96,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Empty response from AI' }, { status: 502 })
     }
 
-    return NextResponse.json({ content, source: 'groq' })
+    return NextResponse.json({ content, source: gatewayKey ? 'gateway' : 'groq' })
   } catch (err) {
     console.error('Chat route error:', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
