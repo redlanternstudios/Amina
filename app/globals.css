@@ -83,6 +83,22 @@
   .bg-rose-selected { background-color: var(--amina-rose-selected); }
   .bg-warm-highlight { background-color: var(--amina-warm-highlight); }
   .text-cream { color: var(--amina-soft-cream); }
+
+  .accent-italic {
+    font-family: var(--font-display), 'Cormorant Garamond', Georgia, serif;
+    font-style: italic;
+  }
+  .gold-divider {
+    height: 1px;
+    width: 64px;
+    background: linear-gradient(90deg, transparent, var(--amina-muted-gold), transparent);
+  }
+  .ring-soft {
+    box-shadow: 0 0 0 1px var(--amina-hairline), var(--amina-shadow-soft);
+  }
+  .shadow-card-lg {
+    box-shadow: 0 24px 60px -18px rgba(44, 41, 38, 0.22);
+  }
 }
 
 @layer components {

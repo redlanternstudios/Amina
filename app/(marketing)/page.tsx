@@ -89,7 +89,7 @@ export default function LandingPage() {
             Meet Amina
           </p>
           <h1 className="font-display text-5xl md:text-6xl text-charcoal leading-[1.05] mb-6 text-balance">
-            You&apos;re not meant to navigate this journey <span className="text-rose-action">alone.</span>
+            You&apos;re not meant to navigate this journey <span className="accent-italic text-rose-action">alone.</span>
           </h1>
           <p className="text-charcoal/70 text-lg mb-8 leading-relaxed max-w-md">
             Meet Amina, your faith-centered reflection companion for questions, encouragement, and support — whenever you
@@ -119,7 +119,7 @@ export default function LandingPage() {
         </div>
 
         <div className="relative">
-          <div className="relative aspect-[4/5] rounded-3xl overflow-hidden">
+          <div className="relative aspect-[4/5] rounded-3xl overflow-hidden shadow-card-lg">
             <Image
               src="/marketing/hero-woman.png"
               alt="A woman in a hijab sitting peacefully on a balcony, gazing at mountains at sunrise"
@@ -128,15 +128,17 @@ export default function LandingPage() {
               sizes="(max-width: 1024px) 100vw, 50vw"
               className="object-cover"
             />
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(44,41,38,0) 55%, rgba(44,41,38,0.18) 100%)' }} />
           </div>
           {/* Floating quote card */}
-          <div className="absolute -bottom-6 -left-2 sm:left-6 max-w-[16rem] bg-cream rounded-3xl p-6 text-center shadow-xl" style={{ border: '1px solid var(--amina-hairline)' }}>
-            <div className="w-12 h-12 rounded-full bg-rose-selected flex items-center justify-center mx-auto mb-3">
+          <div className="absolute -bottom-6 -left-2 sm:left-6 max-w-[16rem] bg-cream rounded-3xl p-6 text-center shadow-card-lg" style={{ border: '1px solid var(--amina-hairline)' }}>
+            <div className="w-12 h-12 rounded-full bg-rose-selected flex items-center justify-center mx-auto mb-3 ring-soft">
               <Sparkles size={20} strokeWidth={1.5} className="text-rose-action" />
             </div>
             <p className="font-display text-lg text-charcoal leading-snug mb-3">
               Amina is here to walk beside you on your beautiful journey of faith, growth, and healing.
             </p>
+            <div className="gold-divider mx-auto mb-3" />
             <Heart size={16} strokeWidth={1.5} className="text-rose-action mx-auto" />
           </div>
         </div>
@@ -146,7 +148,8 @@ export default function LandingPage() {
       <section id="how" className="max-w-7xl mx-auto px-6 lg:px-12 pt-16">
         <div className="bg-ivory rounded-[2rem] px-6 sm:px-12 py-14" style={{ border: '1px solid var(--amina-hairline)' }}>
           <div className="text-center mb-12 max-w-xl mx-auto">
-            <h2 className="font-display text-4xl text-charcoal mb-3">How Amina Supports You</h2>
+            <h2 className="font-display text-4xl text-charcoal mb-4">How Amina Supports You</h2>
+            <div className="gold-divider mx-auto mb-4" />
             <p className="text-charcoal/60">A personal AI companion created for women on their journey to Allah.</p>
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-10 gap-x-6">
@@ -175,7 +178,7 @@ export default function LandingPage() {
 
       {/* Access Gate */}
       <section id="access" className="max-w-7xl mx-auto px-6 lg:px-12 py-16 grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
-        <div className="relative aspect-[5/4] rounded-3xl overflow-hidden">
+        <div className="relative aspect-[5/4] rounded-3xl overflow-hidden shadow-card-lg">
           <Image
             src="/marketing/access-arch.png"
             alt="An Islamic arch tablet with Arabic calligraphy reading Amina, beside a lantern and white flowers"
@@ -219,11 +222,19 @@ export default function LandingPage() {
 
       {/* Disclaimer */}
       <section className="max-w-7xl mx-auto px-6 lg:px-12 pb-16">
-        <div className="rounded-[2rem] p-7 flex gap-5 items-start" style={{ backgroundColor: 'var(--amina-rose-selected)' }}>
+        <div className="relative overflow-hidden rounded-[2rem] p-7 flex gap-5 items-start" style={{ backgroundColor: 'var(--amina-rose-selected)' }}>
+          <Image
+            src="/marketing/botanical-accent.png"
+            alt=""
+            aria-hidden="true"
+            width={220}
+            height={220}
+            className="pointer-events-none select-none absolute -right-4 -bottom-6 w-44 opacity-25"
+          />
           <span className="w-11 h-11 rounded-full bg-rose-action flex items-center justify-center flex-shrink-0">
             <ShieldCheck size={20} strokeWidth={1.5} className="text-cream" />
           </span>
-          <p className="text-sm text-charcoal/65 leading-relaxed">
+          <p className="relative text-sm text-charcoal/65 leading-relaxed max-w-4xl">
             Amina is an AI companion designed to support your spiritual journey. For detailed religious rulings (fatwas),
             please consult qualified scholars. For emotional support needs, please seek professional support. Amina is not
             a replacement for human connection, scholarly guidance, or professional care.
