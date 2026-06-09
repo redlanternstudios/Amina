@@ -68,7 +68,7 @@ Source: AMINA_NORTH_STAR.md Tier 1. RLS audit is part of DoD on every story.
 **so that** I can engage with reflections, reminders, and shared content.
 
 ### Acceptance Criteria
-- [ ] Posts feed queries a `circle_posts` table (see BACKEND task for schema) for the current circle
+- [ ] Posts feed queries `circle_posts` table for the current circle
 - [ ] Each post card shows: author avatar, author name, post text, optional image/video, faith reactions, comment count, timestamp
 - [ ] Faith reactions: ameen / subhanallah / alhamdulillah / mashallah / heart
 - [ ] Tapping a reaction inserts into `circle_reactions`; toggling removes it
@@ -89,7 +89,7 @@ Source: AMINA_NORTH_STAR.md Tier 1. RLS audit is part of DoD on every story.
 **so that** I can share with one or more of my circles.
 
 ### Acceptance Criteria
-- [ ] Text input (multiline, no character limit displayed)
+- [ ] Text input (multiline)
 - [ ] Media picker: image (jpg/png/webp/heic ≤10MB) or video (mp4/mov ≤50MB/60s)
 - [ ] Circle selector: multi-select from user's circles (from `circle_memberships`)
 - [ ] Tag input (freeform, optional)
@@ -119,7 +119,7 @@ Source: AMINA_NORTH_STAR.md Tier 1. RLS audit is part of DoD on every story.
 - [ ] Rows sorted by most recent message
 - [ ] Tapping a row navigates to DM Thread screen
 - [ ] Empty state when no DMs
-- [ ] New DM button initiates a new conversation (creates `dm_conversations` row + `dm_participants` rows)
+- [ ] New DM button initiates a new conversation (creates `dm_conversations` + `dm_participants` rows)
 
 ### Definition of Done
 - [ ] RLS: `dm_conversations` SELECT limited to participants only
@@ -152,8 +152,8 @@ Source: AMINA_NORTH_STAR.md Tier 1. RLS audit is part of DoD on every story.
 
 ---
 
-## P0 Screen Order (build sequence)
-1. STORY-001 Circle Home (shell + tab routing)
+## P0 Build Sequence
+1. STORY-001 Circle Home shell
 2. STORY-005 DM Inbox
 3. STORY-006 DM Thread
 4. STORY-002 Circle Chat
