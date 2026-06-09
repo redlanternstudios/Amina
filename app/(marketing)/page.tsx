@@ -64,8 +64,8 @@ export default function LandingPage() {
   return (
     <div className="min-h-dvh bg-cream font-body">
       {/* Nav */}
-      <nav className="flex items-center justify-between gap-6 px-6 lg:px-12 py-5 max-w-7xl mx-auto">
-        <AminaWordmark size="md" tone="gradient" className="!items-start !text-left" />
+      <nav className="flex items-center justify-between gap-6 px-8 lg:px-16 py-8 max-w-7xl mx-auto">
+        <AminaWordmark size="lg" tone="gradient" className="!items-start !text-left" />
         <div className="hidden lg:flex items-center gap-7 text-sm text-charcoal/80">
           {NAV_LINKS.map((link) => (
             <a key={link.label} href={link.href} className="hover:text-rose-amina transition-colors whitespace-nowrap">
