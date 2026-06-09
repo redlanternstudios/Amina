@@ -1,53 +1,61 @@
-# AMINA_PM_DECISION_001 — DB Architecture Decision
-
-**Status:** OPEN  
-**Routed to:** PM  
-**Blocking:** Circle build stories  
-**Created:** 2026-06-09
-
----
-
-## Decision Required
-
-Choose the Amina database architecture before Circle build stories begin.
+# AMINA PM DECISION 001 — DB ARCHITECTURE FOR THE CIRCLE
+**Status:** RESOLVED
+**Date:** 2026-06-08
+**Decision owner:** PM
+**Gate:** Circle build stories are BLOCKED until this file exists and is resolved.
 
 ---
 
-## Option A — Single Shared DB
+## THE QUESTION
 
-- One database for all users/circles
-- Simpler infrastructure, lower cost
-- Row-level security enforces data isolation
-- Standard for early-stage products
-
-**Tradeoffs:** Harder to shard later; tenant bleed risk if RLS misconfigured.
+Should The Circle (community feature) use the **shared RedLantern Supabase DB** (`endovljmaudnxdzdapmf`) or a **separate dedicated Amina DB**?
 
 ---
 
-## Option B — Per-Circle DB (Multi-Tenant Isolated)
+## OPTIONS EVALUATED
 
-- Each circle gets its own database instance
-- Maximum isolation — no cross-tenant risk
-- Easier compliance story (HIPAA, SOC2 paths)
-- Higher infra cost and operational complexity
+### Option A — Shared DB (single project, prefixed tables)
+- All Amina tables use `amina_*` prefix in the existing shared DB
+- RLS audit required as part of every story's Definition of Done
+- Split to dedicated DB only when: (1) Amina has real users, or (2) a security requirement forces it
+- **Pros:** Faster to ship, no cross-DB query complexity, proven pattern for dogfood phase
+- **Cons:** Shared infra risk, requires strict RLS discipline
 
-**Tradeoffs:** More expensive to run; harder to query across circles.
-
----
-
-## PM Action Required
-
-1. Make the call: **A or B**
-2. Write `AMINA_PM_DECISION_001_RESOLVED.md` with:
-   - Decision (A or B)
-   - Rationale (2–4 sentences)
-   - Any constraints imposed on BACKEND
-3. Notify RUNTIME when file is committed
-
-**Do not start Circle build stories until `AMINA_PM_DECISION_001_RESOLVED.md` exists in the repo.**
+### Option B — Separate dedicated Amina DB
+- New Supabase project created exclusively for Amina
+- Clean isolation from HireWire/ByRed data
+- **Pros:** Clean isolation, no RLS cross-contamination risk
+- **Cons:** Slower to stand up, no users to justify it yet, over-engineered for dogfood phase
 
 ---
 
-## Enforcement
+## DECISION
 
-Robby enforces: no `_RESOLVED.md` = Circle build stays blocked. No exceptions.
+**OPTION A — Shared DB during dogfood phase.**
+
+**Rationale:**
+- Amina has 0 real users. Isolation complexity is premature.
+- RLS enforced per-table as merge gate (not honor system).
+- Split is a future Tier 2 decision triggered by real users or security incident — not now.
+- Consistent with Tier 1 agent authority in `AMINA_NORTH_STAR_v1.0.md`.
+
+---
+
+## CONSTRAINTS THIS DECISION IMPOSES
+
+1. Every Circle table MUST be prefixed `amina_*`
+2. Every new table MUST have RLS enabled before it merges — this is a hard merge gate
+3. No HireWire table may be modified by any Amina story without Tier 2 approval
+4. RLS scaffold must be built and confirmed present before the first Circle data story is allowed to merge
+
+---
+
+## WHAT UNLOCKS
+
+- Track A: The Circle build stories
+- `amina_circle_groups`, `amina_circle_memberships`, `amina_circle_posts`, `amina_circle_reactions` table specs
+- BACKEND can begin RLS scaffold immediately
+
+---
+
+*Written by: PM | Enforced by: ROBBY | Referenced by: AMINA_NORTH_STAR_v1.0.md*
