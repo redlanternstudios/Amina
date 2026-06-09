@@ -2,72 +2,135 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
-
 @layer base {
   :root {
-    --cream: #F7F2EB;
-    --ivory: #F2ECE4;
-    --rose: #C9796A;
-    --rose-light: #E8A89C;
-    --olive: #8E9878;
-    --charcoal: #2C2926;
-    --gold: #D7BA82;
+    /* Amina exact palette — SightEngine spec §4 / §13 */
+    --amina-soft-cream: #F7F2E8;
+    --amina-warm-ivory: #F2ECE4;
+    --amina-dusty-rose: #D6AAA3;
+    --amina-soft-olive: #8E9878;
+    --amina-soft-charcoal: #2C2926;
+    --amina-muted-gold: #D7BA82;
+
+    --amina-primary-bg: var(--amina-soft-cream);
+    --amina-surface: var(--amina-warm-ivory);
+    --amina-primary-text: var(--amina-soft-charcoal);
+    --amina-secondary-text: rgba(44, 41, 38, 0.70);
+    --amina-muted-text: rgba(44, 41, 38, 0.52);
+    --amina-border: rgba(44, 41, 38, 0.12);
+    --amina-hairline: rgba(44, 41, 38, 0.08);
+    --amina-primary-action: #C78072;
+    --amina-primary-action-hover: #B96E62;
+    --amina-rose-selected: rgba(214, 170, 163, 0.38);
+    --amina-warm-highlight: rgba(215, 186, 130, 0.22);
+    --amina-focus-ring: rgba(214, 170, 163, 0.45);
+    --amina-shadow-soft: 0 12px 32px rgba(44, 41, 38, 0.07);
+    --amina-shadow-button: 0 8px 18px rgba(120, 74, 64, 0.14);
+    --amina-shadow-nav: 0 12px 30px rgba(44, 41, 38, 0.08);
+    --amina-radius-sm: 10px;
+    --amina-radius-md: 16px;
+    --amina-radius-lg: 24px;
+    --amina-radius-pill: 999px;
+
+    /* Legacy aliases (back-compat with earlier code) */
+    --cream: var(--amina-soft-cream);
+    --ivory: var(--amina-warm-ivory);
+    --rose: var(--amina-primary-action);
+    --olive: var(--amina-soft-olive);
+    --charcoal: var(--amina-soft-charcoal);
+    --gold: var(--amina-muted-gold);
   }
 
   html {
-    font-family: 'Inter', sans-serif;
-    background-color: var(--cream);
-    color: var(--charcoal);
+    background-color: var(--amina-soft-cream);
+    color: var(--amina-soft-charcoal);
     -webkit-font-smoothing: antialiased;
   }
 
   body {
     min-height: 100dvh;
-    background-color: var(--cream);
+    background-color: var(--amina-soft-cream);
   }
 }
 
 @layer utilities {
   .font-display {
-    font-family: 'Canela', Georgia, serif;
+    font-family: var(--font-display), 'Cormorant Garamond', Georgia, serif;
+  }
+  .font-body {
+    font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
   }
 
-  .text-rose-amina { color: var(--rose); }
-  .bg-rose-amina { background-color: var(--rose); }
-  .border-rose-amina { border-color: var(--rose); }
+  .label-eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.12em];
+  }
 
-  .text-gold { color: var(--gold); }
-  .bg-gold { background-color: var(--gold); }
+  .text-rose-amina { color: var(--amina-primary-action); }
+  .bg-rose-amina { background-color: var(--amina-primary-action); }
+  .border-rose-amina { border-color: var(--amina-primary-action); }
 
-  .text-olive { color: var(--olive); }
-  .bg-olive { background-color: var(--olive); }
+  .text-gold { color: var(--amina-muted-gold); }
+  .bg-gold { background-color: var(--amina-muted-gold); }
 
-  .bg-cream { background-color: var(--cream); }
-  .bg-ivory { background-color: var(--ivory); }
+  .text-olive { color: var(--amina-soft-olive); }
+  .bg-olive { background-color: var(--amina-soft-olive); }
 
+  .bg-cream { background-color: var(--amina-soft-cream); }
+  .bg-ivory { background-color: var(--amina-warm-ivory); }
+}
+
+@layer components {
   .btn-primary {
-    @apply bg-rose-amina text-white rounded-full px-6 py-3.5 font-body font-medium text-base
-           flex items-center justify-center gap-2
-           active:scale-95 transition-transform;
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5
+           font-body font-semibold text-[15px] text-white
+           transition-all active:scale-[0.98];
+    background-color: var(--amina-primary-action);
+    box-shadow: var(--amina-shadow-button);
+  }
+  .btn-primary:hover {
+    background-color: var(--amina-primary-action-hover);
   }
 
   .btn-secondary {
-    @apply border border-charcoal/20 text-charcoal rounded-full px-6 py-3.5 font-body font-medium text-base
-           flex items-center justify-center gap-2 bg-white
-           active:scale-95 transition-transform;
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5
+           font-body font-medium text-[15px] bg-ivory transition-all active:scale-[0.98];
+    color: var(--amina-soft-charcoal);
+    border: 1px solid var(--amina-border);
+  }
+
+  .btn-tertiary {
+    @apply inline-flex items-center gap-1 font-body font-medium text-sm transition-colors;
+    color: var(--amina-soft-olive);
+  }
+
+  .input-field {
+    @apply w-full rounded-full px-4 py-3 font-body text-[15px] outline-none bg-ivory transition-shadow;
+    color: var(--amina-soft-charcoal);
+    border: 1px solid var(--amina-border);
+  }
+  .input-field::placeholder {
+    color: rgba(44, 41, 38, 0.38);
+  }
+  .input-field:focus {
+    box-shadow: 0 0 0 3px var(--amina-focus-ring);
   }
 
   .card {
-    @apply bg-ivory rounded-2xl p-4 shadow-sm;
+    @apply rounded-3xl p-4 bg-ivory;
+    border: 1px solid var(--amina-hairline);
+    box-shadow: var(--amina-shadow-soft);
   }
 
   .chip {
-    @apply bg-white border border-charcoal/10 rounded-full px-3.5 py-1.5 text-sm font-medium text-charcoal
-           flex items-center gap-1.5 whitespace-nowrap;
+    @apply inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium
+           whitespace-nowrap transition-colors bg-ivory;
+    color: var(--amina-secondary-text);
+    border: 1px solid var(--amina-hairline);
   }
 
   .chip-active {
-    @apply bg-rose-amina text-white border-rose-amina;
+    background-color: var(--amina-primary-action);
+    color: #fff;
+    border-color: var(--amina-primary-action);
   }
 }

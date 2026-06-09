@@ -1,5 +1,21 @@
 import type { Metadata, Viewport } from 'next'
+import { Inter, Cormorant_Garamond } from 'next/font/google'
 import './globals.css'
+
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600'],
+  variable: '--font-inter',
+  display: 'swap',
+})
+
+const cormorant = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  style: ['normal', 'italic'],
+  variable: '--font-display',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'Amina — Faith-centered reflection for women',
@@ -17,7 +33,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#F7F2EB',
+  themeColor: '#F7F2E8',
 }
 
 export default function RootLayout({
@@ -26,12 +42,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      </head>
-      <body className="bg-cream text-charcoal antialiased">
+    <html lang="en" className={`${inter.variable} ${cormorant.variable} bg-cream`}>
+      <body className="bg-cream text-charcoal font-body antialiased">
         {children}
       </body>
     </html>

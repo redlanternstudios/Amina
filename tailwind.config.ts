@@ -9,12 +9,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        cream: '#F7F2EB',
+        // Amina exact palette — SightEngine spec §4
+        cream: '#F7F2E8',
         ivory: '#F2ECE4',
         rose: {
-          DEFAULT: '#C9796A',
-          light: '#E8A89C',
-          dark: '#A85E50',
+          DEFAULT: '#D6AAA3', // dusty rose (brand base)
+          action: '#C78072', // primary action / button
+          hover: '#B96E62',
         },
         olive: {
           DEFAULT: '#8E9878',
@@ -24,13 +25,18 @@ const config: Config = {
         gold: '#D7BA82',
       },
       fontFamily: {
-        display: ['Canela', 'Georgia', 'serif'],
-        body: ['Inter', 'sans-serif'],
+        display: ['var(--font-display)', 'Cormorant Garamond', 'Georgia', 'serif'],
+        body: ['var(--font-inter)', 'Inter', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
-        'xl': '1rem',
+        xl: '1rem',
         '2xl': '1.25rem',
         '3xl': '1.5rem',
+      },
+      boxShadow: {
+        soft: '0 12px 32px rgba(44, 41, 38, 0.07)',
+        button: '0 8px 18px rgba(120, 74, 64, 0.14)',
+        nav: '0 12px 30px rgba(44, 41, 38, 0.08)',
       },
     },
   },
