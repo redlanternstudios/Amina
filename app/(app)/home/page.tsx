@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { StreakCounter } from '@/components/amina/StreakCounter'
+import { useSession } from '@/lib/supabase/use-session'
 
 const QUICK_CHIPS = [
   { id: 'reflect', icon: '❤️', label: 'Reflect' },
@@ -19,6 +21,8 @@ const RECENT_CONVERSATIONS = [
 export default function HomePage() {
   const router = useRouter()
   const [message, setMessage] = useState('')
+  const session = useSession()
+  const accessToken = session?.access_token ?? ''
 
   function handleSend() {
     if (!message.trim()) return
@@ -68,6 +72,11 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* Streak Counter — wired to /api/streak via Supabase session token */}
+      <div className="px-4 mb-4">
+        <StreakCounter accessToken={accessToken} />
+      </div>
+
       {/* Amina chat card */}
       <div className="px-4 mb-4">
         <div className="card">
@@ -88,8 +97,8 @@ export default function HomePage() {
           <div className="bg-cream rounded-2xl p-3 mb-3">
             <p className="text-charcoal text-sm leading-relaxed">
               Salam, Sister 🌸<br />
-              I’m so happy you’re here.<br />
-              What’s on your heart today?
+              I'm so happy you're here.<br />
+              What's on your heart today?
             </p>
           </div>
 
@@ -164,7 +173,7 @@ export default function HomePage() {
             📚
           </div>
           <div className="flex-1">
-            <p className="text-rose-amina text-xs font-semibold mb-1">Today’s Reflection</p>
+            <p className="text-rose-amina text-xs font-semibold mb-1">Today's Reflection</p>
             <p className="font-display text-lg text-charcoal leading-snug">
               And He is with you wherever you are.
             </p>
