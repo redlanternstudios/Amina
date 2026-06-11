@@ -24,15 +24,20 @@ export interface DBMessage {
   created_at: string
 }
 
-/** Create a new conversation for the current user */
-export async function createConversation(title?: string, topicTag?: string): Promise<DBConversation> {
+/** Create a new conversation for the current user. Pass `id` to pin it to a specific UUID (e.g. from the URL). */
+export async function createConversation(id?: string, title?: string, topicTag?: string): Promise<DBConversation> {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
   const { data, error } = await supabase
-    .from('conversations')
-    .insert({ user_id: user.id, title: title ?? null, topic_tag: topicTag ?? null })
+    .from('amina_conversations')
+    .insert({
+      ...(id ? { id } : {}),
+      user_id: user.id,
+      title: title ?? null,
+      topic_tag: topicTag ?? null,
+    })
     .select()
     .single()
 
@@ -44,7 +49,7 @@ export async function createConversation(title?: string, topicTag?: string): Pro
 export async function listConversations(): Promise<DBConversation[]> {
   const supabase = createClient()
   const { data, error } = await supabase
-    .from('conversations')
+    .from('amina_conversations')
     .select('*')
     .order('updated_at', { ascending: false })
 
@@ -56,7 +61,7 @@ export async function listConversations(): Promise<DBConversation[]> {
 export async function loadMessages(conversationId: string): Promise<DBMessage[]> {
   const supabase = createClient()
   const { data, error } = await supabase
-    .from('messages')
+    .from('amina_messages')
     .select('*')
     .eq('conversation_id', conversationId)
     .order('created_at', { ascending: true })
@@ -76,7 +81,7 @@ export async function saveMessage(
   if (!user) throw new Error('Not authenticated')
 
   const { data, error } = await supabase
-    .from('messages')
+    .from('amina_messages')
     .insert({ conversation_id: conversationId, user_id: user.id, role, content })
     .select()
     .single()
@@ -91,7 +96,7 @@ export async function getOrCreateDefaultConversation(): Promise<DBConversation> 
   const today = new Date().toISOString().split('T')[0]
 
   const { data: existing } = await supabase
-    .from('conversations')
+    .from('amina_conversations')
     .select('*')
     .gte('created_at', `${today}T00:00:00Z`)
     .order('created_at', { ascending: false })
@@ -99,5 +104,5 @@ export async function getOrCreateDefaultConversation(): Promise<DBConversation> 
     .maybeSingle()
 
   if (existing) return existing
-  return createConversation('Chat with Amina')
+  return createConversation(undefined, 'Chat with Amina')
 }

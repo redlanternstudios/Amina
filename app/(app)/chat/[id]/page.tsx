@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, Suspense } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { loadMessages, saveMessage, createConversation } from '@/lib/supabase/chat'
 
 interface Message {
   id: string
@@ -13,25 +14,45 @@ interface Message {
 const QUICK_CHIPS = [
   { id: 'reflect', label: '🧘 Help me reflect' },
   { id: 'reminder', label: '🔔 Give me a reminder' },
-  { id: 'dua', label: '🤲 Make du‘a for me' },
+  { id: 'dua', label: "🤲 Make du'a for me" },
   { id: 'quran', label: '📖 Quranic guidance' },
 ]
 
 function ChatInner() {
   const router = useRouter()
   const params = useParams()
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: 'As-salamu alaykum, sister \u2665\ufe0f\nHow can I support you today?',
-      timestamp: new Date(),
-    },
-  ])
+  const conversationId = params.id as string
+
+  const [messages, setMessages] = useState<Message[]>([])
+  const [initialized, setInitialized] = useState(false)
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const conversationCreated = useRef(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+
+  // Load history from DB on mount
+  useEffect(() => {
+    async function init() {
+      try {
+        const dbMessages = await loadMessages(conversationId)
+        if (dbMessages.length > 0) {
+          conversationCreated.current = true
+          setMessages(dbMessages.map(m => ({
+            id: m.id,
+            role: m.role,
+            content: m.content,
+            timestamp: new Date(m.created_at),
+          })))
+        }
+      } catch {
+        // New conversation — no history yet, fine
+      } finally {
+        setInitialized(true)
+      }
+    }
+    init()
+  }, [conversationId])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -40,6 +61,7 @@ function ChatInner() {
   async function sendMessage(text: string) {
     if (!text.trim() || isLoading) return
     setError(null)
+
     const userMsg: Message = {
       id: Date.now().toString(),
       role: 'user',
@@ -51,6 +73,16 @@ function ChatInner() {
     setIsLoading(true)
 
     try {
+      // Create conversation row on first message, using the URL UUID as the DB ID
+      if (!conversationCreated.current) {
+        await createConversation(conversationId, 'Chat with Amina')
+        conversationCreated.current = true
+      }
+
+      // Save user message to DB
+      await saveMessage(conversationId, 'user', userMsg.content)
+
+      // Call AI
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -60,20 +92,34 @@ function ChatInner() {
       })
       if (res.status === 429) {
         setError('Taking a breath... please try again in a moment.')
-        setIsLoading(false)
         return
       }
       if (!res.ok) throw new Error('Response error')
+
       const data = await res.json()
-      setMessages(prev => [
-        ...prev,
-        { id: Date.now().toString() + '_a', role: 'assistant', content: data.content, timestamp: new Date() },
-      ])
+      const assistantMsg: Message = {
+        id: Date.now().toString() + '_a',
+        role: 'assistant',
+        content: data.content,
+        timestamp: new Date(),
+      }
+      setMessages(prev => [...prev, assistantMsg])
+
+      // Save assistant message to DB
+      await saveMessage(conversationId, 'assistant', data.content)
     } catch {
       setError('Something went wrong. Please try again.')
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (!initialized) {
+    return (
+      <div className="flex items-center justify-center min-h-dvh bg-cream">
+        <span className="text-3xl animate-pulse">🌙</span>
+      </div>
+    )
   }
 
   return (
@@ -95,8 +141,22 @@ function ChatInner() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
+        {/* Greeting — only on fresh conversation */}
+        {messages.length === 0 && (
+          <div className="flex justify-start">
+            <div className="w-7 h-7 rounded-full bg-rose-amina flex items-center justify-center mr-2 flex-shrink-0 mt-1">
+              <span className="text-white text-xs">🌙</span>
+            </div>
+            <div className="max-w-[78%] bg-ivory rounded-2xl rounded-tl-sm px-4 py-3">
+              <p className="text-sm leading-relaxed whitespace-pre-wrap text-charcoal">
+                {"As-salamu alaykum, sister ♥️\nHow can I support you today?"}
+              </p>
+            </div>
+          </div>
+        )}
+
         {messages.map(msg => (
-          <div key={msg.id} className={`flex ${ msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+          <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             {msg.role === 'assistant' && (
               <div className="w-7 h-7 rounded-full bg-rose-amina flex items-center justify-center mr-2 flex-shrink-0 mt-1">
                 <span className="text-white text-xs">🌙</span>
@@ -108,9 +168,7 @@ function ChatInner() {
                 : 'bg-ivory text-charcoal rounded-tl-sm'
             }`}>
               <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-              <p className={`text-xs mt-1 ${
-                msg.role === 'user' ? 'text-white/60' : 'text-charcoal/30'
-              }`}>
+              <p className={`text-xs mt-1 ${msg.role === 'user' ? 'text-white/60' : 'text-charcoal/30'}`}>
                 {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>
             </div>
@@ -142,13 +200,13 @@ function ChatInner() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Quick chips */}
-      {messages.length <= 1 && (
+      {/* Quick chips — only on fresh conversation */}
+      {messages.length === 0 && (
         <div className="px-4 pb-2 flex gap-2 overflow-x-auto">
           {QUICK_CHIPS.map(chip => (
             <button
               key={chip.id}
-              onClick={() => sendMessage(chip.label.replace(/^[\S]+ /, ''))}
+              onClick={() => sendMessage(chip.label.replace(/^\S+\s/, ''))}
               className="chip flex-shrink-0 text-xs"
             >
               {chip.label}
