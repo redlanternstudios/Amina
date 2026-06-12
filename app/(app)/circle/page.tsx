@@ -11,9 +11,8 @@ interface Circle {
   id: string
   name: string
   description: string | null
-  icon_url: string | null
-  is_private: boolean
-  member_count: number | null
+  avatar_url: string | null
+  is_public: boolean
 }
 
 interface MyCircle extends Circle {
@@ -57,10 +56,10 @@ export default function CirclePage() {
         return
       }
 
-      // My Circles — order by membership join time (circles has no updated_at)
+      // My Circles — order by membership join time
       const { data: memberships } = await supabase
         .from('circle_memberships')
-        .select('role, joined_at, circles(id, name, description, icon_url, is_private, member_count)')
+        .select('role, joined_at, circles(id, name, description, avatar_url, is_public)')
         .eq('user_id', user.id)
         .eq('status', 'active')
         .order('joined_at', { ascending: false })
@@ -79,8 +78,8 @@ export default function CirclePage() {
         // Discover — public circles the user hasn't joined
         let query = supabase
           .from('circles')
-          .select('id, name, description, icon_url, is_private, member_count')
-          .eq('is_private', false)
+          .select('id, name, description, avatar_url, is_public')
+          .eq('is_public', true)
           .limit(6)
 
         if (joinedIds.length > 0) {
@@ -90,9 +89,9 @@ export default function CirclePage() {
         setDiscoverCircles(discover ?? [])
       }
 
-      // Pending requests count
+      // Pending join requests (stored as pending memberships)
       const { count } = await supabase
-        .from('circle_join_requests')
+        .from('circle_memberships')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .eq('status', 'pending')
@@ -251,11 +250,20 @@ async function handleJoinRequest(circleId: string) {
 
   if (existing) return
 
-  // Direct join for public circles
+  // Check if circle is public — direct join if public, pending request if private
+  const { data: circle } = await supabase
+    .from('circles')
+    .select('is_public')
+    .eq('id', circleId)
+    .single()
+
+  const status = circle?.is_public ? 'active' : 'pending'
+
   const { error } = await supabase.from('circle_memberships').insert({
     circle_id: circleId,
     user_id: user.id,
     role: 'member',
+    status,
   })
 
   // Ignore duplicate key errors
@@ -275,12 +283,12 @@ function SectionHeader({ title, onViewAll }: { title: string; onViewAll: () => v
   )
 }
 
-function CircleAvatar({ circle, size = 'md' }: { circle: { name: string; icon_url?: string | null }; size?: 'sm' | 'md' }) {
+function CircleAvatar({ circle, size = 'md' }: { circle: { name: string; avatar_url?: string | null }; size?: 'sm' | 'md' }) {
   const sz = size === 'sm' ? 'w-9 h-9 text-base' : 'w-11 h-11 text-lg'
   return (
     <div className={`${sz} rounded-full bg-rose-100 flex items-center justify-center flex-shrink-0 overflow-hidden`}>
-      {circle.icon_url
-        ? <img src={circle.icon_url} alt={circle.name} className="w-full h-full object-cover" />
+      {circle.avatar_url
+        ? <img src={circle.avatar_url} alt={circle.name} className="w-full h-full object-cover" />
         : <span>🕌</span>
       }
     </div>
@@ -310,9 +318,6 @@ function MyCircleCard({ circle, onClick }: { circle: MyCircle; onClick: () => vo
           </p>
         )}
       </div>
-      {circle.member_count !== null && (
-        <span className="text-xs text-charcoal/40 flex-shrink-0">{circle.member_count}</span>
-      )}
       <span className="text-charcoal/20 flex-shrink-0">›</span>
     </button>
   )
@@ -333,9 +338,6 @@ function DiscoverCard({ circle, onJoin }: { circle: Circle; onJoin: () => void }
         <p className="font-semibold text-charcoal text-sm truncate">{circle.name}</p>
         {circle.description && (
           <p className="text-charcoal/50 text-xs mt-0.5 truncate">{circle.description}</p>
-        )}
-        {circle.member_count !== null && (
-          <p className="text-charcoal/30 text-xs mt-0.5">{circle.member_count.toLocaleString()} members</p>
         )}
       </div>
       <button
