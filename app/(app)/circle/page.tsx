@@ -52,7 +52,10 @@ export default function CirclePage() {
     async function load() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      if (!user) {
+        router.push('/login')
+        return
+      }
 
       // My Circles — order by membership join time (circles has no updated_at)
       const { data: memberships } = await supabase
@@ -235,13 +238,30 @@ export default function CirclePage() {
 
 async function handleJoinRequest(circleId: string) {
   const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return
-  await supabase.from('circle_join_requests').insert({
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) return
+
+  // Check if already a member
+  const { data: existing } = await supabase
+    .from('circle_memberships')
+    .select('id')
+    .eq('circle_id', circleId)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (existing) return
+
+  // Direct join for public circles
+  const { error } = await supabase.from('circle_memberships').insert({
     circle_id: circleId,
     user_id: user.id,
-    status: 'pending',
+    role: 'member',
   })
+
+  // Ignore duplicate key errors
+  if (error && error.code !== '23505') {
+    console.error('Failed to join circle:', error)
+  }
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, Suspense } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { loadMessages, saveMessage, createConversation } from '@/lib/supabase/chat'
+import { createClient } from '@/lib/supabase/client'
 
 interface Message {
   id: string
@@ -14,7 +14,7 @@ interface Message {
 const QUICK_CHIPS = [
   { id: 'reflect', label: '🧘 Help me reflect' },
   { id: 'reminder', label: '🔔 Give me a reminder' },
-  { id: 'dua', label: "🤲 Make du'a for me" },
+  { id: 'dua', label: '🤲 Make du\'a for me' },
   { id: 'quran', label: '📖 Quranic guidance' },
 ]
 
@@ -22,34 +22,63 @@ function ChatInner() {
   const router = useRouter()
   const params = useParams()
   const conversationId = params.id as string
+  const supabase = createClient()
 
   const [messages, setMessages] = useState<Message[]>([])
-  const [initialized, setInitialized] = useState(false)
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isInitializing, setIsInitializing] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const conversationCreated = useRef(false)
+  const [userId, setUserId] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
 
-  // Load history from DB on mount
+  // Load conversation + messages on mount
   useEffect(() => {
     async function init() {
-      try {
-        const dbMessages = await loadMessages(conversationId)
-        if (dbMessages.length > 0) {
-          conversationCreated.current = true
-          setMessages(dbMessages.map(m => ({
-            id: m.id,
-            role: m.role,
-            content: m.content,
-            timestamp: new Date(m.created_at),
-          })))
-        }
-      } catch {
-        // New conversation — no history yet, fine
-      } finally {
-        setInitialized(true)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.replace('/'); return }
+      setUserId(user.id)
+
+      // Ensure conversation exists; create if not
+      const { data: conv, error: convErr } = await supabase
+        .from('amina_conversations')
+        .select('id')
+        .eq('id', conversationId)
+        .eq('user_id', user.id)
+        .single()
+
+      if (convErr || !conv) {
+        const { error: insertErr } = await supabase
+          .from('amina_conversations')
+          .insert({ id: conversationId, user_id: user.id, title: 'New conversation' })
+        if (insertErr) console.error('Failed to create conversation:', insertErr)
       }
+
+      // Load existing messages
+      const { data: rows } = await supabase
+        .from('amina_messages')
+        .select('id, role, content, created_at')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true })
+
+      if (rows && rows.length > 0) {
+        setMessages(rows.map(r => ({
+          id: r.id,
+          role: r.role as 'user' | 'assistant',
+          content: r.content,
+          timestamp: new Date(r.created_at),
+        })))
+      } else {
+        // Seed the opening greeting (only on fresh conversation)
+        setMessages([{
+          id: 'greeting',
+          role: 'assistant',
+          content: 'As-salamu alaykum, sister ♥️\nHow can I support you today?',
+          timestamp: new Date(),
+        }])
+      }
+
+      setIsInitializing(false)
     }
     init()
   }, [conversationId])
@@ -58,12 +87,23 @@ function ChatInner() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  async function saveMessage(role: 'user' | 'assistant', content: string): Promise<string> {
+    const { data, error } = await supabase
+      .from('amina_messages')
+      .insert({ conversation_id: conversationId, user_id: userId, role, content })
+      .select('id')
+      .single()
+    if (error) console.error('Failed to save message:', error)
+    return data?.id ?? Date.now().toString()
+  }
+
   async function sendMessage(text: string) {
-    if (!text.trim() || isLoading) return
+    if (!text.trim() || isLoading || !userId) return
     setError(null)
 
+    const savedUserId = await saveMessage('user', text.trim())
     const userMsg: Message = {
-      id: Date.now().toString(),
+      id: savedUserId,
       role: 'user',
       content: text.trim(),
       timestamp: new Date(),
@@ -72,17 +112,13 @@ function ChatInner() {
     setInput('')
     setIsLoading(true)
 
+    // Update conversation updated_at
+    await supabase
+      .from('amina_conversations')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', conversationId)
+
     try {
-      // Create conversation row on first message, using the URL UUID as the DB ID
-      if (!conversationCreated.current) {
-        await createConversation(conversationId, 'Chat with Amina')
-        conversationCreated.current = true
-      }
-
-      // Save user message to DB
-      await saveMessage(conversationId, 'user', userMsg.content)
-
-      // Call AI
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -92,21 +128,17 @@ function ChatInner() {
       })
       if (res.status === 429) {
         setError('Taking a breath... please try again in a moment.')
+        setIsLoading(false)
         return
       }
       if (!res.ok) throw new Error('Response error')
-
       const data = await res.json()
-      const assistantMsg: Message = {
-        id: Date.now().toString() + '_a',
-        role: 'assistant',
-        content: data.content,
-        timestamp: new Date(),
-      }
-      setMessages(prev => [...prev, assistantMsg])
 
-      // Save assistant message to DB
-      await saveMessage(conversationId, 'assistant', data.content)
+      const savedAssistantId = await saveMessage('assistant', data.content)
+      setMessages(prev => [
+        ...prev,
+        { id: savedAssistantId, role: 'assistant', content: data.content, timestamp: new Date() },
+      ])
     } catch {
       setError('Something went wrong. Please try again.')
     } finally {
@@ -114,10 +146,13 @@ function ChatInner() {
     }
   }
 
-  if (!initialized) {
+  if (isInitializing) {
     return (
       <div className="flex items-center justify-center min-h-dvh bg-cream">
-        <span className="text-3xl animate-pulse">🌙</span>
+        <div className="flex flex-col items-center gap-3">
+          <span className="text-3xl animate-pulse">🌙</span>
+          <p className="text-charcoal/40 text-sm">Loading...</p>
+        </div>
       </div>
     )
   }
@@ -141,22 +176,8 @@ function ChatInner() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
-        {/* Greeting — only on fresh conversation */}
-        {messages.length === 0 && (
-          <div className="flex justify-start">
-            <div className="w-7 h-7 rounded-full bg-rose-amina flex items-center justify-center mr-2 flex-shrink-0 mt-1">
-              <span className="text-white text-xs">🌙</span>
-            </div>
-            <div className="max-w-[78%] bg-ivory rounded-2xl rounded-tl-sm px-4 py-3">
-              <p className="text-sm leading-relaxed whitespace-pre-wrap text-charcoal">
-                {"As-salamu alaykum, sister ♥️\nHow can I support you today?"}
-              </p>
-            </div>
-          </div>
-        )}
-
         {messages.map(msg => (
-          <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+          <div key={msg.id} className={`flex ${ msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             {msg.role === 'assistant' && (
               <div className="w-7 h-7 rounded-full bg-rose-amina flex items-center justify-center mr-2 flex-shrink-0 mt-1">
                 <span className="text-white text-xs">🌙</span>
@@ -168,7 +189,9 @@ function ChatInner() {
                 : 'bg-ivory text-charcoal rounded-tl-sm'
             }`}>
               <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-              <p className={`text-xs mt-1 ${msg.role === 'user' ? 'text-white/60' : 'text-charcoal/30'}`}>
+              <p className={`text-xs mt-1 ${
+                msg.role === 'user' ? 'text-white/60' : 'text-charcoal/30'
+              }`}>
                 {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>
             </div>
@@ -200,13 +223,13 @@ function ChatInner() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Quick chips — only on fresh conversation */}
-      {messages.length === 0 && (
+      {/* Quick chips */}
+      {messages.length <= 1 && (
         <div className="px-4 pb-2 flex gap-2 overflow-x-auto">
           {QUICK_CHIPS.map(chip => (
             <button
               key={chip.id}
-              onClick={() => sendMessage(chip.label.replace(/^\S+\s/, ''))}
+              onClick={() => sendMessage(chip.label.replace(/^[\S]+ /, ''))}
               className="chip flex-shrink-0 text-xs"
             >
               {chip.label}
