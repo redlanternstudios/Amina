@@ -73,7 +73,7 @@ interface PendingInvite {
   }
 }
 
-export default function CirclePage() {
+export default function CirclesPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('my')
   const [searchQuery, setSearchQuery] = useState('')
@@ -83,7 +83,6 @@ export default function CirclePage() {
   const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([])
   const [activity, setActivity] = useState<ActivityItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
   const mySectionRef = useRef<HTMLDivElement>(null)
   const discoverSectionRef = useRef<HTMLDivElement>(null)
@@ -104,7 +103,6 @@ export default function CirclePage() {
         router.push('/login')
         return
       }
-      setCurrentUserId(user.id)
 
       // 1. My circles (active memberships)
       const { data: memberships } = await supabase
@@ -289,11 +287,11 @@ export default function CirclePage() {
       <div className="sticky top-0 z-20 px-4 pt-12 pb-0 bg-cream/95 backdrop-blur-sm">
         <div className="flex items-center justify-between mb-1">
           <div>
-            <h1 className="font-display text-2xl text-charcoal">Circle</h1>
+            <h1 className="font-display text-2xl text-charcoal">Circles</h1>
             <p className="text-charcoal/50 text-xs">Connect, support, and grow together in faith.</p>
           </div>
           <button
-            onClick={() => router.push('/circle/create')}
+            onClick={() => router.push('/circles/create')}
             className="w-9 h-9 bg-rose-amina rounded-full flex items-center justify-center shadow-sm active:opacity-80"
             aria-label="Create circle"
           >
@@ -359,7 +357,7 @@ export default function CirclePage() {
                       key={c.id}
                       circle={c}
                       variant="member"
-                      onClick={(id) => router.push(`/circle/${id}`)}
+                      onClick={(id) => router.push(`/circles/${id}`)}
                     />
                   ))}
                 </div>
