@@ -1,63 +1,129 @@
 'use client'
 
-import { useState, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useState, useCallback, useEffect } from 'react'
 
-export const FAITH_REACTIONS = [
-  { key: 'ameen', label: '🤲 Ameen', arabic: 'آمين' },
-  { key: 'subhanallah', label: '🌙 SubhanAllah', arabic: 'سُبْحَانَ ٱللَّٰهِ' },
-  { key: 'alhamdulillah', label: '🌿 Alhamdulillah', arabic: 'ٱلْحَمْدُ لِلَّٰهِ' },
-  { key: 'mashallah', label: '🌸 MashaAllah', arabic: 'مَا شَاءَ ٱللَّٰهُ' },
-  { key: 'heart', label: '❤️ Heart', arabic: '' },
+const FAITH_REACTIONS = [
+  { key: 'ameen', emoji: '🥲', label: 'Ameen', arabic: 'آمين' },
+  { key: 'subhanallah', emoji: '🌙', label: 'SubhanAllah', arabic: 'سُبْحَانَ ٱللَّهِ' },
+  { key: 'alhamdulillah', emoji: '🌿', label: 'Alhamdulillah', arabic: 'ٱلْحَمْدُ لِلَّهِ' },
+  { key: 'mashallah', emoji: '🌸', label: 'MashaAllah', arabic: 'مَا شَاءَ ٱللَّهُ' },
+  { key: 'heart', emoji: '❤️', label: 'Heart', arabic: '' },
 ]
 
-interface Reaction {
-  id?: string
-  user_id: string
+interface ExistingReaction {
   reaction: string
+  user_id: string
 }
 
 interface Props {
   targetId: string
   targetType: 'message' | 'post'
-  existingReactions?: Reaction[]
+  existingReactions?: ExistingReaction[]
   currentUserId?: string
+  compact?: boolean
 }
 
-export default function FaithReactions({targetId,targetType,existingReactions=[],currentUserId}: Props) {
-  if (!currentUserId) return null
+export default function FaithReactions({
+  targetId,
+  targetType,
+  existingReactions = [],
+  currentUserId,
+  compact = true,
+}: Props) {
+  const [reactions, setReactions] = useState<ExistingReaction[]>(existingReactions)
 
-  const [reactions, setReactions] = useState<Reaction[]>(existingReactions)
-  const supabase = createClient()
+  // Sync when existingReactions changes (e.g., on page load)
+  useEffect(() => {
+    setReactions(existingReactions)
+  }, [existingReactions])
 
-  const toggleReaction = useCallback(async (reactionKey: string) => {
-    if (!currentUserId) return
-    const existing = reactions.find(r => r.reaction === reactionKey && r.user_id === currentUserId)
+  const toggleReaction = useCallback(async (key: string) => {
+    if (!targetId || !currentUserId) return
+
+    const existing = reactions.find(r => r.reaction === key && r.user_id === currentUserId)
 
     if (existing) {
-      const { error } = await supabase.from('circle_reactions').delete()
-        .eq('user_id', currentUserId).eq('target_id', targetId).eq('target_type', targetType).eq('reaction', reactionKey)
-      if (!error) setReactions(prev => prev.filter(r => !(r.reaction === reactionKey && r.user_id === currentUserId)))
+      // Optimistic remove
+      setReactions(prev => prev.filter(r => !(r.reaction === key && r.user_id === currentUserId)))
+      try {
+        const res = await fetch('/api/reactions', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ target_id: targetId, target_type: targetType, reaction: key }),
+        })
+        if (!res.ok) {
+          // Rollback on failure
+          setReactions(prev => [...prev, { reaction: key, user_id: currentUserId }])
+        }
+      } catch {
+        // Rollback on failure
+        setReactions(prev => [...prev, { reaction: key, user_id: currentUserId }])
+      }
     } else {
-      const { error } = await supabase.from('circle_reactions').insert({
-        user_id: currentUserId, target_id: targetId, target_type: targetType, reaction: reactionKey,
-      })
-      if (!error) setReactions(prev => [...prev, { user_id: currentUserId!, reaction: reactionKey }])
+      // Optimistic add
+      setReactions(prev => [...prev, { reaction: key, user_id: currentUserId }])
+      try {
+        const res = await fetch('/api/reactions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ target_id: targetId, target_type: targetType, reaction: key }),
+        })
+        if (!res.ok) {
+          // Rollback on failure
+          setReactions(prev => prev.filter(r => !(r.reaction === key && r.user_id === currentUserId)))
+        }
+      } catch {
+        // Rollback on failure
+        setReactions(prev => prev.filter(r => !(r.reaction === key && r.user_id === currentUserId)))
+      }
     }
-  }, [currentUserId, targetId, targetType, reactions, supabase])
+  }, [targetId, targetType, currentUserId, reactions])
 
-  function countFor(key: string) { return reactions.filter(r => r.reaction === key).length }
-  function hasReacted(key: string) { return reactions.some(r => r.reaction === key && r.user_id === currentUserId) }
+  if (!currentUserId) return null
+
+  const countFor = (key: string) => reactions.filter(r => r.reaction === key).length
+  const hasReacted = (key: string) => currentUserId ? reactions.some(r => r.reaction === key && r.user_id === currentUserId) : false
 
   return (
-    <div className="flex flex-wrap gap-1.5 mt-1">
+    <div className="flex flex-wrap gap-1 mt-1.5" role="group" aria-label="Reactions">
       {FAITH_REACTIONS.map(r => {
         const count = countFor(r.key)
-        const reacted = hasReacted(r.key)
+        const active = hasReacted(r.key)
+
+        // Compact mode: always show all 5 reactions (emoji + count if > 0)
+        if (compact) {
+          return (
+            <button
+              key={r.key}
+              onClick={() => toggleReaction(r.key)}
+              className={`text-xs px-1.5 py-0.5 rounded-full transition-colors flex items-center gap-0.5 ${
+                active
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+              }`}
+              title={r.label}
+              aria-label={`${r.emoji} ${r.label}${count > 0 ? ` (${count})` : ''}`}
+            >
+              <span>{r.emoji}</span>
+              {count > 0 && <span className="text-[11px] font-medium ml-0.5">{count}</span>}
+            </button>
+          )
+        }
+
+        // Standard mode — hide when count=0 (backward compatible)
+        if (count === 0) return null
+
         return (
-          <button key={r.key} onClick={() => toggleReaction(r.key)} disabled={!currentUserId}
-            className={`text-xs px-2 py-0.5 rounded-full transition-colors ${reacted ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'} disabled:opacity-50`}>
-            {r.label} {count > 0 && <span className="ml-0.5 font-medium">{count}</span>}
+          <button
+            key={r.key}
+            onClick={() => toggleReaction(r.key)}
+            className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
+              active
+                ? 'bg-emerald-100 text-emerald-700'
+                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+            }`}
+          >
+            {r.emoji} {r.label} <span className="ml-0.5 font-medium">{count}</span>
           </button>
         )
       })}
