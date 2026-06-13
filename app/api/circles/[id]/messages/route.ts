@@ -16,7 +16,7 @@ export async function GET(
 
     const { data, error } = await supabase
       .from('circle_messages')
-      .select('*, circle_profiles!inner(display_name, avatar_url)')
+      .select('*, circle_profiles(display_name, avatar_url)')
       .eq('circle_id', id)
       .order('created_at', { ascending: true })
       .limit(100)
@@ -58,7 +58,7 @@ export async function POST(
         user_id: user.id,
         content: body.content.trim(),
       })
-      .select('*, circle_profiles!inner(display_name, avatar_url)')
+      .select('*, circle_profiles(display_name, avatar_url)')
       .single()
 
     if (error) {

@@ -33,7 +33,7 @@ export async function POST(
           user_id: user.id,
           role: 'member',
         })
-        .select('*, circle_profiles!inner(display_name, avatar_url)')
+        .select('*')
         .single()
 
       if (error?.code === '23505') {
