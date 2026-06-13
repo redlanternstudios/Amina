@@ -88,11 +88,13 @@ export async function GET(
       .single()
 
     return NextResponse.json({
-      ...circle,
-      members: (members as unknown as CircleMember[]) || [],
-      member_count: memberCount ?? 0,
-      last_message: lastMessage ?? null,
-      my_role: membership.role,
+      circle: {
+        ...circle,
+        members: (members as unknown as CircleMember[]) || [],
+        member_count: memberCount ?? 0,
+        last_message: lastMessage ?? null,
+        my_role: membership.role,
+      },
     })
   } catch (err) {
     console.error('Unexpected error in GET /api/circles/[id]:', err)
