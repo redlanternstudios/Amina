@@ -16,6 +16,7 @@ const newsreader = Newsreader({
   style: ['normal', 'italic'],
   variable: '--font-display',
   display: 'swap',
+  adjustFontFallback: false,
 })
 
 // Amina's voice font — warm, literary, unmistakably feminine
