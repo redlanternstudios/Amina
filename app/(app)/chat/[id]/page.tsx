@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, Suspense } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { ChevronLeft, MoreHorizontal, ArrowUp, Heart, Bell, HandHeart, BookOpen } from 'lucide-react'
 import AminaIcon from '@/components/brand/AminaIcon'
 
@@ -32,6 +32,8 @@ function AminaAvatar({ size = 36 }: { size?: number }) {
 
 function ChatInner() {
   const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -44,10 +46,22 @@ function ChatInner() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const autoSentRef = useRef(false)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  // Auto-send the ?q= param from home page on first mount
+  useEffect(() => {
+    const q = searchParams.get('q')
+    if (!q || autoSentRef.current) return
+    autoSentRef.current = true
+    // Clean the URL so a refresh doesn't re-send
+    router.replace(pathname, { scroll: false })
+    sendMessage(q)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   async function sendMessage(text: string) {
     if (!text.trim() || isLoading) return

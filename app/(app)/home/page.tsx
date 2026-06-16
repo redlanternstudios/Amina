@@ -8,10 +8,10 @@ import AppHeader from '@/components/app/AppHeader'
 import AminaIcon from '@/components/brand/AminaIcon'
 
 const QUICK_CHIPS = [
-  { id: 'reflect', icon: Heart, label: 'Reflect' },
-  { id: 'guidance', icon: Moon, label: 'Guidance' },
-  { id: 'learn', icon: BookOpen, label: 'Learn' },
-  { id: 'grow', icon: Leaf, label: 'Grow' },
+  { id: 'reflect', icon: Heart, label: 'Reflect', q: 'I need help reflecting on something.' },
+  { id: 'guidance', icon: Moon, label: 'Guidance', q: 'I need some Islamic guidance today.' },
+  { id: 'learn', icon: BookOpen, label: 'Learn', q: 'Teach me something from the Quran or Sunnah.' },
+  { id: 'grow', icon: Leaf, label: 'Grow', q: 'Help me grow in my faith and character.' },
 ]
 
 const RECENT_CONVERSATIONS = [
@@ -24,9 +24,14 @@ export default function HomePage() {
   const router = useRouter()
   const [message, setMessage] = useState('')
 
+  function startChat(text: string) {
+    if (!text.trim()) return
+    const id = crypto.randomUUID()
+    router.push(`/chat/${id}?q=${encodeURIComponent(text.trim())}`)
+  }
+
   function handleSend() {
-    if (!message.trim()) return
-    router.push(`/chat?q=${encodeURIComponent(message)}`)
+    startChat(message)
   }
 
   return (
@@ -58,7 +63,7 @@ export default function HomePage() {
             {QUICK_CHIPS.map(chip => {
               const Icon = chip.icon
               return (
-                <button key={chip.id} onClick={() => router.push(`/chat?topic=${chip.id}`)} className="chip flex-shrink-0 text-xs">
+                <button key={chip.id} onClick={() => startChat(chip.q)} className="chip flex-shrink-0 text-xs">
                   <Icon size={14} strokeWidth={1.5} className="text-olive" /> {chip.label}
                 </button>
               )
