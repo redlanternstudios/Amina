@@ -69,9 +69,10 @@ export async function POST(req: NextRequest) {
       verdict: result.verdict,
       reasons: result.reasons,
       reviewed: false,
-    }).throwOnError().catch((err: Error) => {
+    }).then(({ error: err }) => { if (err) {
       // Log but don't fail the moderation response
       console.error('[moderate-image] Failed to insert moderation_queue row', err.message)
+    }
     })
   }
 
