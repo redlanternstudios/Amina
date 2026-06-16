@@ -135,7 +135,15 @@ function ChatInner() {
                 msg.role === 'user' ? 'text-white rounded-tr-sm bg-rose-amina' : 'bg-ivory text-charcoal rounded-tl-sm'
               }`}
             >
-              <p className={`leading-relaxed whitespace-pre-wrap ${msg.role === 'assistant' ? 'font-amina-voice text-[16px]' : 'text-sm'}`}>{msg.content}</p>
+              {msg.role === 'assistant' ? (
+                <div className="font-amina-voice text-[16px] leading-relaxed space-y-2">
+                  {msg.content.split(/\n\n+/).map((para, i) => (
+                    <p key={i} className="whitespace-pre-wrap">{para.trim()}</p>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+              )}
               <p className={`text-xs mt-1 ${msg.role === 'user' ? 'text-white/60' : 'text-charcoal/30'}`}>
                 {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>
