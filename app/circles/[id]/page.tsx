@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import CircleAvatar from '@/components/circle/CircleAvatar'
-import CircleDetailSkeleton from '@/components/circle/CircleDetailSkeleton'
 import FaithReactions from '@/components/circle/FaithReactions'
 import { Spinner } from '@/components/ui/spinner'
 import { ArrowLeft, MessageCircle, FileText, Users, Send, Plus, X } from 'lucide-react'
@@ -262,8 +261,8 @@ export default function CircleDetailPage() {
   // --- Loading state ---
   if (loading) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-8">
-        <CircleDetailSkeleton />
+      <div className="mx-auto max-w-4xl px-4 py-8 flex items-center justify-center min-h-48">
+        <Spinner size="lg" />
       </div>
     )
   }
