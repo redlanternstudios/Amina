@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ChevronLeft } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 type CirclePreview = {
   id: string
@@ -73,9 +74,17 @@ export default function JoinCirclePage() {
     if (!preview || joining || isFull) return
     setJoining(true)
     try {
+      // Get the current session token from the browser client
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`
+      }
+
       const res = await fetch('/api/circles/join', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ invite_code: code }),
       })
       const data = await res.json()

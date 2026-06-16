@@ -1,11 +1,29 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
 
 // POST /api/circles/join — join by invite code
 export async function POST(req: Request) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  // Prefer Bearer token (sent by client to bypass SSR cookie issues),
+  // fall back to cookie-based auth.
+  const authHeader = req.headers.get('Authorization')
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
+
+  // Use the service-role key to create an admin client that can verify the
+  // JWT and then perform inserts with the user's identity.
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    token ? { global: { headers: { Authorization: `Bearer ${token}` } } } : undefined
+  )
+
+  const { data: { user }, error: userErr } = token
+    ? await supabase.auth.getUser(token)
+    : await supabase.auth.getSession().then(({ data }) => ({
+        data: { user: data.session?.user ?? null },
+        error: null,
+      }))
+
+  if (userErr || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { invite_code } = await req.json()
   if (!invite_code?.trim()) return NextResponse.json({ error: 'invite_code required' }, { status: 400 })
