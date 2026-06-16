@@ -71,59 +71,37 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
     }
 
-    const groqKey = process.env.GROQ_API_KEY
     const gatewayKey = process.env.AI_GATEWAY_API_KEY
-
-    // Prefer direct Groq (key is confirmed set), fall back to AI Gateway, then stub.
-    const provider = groqKey
-      ? {
-          url: 'https://api.groq.com/openai/v1/chat/completions',
-          key: groqKey,
-          model: 'llama-3.3-70b-versatile',
-          source: 'groq',
-        }
-      : gatewayKey
-        ? {
-            url: 'https://ai-gateway.vercel.sh/v1/chat/completions',
-            key: gatewayKey,
-            model: 'groq/llama-3.3-70b-versatile',
-            source: 'gateway',
-          }
-        : null
-
-    // Dev stub — only reached when no API key is configured at all
-    if (!provider) {
+    if (!gatewayKey) {
       return NextResponse.json({
-        content: "Assalamu alaykum, sister. I'm so glad you're here. No AI provider is configured yet — please add a GROQ_API_KEY to your environment variables.",
+        content: "Assalamu alaykum, sister. I'm here — but no AI provider is configured yet. Please add an AI_GATEWAY_API_KEY to your environment variables.",
         source: 'stub',
       })
     }
 
-    const callProvider = () =>
-      fetch(provider.url, {
+    const callDeepSeek = () =>
+      fetch('https://ai-gateway.vercel.sh/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${provider.key}`,
+          'Authorization': `Bearer ${gatewayKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: provider.model,
+          model: 'deepseek/deepseek-chat',
           messages: [
             { role: 'system', content: SYSTEM_PROMPT },
             ...messages,
           ],
-          max_tokens: 250,
-          temperature: 0.7,
+          max_tokens: 300,
+          temperature: 0.75,
         }),
       })
 
-    // AI Gateway / Groq call with one automatic retry on 429
-    let response = await callProvider()
+    let response = await callDeepSeek()
 
     if (response.status === 429) {
-      // Wait 1 second and try once more before surfacing the error
-      await new Promise((r) => setTimeout(r, 1000))
-      response = await callProvider()
+      await new Promise(r => setTimeout(r, 1200))
+      response = await callDeepSeek()
     }
 
     if (response.status === 429) {
@@ -131,8 +109,8 @@ export async function POST(req: NextRequest) {
     }
 
     if (!response.ok) {
-      const error = await response.text()
-      console.error('Groq API error:', error)
+      const err = await response.text()
+      console.error('[amina] DeepSeek error:', response.status, err)
       return NextResponse.json({ error: 'AI service unavailable' }, { status: 502 })
     }
 
@@ -143,9 +121,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Empty response from AI' }, { status: 502 })
     }
 
-    return NextResponse.json({ content, source: provider.source })
+    return NextResponse.json({ content, source: 'deepseek' })
   } catch (err) {
-    console.error('Chat route error:', err)
+    console.error('[amina] Chat route error:', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

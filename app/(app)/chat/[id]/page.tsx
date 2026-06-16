@@ -1,15 +1,22 @@
 'use client'
 
-import { useState, useRef, useEffect, Suspense } from 'react'
-import { useRouter, useSearchParams, usePathname } from 'next/navigation'
+import { useState, useRef, useEffect, useCallback, Suspense } from 'react'
+import { useRouter, useSearchParams, usePathname, useParams } from 'next/navigation'
 import { ChevronLeft, MoreHorizontal, ArrowUp, Heart, Bell, HandHeart, BookOpen } from 'lucide-react'
 import AminaIcon from '@/components/brand/AminaIcon'
+import {
+  loadMessages,
+  saveMessage,
+  createConversation,
+  type DBMessage,
+} from '@/lib/supabase/chat'
 
-interface Message {
+interface UIMessage {
   id: string
   role: 'user' | 'assistant'
   content: string
   timestamp: Date
+  persisted?: boolean
 }
 
 const QUICK_CHIPS = [
@@ -19,7 +26,15 @@ const QUICK_CHIPS = [
   { id: 'quran', label: 'Quranic guidance', icon: BookOpen, prompt: 'I need Quranic guidance on something.' },
 ]
 
-function AminaAvatar({ size = 36 }: { size?: number }) {
+const GREETING: UIMessage = {
+  id: '__greeting__',
+  role: 'assistant',
+  content: "Salam, sister.\nI'm so glad you're here.\nWhat's on your heart today?",
+  timestamp: new Date(),
+  persisted: true,
+}
+
+function AminaAvatar({ size = 32 }: { size?: number }) {
   return (
     <div
       className="flex items-center justify-center rounded-full bg-cream flex-shrink-0"
@@ -30,155 +45,244 @@ function AminaAvatar({ size = 36 }: { size?: number }) {
   )
 }
 
+function dbToUI(m: DBMessage): UIMessage {
+  return {
+    id: m.id,
+    role: m.role,
+    content: m.content,
+    timestamp: new Date(m.created_at),
+    persisted: true,
+  }
+}
+
 function ChatInner() {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: 'As-salamu alaykum, sister.\nHow can I support you today?',
-      timestamp: new Date(),
-    },
-  ])
+  const params = useParams<{ id: string }>()
+  const conversationId = params?.id
+
+  const [messages, setMessages] = useState<UIMessage[]>([GREETING])
+  const messagesRef = useRef<UIMessage[]>([GREETING])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const autoSentRef = useRef(false)
+  const textareaRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  // Keep ref in sync so async callbacks always see the latest messages
+  const setMessagesAndRef = useCallback((updater: (prev: UIMessage[]) => UIMessage[]) => {
+    setMessages(prev => {
+      const next = updater(prev)
+      messagesRef.current = next
+      return next
+    })
+  }, [])
 
-  // Auto-send the ?q= param from home page on first mount
+  // Load conversation history from DB on mount
   useEffect(() => {
+    if (!conversationId) { setIsLoadingHistory(false); return }
+
+    loadMessages(conversationId)
+      .then(dbMessages => {
+        if (dbMessages.length > 0) {
+          setMessagesAndRef(() => [GREETING, ...dbMessages.map(dbToUI)])
+        }
+      })
+      .catch(() => {
+        // Conversation may be brand new — that's fine, show greeting only
+      })
+      .finally(() => setIsLoadingHistory(false))
+  }, [conversationId])
+
+  // Auto-send ?q= param from home page (only after history loads)
+  useEffect(() => {
+    if (isLoadingHistory) return
     const q = searchParams.get('q')
     if (!q || autoSentRef.current) return
     autoSentRef.current = true
-    // Clean the URL so a refresh doesn't re-send
     router.replace(pathname, { scroll: false })
     sendMessage(q)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [isLoadingHistory])
 
-  async function sendMessage(text: string) {
-    if (!text.trim() || isLoading) return
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, isLoading])
+
+  const sendMessage = useCallback(async (text: string) => {
+    if (!text.trim() || isLoading || isLoadingHistory) return
     setError(null)
-    const userMsg: Message = {
-      id: Date.now().toString(),
+
+    const userMsg: UIMessage = {
+      id: `u_${Date.now()}`,
       role: 'user',
       content: text.trim(),
       timestamp: new Date(),
     }
-    setMessages(prev => [...prev, userMsg])
+
+    // Optimistically add to UI immediately
+    setMessagesAndRef(prev => [...prev, userMsg])
     setInput('')
     setIsLoading(true)
 
+    // Snapshot full history right now (including the new user message) for AI context
+    const contextMessages = [...messagesRef.current, userMsg]
+      .filter(m => m.id !== '__greeting__')
+      .map(m => ({ role: m.role, content: m.content }))
+
     try {
+      // Save user message to DB
+      let savedUserMsg: DBMessage | null = null
+      if (conversationId) {
+        savedUserMsg = await saveMessage(conversationId, 'user', text.trim())
+        setMessagesAndRef(prev =>
+          prev.map(m => m.id === userMsg.id ? { ...m, id: savedUserMsg!.id, persisted: true } : m)
+        )
+      }
+
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [...messages, userMsg].map(m => ({ role: m.role, content: m.content })),
-        }),
+        body: JSON.stringify({ messages: contextMessages }),
       })
+
       if (res.status === 429) {
         setError('Taking a breath... please try again in a moment.')
-        setIsLoading(false)
         return
       }
-      if (!res.ok) throw new Error('Response error')
+      if (!res.ok) throw new Error('api_error')
+
       const data = await res.json()
-      setMessages(prev => [
-        ...prev,
-        { id: Date.now().toString() + '_a', role: 'assistant', content: data.content, timestamp: new Date() },
-      ])
+      const assistantContent: string = data.content
+
+      // Add assistant response to UI
+      const assistantMsg: UIMessage = {
+        id: `a_${Date.now()}`,
+        role: 'assistant',
+        content: assistantContent,
+        timestamp: new Date(),
+      }
+      setMessagesAndRef(prev => [...prev, assistantMsg])
+
+      // Save assistant response to DB
+      if (conversationId) {
+        const savedAssistant = await saveMessage(conversationId, 'assistant', assistantContent)
+        setMessagesAndRef(prev =>
+          prev.map(m => m.id === assistantMsg.id ? { ...m, id: savedAssistant.id, persisted: true } : m)
+        )
+      }
     } catch {
       setError('Something went wrong. Please try again.')
+      // Remove the optimistic user message on failure
+      setMessagesAndRef(prev => prev.filter(m => m.id !== userMsg.id))
     } finally {
       setIsLoading(false)
     }
-  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationId, isLoading, isLoadingHistory, setMessagesAndRef])
+
+  const userMessageCount = messages.filter(m => m.role === 'user').length
 
   return (
-    <div className="flex flex-col min-h-dvh bg-cream">
+    <div className="flex flex-col h-dvh" style={{ background: 'var(--amina-soft-cream)' }}>
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 pt-4 pb-3 bg-cream" style={{ borderBottom: '1px solid var(--amina-hairline)' }}>
-        <button onClick={() => router.back()} aria-label="Back" className="text-secondary">
+      <div
+        className="flex items-center gap-3 px-4 pt-12 pb-3 flex-shrink-0"
+        style={{ borderBottom: '1px solid var(--amina-hairline)', background: 'var(--amina-soft-cream)' }}
+      >
+        <button onClick={() => router.push('/home')} aria-label="Back" style={{ color: 'var(--amina-soft-charcoal)' }}>
           <ChevronLeft size={24} strokeWidth={1.5} />
         </button>
-        <div className="flex items-center gap-2 flex-1">
+        <div className="flex items-center gap-2.5 flex-1">
           <AminaAvatar size={36} />
           <div>
-            <p className="font-semibold text-charcoal text-sm">Amina</p>
-            <p className="text-muted text-xs">Faith companion</p>
+            <p className="font-semibold text-charcoal text-[14px]">Amina</p>
+            <p className="text-[11px]" style={{ color: 'rgba(44,41,38,0.45)' }}>Faith companion</p>
           </div>
         </div>
-        <button aria-label="More options" className="text-muted">
+        <button aria-label="More options" style={{ color: 'rgba(44,41,38,0.4)' }}>
           <MoreHorizontal size={20} strokeWidth={1.5} />
         </button>
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
-        {messages.map(msg => (
-          <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            {msg.role === 'assistant' && (
-              <div className="mr-2 mt-1">
-                <AminaAvatar size={28} />
-              </div>
-            )}
-            <div
-              className={`max-w-[78%] rounded-2xl px-4 py-3 ${
-                msg.role === 'user' ? 'text-white rounded-tr-sm bg-rose-amina' : 'bg-ivory text-charcoal rounded-tl-sm'
-              }`}
-            >
-              {msg.role === 'assistant' ? (
-                <div className="font-amina-voice text-[16px] leading-relaxed space-y-2">
-                  {msg.content.split(/\n\n+/).map((para, i) => (
-                    <p key={i} className="whitespace-pre-wrap">{para.trim()}</p>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-              )}
-              <p className={`text-xs mt-1 ${msg.role === 'user' ? 'text-white/60' : 'text-muted'}`}>
-                {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </p>
+        {isLoadingHistory ? (
+          <div className="flex justify-center pt-8">
+            <div className="flex gap-1">
+              {[0, 1, 2].map(i => (
+                <div key={i} className="w-2 h-2 rounded-full animate-bounce" style={{ background: 'var(--amina-muted-gold)', animationDelay: `${i * 150}ms` }} />
+              ))}
             </div>
           </div>
-        ))}
+        ) : (
+          messages.map(msg => (
+            <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start items-end gap-2'}`}>
+              {msg.role === 'assistant' && <AminaAvatar size={28} />}
+              <div
+                className={`rounded-2xl px-4 py-3 ${
+                  msg.role === 'user'
+                    ? 'text-white rounded-tr-sm max-w-[78%]'
+                    : 'text-charcoal rounded-tl-sm max-w-[82%]'
+                }`}
+                style={
+                  msg.role === 'user'
+                    ? { background: 'var(--amina-primary-action)' }
+                    : { background: 'var(--amina-warm-ivory)', border: '1px solid var(--amina-hairline)' }
+                }
+              >
+                {msg.role === 'assistant' ? (
+                  <div className="font-amina-voice text-[15px] leading-relaxed space-y-2">
+                    {msg.content.split(/\n\n+/).map((para, i) => (
+                      <p key={i} className="whitespace-pre-wrap">{para.trim()}</p>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[14px] leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                )}
+                <p className={`text-[11px] mt-1 ${msg.role === 'user' ? 'text-white/60 text-right' : 'text-muted'}`}>
+                  {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+            </div>
+          ))
+        )}
 
         {isLoading && (
-          <div className="flex justify-start">
-            <div className="mr-2">
-              <AminaAvatar size={28} />
-            </div>
-            <div className="bg-ivory rounded-2xl rounded-tl-sm px-4 py-3">
+          <div className="flex justify-start items-end gap-2">
+            <AminaAvatar size={28} />
+            <div
+              className="rounded-2xl rounded-tl-sm px-4 py-3"
+              style={{ background: 'var(--amina-warm-ivory)', border: '1px solid var(--amina-hairline)' }}
+            >
               <div className="flex gap-1">
-                <span className="w-2 h-2 rounded-full bg-charcoal/20 animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="w-2 h-2 rounded-full bg-charcoal/20 animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="w-2 h-2 rounded-full bg-charcoal/20 animate-bounce" style={{ animationDelay: '300ms' }} />
+                {[0, 1, 2].map(i => (
+                  <span key={i} className="w-2 h-2 rounded-full animate-bounce" style={{ background: 'rgba(44,41,38,0.25)', animationDelay: `${i * 150}ms` }} />
+                ))}
               </div>
             </div>
           </div>
         )}
 
         {error && (
-          <div className="rounded-xl px-4 py-3 text-center" style={{ backgroundColor: 'var(--amina-rose-selected)' }}>
-            <p className="text-rose-amina text-sm">{error}</p>
-            <button onClick={() => setError(null)} className="text-muted text-xs mt-1">Dismiss</button>
+          <div
+            className="rounded-xl px-4 py-3 text-center"
+            style={{ background: 'var(--amina-rose-selected)' }}
+          >
+            <p className="text-[13px]" style={{ color: 'var(--amina-primary-action)' }}>{error}</p>
+            <button onClick={() => setError(null)} className="text-[11px] mt-1" style={{ color: 'rgba(44,41,38,0.45)' }}>Dismiss</button>
           </div>
         )}
 
         <div ref={bottomRef} />
       </div>
 
-      {/* Quick chips */}
-      {messages.length <= 1 && (
-        <div className="px-4 pb-2 flex gap-2 overflow-x-auto">
+      {/* Quick chips — only before any user messages */}
+      {!isLoadingHistory && userMessageCount === 0 && (
+        <div className="px-4 pb-2 flex gap-2 overflow-x-auto flex-shrink-0">
           {QUICK_CHIPS.map(chip => {
             const Icon = chip.icon
             return (
@@ -195,26 +299,39 @@ function ChatInner() {
       )}
 
       {/* Input */}
-      <div className="px-4 pb-6 pt-2" style={{ borderTop: '1px solid var(--amina-hairline)' }}>
-        <div className="flex items-center gap-2 rounded-full px-4 py-2.5 bg-ivory" style={{ border: '1px solid var(--amina-border)' }}>
+      <div
+        className="px-4 pb-[max(env(safe-area-inset-bottom),1.25rem)] pt-2 flex-shrink-0"
+        style={{ borderTop: '1px solid var(--amina-hairline)', background: 'var(--amina-soft-cream)' }}
+      >
+        <div
+          className="flex items-center gap-2 rounded-full px-4 py-2.5"
+          style={{ background: 'var(--amina-warm-ivory)', border: '1px solid var(--amina-hairline)' }}
+        >
           <input
+            ref={textareaRef}
             value={input}
             onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage(input)}
-            placeholder="Type your message..."
-            className="flex-1 bg-transparent text-sm text-charcoal placeholder:text-muted outline-none"
+            onKeyDown={e => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                sendMessage(input)
+              }
+            }}
+            placeholder="Share what's on your heart..."
+            className="flex-1 bg-transparent text-[14px] text-charcoal placeholder:text-muted outline-none"
           />
           <button
             onClick={() => sendMessage(input)}
-            disabled={!input.trim() || isLoading}
+            disabled={!input.trim() || isLoading || isLoadingHistory}
             aria-label="Send message"
-            className="w-8 h-8 rounded-full bg-rose-amina flex items-center justify-center disabled:opacity-40"
+            className="w-8 h-8 rounded-full flex items-center justify-center disabled:opacity-40 transition-opacity"
+            style={{ background: 'var(--amina-primary-action)' }}
           >
             <ArrowUp size={16} strokeWidth={2} className="text-white" />
           </button>
         </div>
-        <p className="text-center text-xs text-muted mt-2">
-          Amina can make mistakes. Please review important information.
+        <p className="text-center text-[11px] mt-2" style={{ color: 'rgba(44,41,38,0.35)' }}>
+          Amina is an AI companion, not a scholar or therapist.
         </p>
       </div>
     </div>
@@ -225,10 +342,9 @@ export default function ChatPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex items-center justify-center min-h-dvh bg-cream">
+        <div className="flex items-center justify-center min-h-dvh" style={{ background: 'var(--amina-soft-cream)' }}>
           <div className="flex flex-col items-center gap-3">
             <AminaIcon size={40} className="animate-pulse" />
-            <p className="text-muted text-sm">Loading...</p>
           </div>
         </div>
       }
