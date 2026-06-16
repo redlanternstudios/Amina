@@ -20,10 +20,7 @@ import AminaWordmark from '@/components/brand/AminaWordmark'
 const NAV_LINKS = [
   { label: 'About', href: '#about' },
   { label: 'Amina', href: '#about' },
-  { label: 'The Circle', href: 'https://theblondemuslim.com/circle' },
-  { label: 'Muslim Texas', href: '#' },
-  { label: 'Saudi Journey', href: '#' },
-  { label: 'Drops', href: '#' },
+  { label: 'The Circle', href: '#access' },
   { label: 'Partnerships', href: '#' },
 ]
 
@@ -216,12 +213,7 @@ export default function LandingPage() {
               Access Amina <ArrowRight size={18} strokeWidth={1.75} />
             </button>
           </form>
-          <p className="text-sm text-muted mt-5">
-            Not a member yet?{' '}
-            <a href="https://theblondemuslim.com/circle" className="text-rose-action underline underline-offset-2 hover:opacity-80">
-              Join The Circle
-            </a>
-          </p>
+
         </div>
       </section>
 
@@ -249,7 +241,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="bg-ivory" style={{ borderTop: '1px solid var(--amina-border)' }}>
-        <div className="max-w-7xl mx-auto px-6 lg:px-12 py-14 grid gap-10 md:grid-cols-2 lg:grid-cols-4">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12 py-14 grid gap-10 md:grid-cols-3">
           <div>
             <AminaWordmark size="md" tone="gradient" className="!items-start !text-left" />
             <p className="font-display text-primary mt-4">Faith. Purpose. Sisterhood.</p>
@@ -260,15 +252,7 @@ export default function LandingPage() {
             <ul className="space-y-2.5 text-sm text-secondary">
               <li><a href="#about" className="hover:text-rose-action">About</a></li>
               <li><a href="#about" className="hover:text-rose-action">Amina</a></li>
-              <li><a href="https://theblondemuslim.com/circle" className="hover:text-rose-action">The Circle</a></li>
-              <li><a href="#" className="hover:text-rose-action">Muslim Texas</a></li>
-            </ul>
-          </div>
-          <div>
-            <p className="label-eyebrow text-muted mb-4">Resources</p>
-            <ul className="space-y-2.5 text-sm text-secondary">
-              <li><a href="#" className="hover:text-rose-action">Saudi Journey</a></li>
-              <li><a href="#" className="hover:text-rose-action">Drops</a></li>
+              <li><a href="#access" className="hover:text-rose-action">The Circle</a></li>
               <li><a href="#" className="hover:text-rose-action">Partnerships</a></li>
             </ul>
           </div>
