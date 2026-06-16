@@ -26,8 +26,7 @@ export default function SignInForm({ onClose, redirectTo = '/home' }: { onClose?
         setError(signInError.message)
         return
       }
-      router.push(redirectTo)
-      router.refresh()
+      router.replace(redirectTo)
     } catch {
       setError('Something went wrong. Please try again.')
     } finally {

@@ -1,17 +1,25 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowRight, Leaf } from 'lucide-react'
 import AminaWordmark from '@/components/brand/AminaWordmark'
 import AminaIcon from '@/components/brand/AminaIcon'
 import SignInForm from '@/components/auth/SignInForm'
+import { createClient } from '@/lib/supabase/client'
 
 export default function SplashPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get('redirect') ?? '/home'
   const [showSignIn, setShowSignIn] = useState(false)
+
+  // If already signed in, go straight to the destination
+  useEffect(() => {
+    createClient().auth.getSession().then(({ data }) => {
+      if (data.session) router.replace(redirectTo)
+    })
+  }, [redirectTo, router])
 
   return (
     <div className="flex flex-col min-h-dvh bg-cream relative overflow-hidden">
