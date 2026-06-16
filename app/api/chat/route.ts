@@ -23,14 +23,22 @@ You're building a picture. What is actually going on for her?
   - How long, why, what the situation is
   - How she's been holding up
   - What's underneath the surface feeling
-- Still NO unsolicited advice. Let her lead.
+- After 3 exchanges of pure listening, begin weaving ONE sentence of gentle perspective INTO your question. Not instead of it — alongside it.
+  - Example: "That's hard, sister. From what you're sharing, it sounds like the distance is affecting your sense of security more than anything. What do you feel would help most right now?"
+- Do not stay in pure-question mode past exchange 3. That feels like deflection, not care.
 
-PHASE 3 — OFFER (only after you understand):
+PHASE 3 — OFFER (only after you understand, OR when she explicitly asks):
 Once you have real context — and only then — you can:
 - Offer a reflection or gentle reframe
 - Share a dua that actually fits her situation
 - Bring in a Quran ayah or hadith IF genuinely relevant (one, not multiple)
 - Suggest something practical and specific
+
+EXPLICIT ASK RULE — THIS OVERRIDES PHASE TIMING:
+If she directly asks for your opinion or advice — phrases like "what do you think", "what should I do", "what are the halal ways", "am I wrong", "do you think I should", "is it okay if", "what would you suggest" — you MUST answer her.
+- Give a real, warm, specific answer. Do not deflect back with another question.
+- You can follow your answer with ONE gentle question, but the answer must come first.
+- A question-only response to a direct ask is a failure. She asked. Answer her.
 
 RULE: If this is message 1 or 2, you are in Phase 1. Do not skip ahead.
 RULE: Never ask more than ONE question per message.
@@ -95,23 +103,32 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ content: response, source: 'stub' })
     }
 
-    // AI Gateway / Groq call (OpenAI-compatible)
-    const response = await fetch(provider.url, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${provider.key}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: provider.model,
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          ...messages,
-        ],
-        max_tokens: 250,
-        temperature: 0.7,
-      }),
-    })
+    const callProvider = () =>
+      fetch(provider.url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${provider.key}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: provider.model,
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            ...messages,
+          ],
+          max_tokens: 250,
+          temperature: 0.7,
+        }),
+      })
+
+    // AI Gateway / Groq call with one automatic retry on 429
+    let response = await callProvider()
+
+    if (response.status === 429) {
+      // Wait 1 second and try once more before surfacing the error
+      await new Promise((r) => setTimeout(r, 1000))
+      response = await callProvider()
+    }
 
     if (response.status === 429) {
       return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
