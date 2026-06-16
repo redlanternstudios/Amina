@@ -39,7 +39,7 @@ export default function HomePage() {
       <AppHeader
         brand
         right={
-          <button aria-label="Notifications" className="w-9 h-9 flex items-center justify-center rounded-full bg-ivory relative text-charcoal/70" style={{ border: '1px solid var(--amina-hairline)' }}>
+          <button aria-label="Notifications" className="w-9 h-9 flex items-center justify-center rounded-full bg-ivory relative text-secondary" style={{ border: '1px solid var(--amina-hairline)' }}>
             <Bell size={18} strokeWidth={1.5} />
             <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-amina" />
           </button>
@@ -56,7 +56,7 @@ export default function HomePage() {
           <h2 className="font-display text-3xl text-charcoal leading-tight">
             Assalamu alaykum, <span className="text-rose-amina">Sister</span>
           </h2>
-          <p className="text-charcoal/50 text-sm mt-1">How can I support you today?</p>
+          <p className="text-muted text-sm mt-1">How can I support you today?</p>
 
           {/* Quick chips */}
           <div className="flex gap-2 mt-3 overflow-x-auto pb-1 -mx-1 px-1">
@@ -82,10 +82,10 @@ export default function HomePage() {
               </div>
               <div>
                 <p className="font-semibold text-rose-amina text-sm">Amina</p>
-                <p className="text-charcoal/40 text-xs">Your companion for faith, reflection, and growth.</p>
+                <p className="text-muted text-xs">Your companion for faith, reflection, and growth.</p>
               </div>
             </div>
-            <button aria-label="More options" className="text-charcoal/30">
+            <button aria-label="More options" className="text-muted">
               <MoreHorizontal size={18} strokeWidth={1.5} />
             </button>
           </div>
@@ -106,7 +106,7 @@ export default function HomePage() {
               onChange={e => setMessage(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSend()}
               placeholder="Type your message..."
-              className="flex-1 bg-transparent text-sm text-charcoal placeholder:text-charcoal/40 outline-none"
+              className="flex-1 bg-transparent text-sm text-charcoal placeholder:text-muted outline-none"
             />
             <button onClick={handleSend} aria-label="Send" className="w-8 h-8 rounded-full bg-rose-amina flex items-center justify-center">
               <ArrowUp size={16} strokeWidth={2} className="text-white" />
@@ -114,7 +114,7 @@ export default function HomePage() {
           </div>
 
           {/* Toolbar */}
-          <div className="flex items-center gap-3 mt-2 px-1 text-charcoal/40">
+          <div className="flex items-center gap-3 mt-2 px-1 text-muted">
             <button aria-label="Attach file" className="w-8 h-8 rounded-full bg-ivory flex items-center justify-center">
               <Paperclip size={16} strokeWidth={1.5} />
             </button>
@@ -142,7 +142,7 @@ export default function HomePage() {
                 <BookOpen size={18} strokeWidth={1.5} className="text-olive" />
               </div>
               <p className="font-semibold text-charcoal text-xs leading-snug mb-1">{conv.title}</p>
-              <p className="text-charcoal/40 text-xs mb-2">Last chat • {conv.time}</p>
+              <p className="text-muted text-xs mb-2">Last chat • {conv.time}</p>
               <div className="h-1 rounded-full bg-charcoal/10">
                 <div className="h-1 rounded-full" style={{ width: `${conv.progress}%`, backgroundColor: conv.color }} />
               </div>
@@ -164,7 +164,7 @@ export default function HomePage() {
           <div className="flex-1">
             <p className="text-rose-amina text-xs font-semibold mb-1">Today&apos;s Reflection</p>
             <p className="font-display text-xl text-charcoal leading-snug">And He is with you wherever you are.</p>
-            <p className="text-charcoal/40 text-xs mt-1">— Quran 57:4</p>
+            <p className="text-muted text-xs mt-1">— Quran 57:4</p>
             <button className="flex items-center gap-1 text-rose-amina text-xs mt-2">
               <Heart size={14} strokeWidth={1.5} /> Reflect on this
             </button>

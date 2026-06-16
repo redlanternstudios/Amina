@@ -28,7 +28,7 @@ export default function GuidancePage() {
       <AppHeader
         brand
         right={
-          <button aria-label="Search" className="w-9 h-9 flex items-center justify-center rounded-full bg-ivory text-charcoal/70" style={{ border: '1px solid var(--amina-hairline)' }}>
+          <button aria-label="Search" className="w-9 h-9 flex items-center justify-center rounded-full bg-ivory text-secondary" style={{ border: '1px solid var(--amina-hairline)' }}>
             <Search size={18} strokeWidth={1.5} />
           </button>
         }
@@ -37,7 +37,7 @@ export default function GuidancePage() {
       {/* Page heading */}
       <div className="px-4 pt-4 pb-2">
         <h1 className="font-display text-3xl text-charcoal mb-1">Guidance</h1>
-        <p className="text-charcoal/60 text-sm">Explore answers, wisdom, and reminders for life&apos;s journey.</p>
+        <p className="text-secondary text-sm">Explore answers, wisdom, and reminders for life&apos;s journey.</p>
       </div>
 
       {/* Category chips */}
@@ -67,7 +67,7 @@ export default function GuidancePage() {
             <div className="p-4">
               <p className="label-eyebrow text-rose-amina mb-1">Featured</p>
               <p className="font-display text-xl text-charcoal mb-2">Finding Strength in Tawakkul</p>
-              <p className="text-charcoal/60 text-sm mb-4">Trusting Allah brings peace to the heart and clarity to the path.</p>
+              <p className="text-secondary text-sm mb-4">Trusting Allah brings peace to the heart and clarity to the path.</p>
               <button className="btn-primary text-sm px-5 py-2">Read Article <ArrowRight size={16} strokeWidth={1.75} /></button>
             </div>
           </div>
@@ -111,9 +111,9 @@ export default function GuidancePage() {
                   </div>
                   <div className="flex-1">
                     <p className="text-charcoal text-sm font-medium">{q.q}</p>
-                    <p className="text-charcoal/40 text-xs mt-0.5">Answer • {q.cat}</p>
+                    <p className="text-muted text-xs mt-0.5">Answer • {q.cat}</p>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0 text-charcoal/30">
+                  <div className="flex items-center gap-2 flex-shrink-0 text-muted">
                     <Bookmark size={16} strokeWidth={1.5} />
                     <ChevronRight size={16} strokeWidth={1.5} />
                   </div>

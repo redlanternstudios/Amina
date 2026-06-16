@@ -116,6 +116,15 @@
   .bg-warm-highlight { background-color: var(--amina-warm-highlight); }
   .text-cream { color: var(--amina-soft-cream); }
 
+  /* Semantic opacity text — use these instead of text-charcoal/{n} which breaks with CSS vars */
+  .text-primary   { color: var(--amina-soft-charcoal); }
+  .text-secondary { color: var(--amina-secondary-text); }
+  .text-muted     { color: var(--amina-muted-text); }
+
+  /* Borders */
+  .border-hairline { border-color: var(--amina-hairline); }
+  .border-soft     { border-color: var(--amina-border); }
+
   .accent-italic {
     font-family: var(--font-display), 'Newsreader', Georgia, serif;
     font-style: italic;

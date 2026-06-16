@@ -106,17 +106,17 @@ function ChatInner() {
     <div className="flex flex-col min-h-dvh bg-cream">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 pt-4 pb-3 bg-cream" style={{ borderBottom: '1px solid var(--amina-hairline)' }}>
-        <button onClick={() => router.back()} aria-label="Back" className="text-charcoal/60">
+        <button onClick={() => router.back()} aria-label="Back" className="text-secondary">
           <ChevronLeft size={24} strokeWidth={1.5} />
         </button>
         <div className="flex items-center gap-2 flex-1">
           <AminaAvatar size={36} />
           <div>
             <p className="font-semibold text-charcoal text-sm">Amina</p>
-            <p className="text-charcoal/40 text-xs">Faith companion</p>
+            <p className="text-muted text-xs">Faith companion</p>
           </div>
         </div>
-        <button aria-label="More options" className="text-charcoal/40">
+        <button aria-label="More options" className="text-muted">
           <MoreHorizontal size={20} strokeWidth={1.5} />
         </button>
       </div>
@@ -144,7 +144,7 @@ function ChatInner() {
               ) : (
                 <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
               )}
-              <p className={`text-xs mt-1 ${msg.role === 'user' ? 'text-white/60' : 'text-charcoal/30'}`}>
+              <p className={`text-xs mt-1 ${msg.role === 'user' ? 'text-white/60' : 'text-muted'}`}>
                 {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>
             </div>
@@ -169,7 +169,7 @@ function ChatInner() {
         {error && (
           <div className="rounded-xl px-4 py-3 text-center" style={{ backgroundColor: 'var(--amina-rose-selected)' }}>
             <p className="text-rose-amina text-sm">{error}</p>
-            <button onClick={() => setError(null)} className="text-charcoal/40 text-xs mt-1">Dismiss</button>
+            <button onClick={() => setError(null)} className="text-muted text-xs mt-1">Dismiss</button>
           </div>
         )}
 
@@ -202,7 +202,7 @@ function ChatInner() {
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage(input)}
             placeholder="Type your message..."
-            className="flex-1 bg-transparent text-sm text-charcoal placeholder:text-charcoal/40 outline-none"
+            className="flex-1 bg-transparent text-sm text-charcoal placeholder:text-muted outline-none"
           />
           <button
             onClick={() => sendMessage(input)}
@@ -213,7 +213,7 @@ function ChatInner() {
             <ArrowUp size={16} strokeWidth={2} className="text-white" />
           </button>
         </div>
-        <p className="text-center text-xs text-charcoal/30 mt-2">
+        <p className="text-center text-xs text-muted mt-2">
           Amina can make mistakes. Please review important information.
         </p>
       </div>
@@ -228,7 +228,7 @@ export default function ChatPage() {
         <div className="flex items-center justify-center min-h-dvh bg-cream">
           <div className="flex flex-col items-center gap-3">
             <AminaIcon size={40} className="animate-pulse" />
-            <p className="text-charcoal/40 text-sm">Loading...</p>
+            <p className="text-muted text-sm">Loading...</p>
           </div>
         </div>
       }

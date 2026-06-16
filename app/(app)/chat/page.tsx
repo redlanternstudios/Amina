@@ -88,17 +88,17 @@ function ChatInner() {
     <div className="flex flex-col min-h-dvh bg-cream">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 pt-4 pb-3 bg-cream" style={{ borderBottom: '1px solid var(--amina-hairline)' }}>
-        <button onClick={() => router.back()} aria-label="Back" className="text-charcoal/60">
+        <button onClick={() => router.back()} aria-label="Back" className="text-secondary">
           <ChevronLeft size={24} strokeWidth={1.5} />
         </button>
         <div className="flex-1 flex items-center gap-3">
           <AminaAvatar size={36} />
           <div>
             <p className="font-semibold text-charcoal text-sm">Amina</p>
-            <p className="text-charcoal/50 text-xs">Your companion for faith, reflection, and growth.</p>
+            <p className="text-muted text-xs">Your companion for faith, reflection, and growth.</p>
           </div>
         </div>
-        <button aria-label="More options" className="text-charcoal/40">
+        <button aria-label="More options" className="text-muted">
           <MoreHorizontal size={20} strokeWidth={1.5} />
         </button>
       </div>
@@ -122,7 +122,7 @@ function ChatInner() {
               }`}
             >
               <p className="text-sm leading-relaxed">{msg.content}</p>
-              <p className={`text-xs mt-1 ${msg.role === 'user' ? 'text-white/70 text-right' : 'text-charcoal/40'}`}>
+              <p className={`text-xs mt-1 ${msg.role === 'user' ? 'text-white/70 text-right' : 'text-muted'}`}>
                 {msg.timestamp}
               </p>
             </div>
@@ -159,7 +159,7 @@ function ChatInner() {
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage(input)}
             placeholder="Type your message..."
-            className="flex-1 bg-transparent text-charcoal text-sm outline-none placeholder:text-charcoal/40"
+            className="flex-1 bg-transparent text-charcoal text-sm outline-none placeholder:text-muted"
           />
           <button
             onClick={() => sendMessage(input)}
@@ -171,7 +171,7 @@ function ChatInner() {
           </button>
         </div>
         {/* Toolbar */}
-        <div className="flex items-center justify-between px-2 mt-2 text-charcoal/40">
+        <div className="flex items-center justify-between px-2 mt-2 text-muted">
           <div className="flex gap-3">
             <button aria-label="Attach file"><Paperclip size={18} strokeWidth={1.5} /></button>
             <button aria-label="Voice input"><Mic size={18} strokeWidth={1.5} /></button>
@@ -191,7 +191,7 @@ function ChatInner() {
             })}
           </div>
         )}
-        <p className="text-center text-xs text-charcoal/30 mt-2">Amina can make mistakes. Please review important information.</p>
+        <p className="text-center text-xs text-muted mt-2">Amina can make mistakes. Please review important information.</p>
       </div>
     </div>
   )

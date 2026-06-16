@@ -36,7 +36,7 @@ export default function ProfilePage() {
       {/* Page heading + tabs */}
       <div className="px-4 pt-4 pb-3" style={{ borderBottom: '1px solid var(--amina-hairline)' }}>
         <h1 className="font-display text-3xl text-charcoal text-center">Profile &amp; Settings</h1>
-        <p className="text-charcoal/50 text-sm text-center">Manage your account and preferences.</p>
+        <p className="text-muted text-sm text-center">Manage your account and preferences.</p>
         {/* Tabs */}
         <div className="flex mt-4 overflow-x-auto gap-1">
           {TABS.map(tab => (
@@ -68,8 +68,8 @@ export default function ProfilePage() {
               </div>
               <div>
                 <p className="font-semibold text-charcoal">Sister</p>
-                <p className="text-charcoal/50 text-sm">sister@example.com</p>
-                <p className="text-charcoal/40 text-xs mt-0.5">Member since May 2025</p>
+                <p className="text-muted text-sm">sister@example.com</p>
+                <p className="text-muted text-xs mt-0.5">Member since May 2025</p>
               </div>
             </div>
 
@@ -84,7 +84,7 @@ export default function ProfilePage() {
                 <button key={item.label} className="w-full flex items-center gap-3 card">
                   <Icon size={20} strokeWidth={1.5} className="text-olive" />
                   <span className="flex-1 text-left text-charcoal text-sm font-medium">{item.label}</span>
-                  <ChevronRight size={18} strokeWidth={1.5} className="text-charcoal/30" />
+                  <ChevronRight size={18} strokeWidth={1.5} className="text-muted" />
                 </button>
               )
             })}
@@ -108,7 +108,7 @@ export default function ProfilePage() {
             <div className="card flex items-center gap-3">
               <Globe size={20} strokeWidth={1.5} className="text-olive" />
               <span className="flex-1 text-charcoal text-sm font-medium">Language</span>
-              <button className="text-charcoal/60 text-sm flex items-center gap-1">{language} <ChevronRight size={16} strokeWidth={1.5} /></button>
+              <button className="text-secondary text-sm flex items-center gap-1">{language} <ChevronRight size={16} strokeWidth={1.5} /></button>
             </div>
 
             {/* Log Out */}
@@ -125,17 +125,17 @@ export default function ProfilePage() {
               <p className="font-semibold text-charcoal mb-3">Reflection Cadence</p>
               <div className="flex gap-2">
                 {['Daily', 'A few times a week', 'Weekly'].map(f => (
-                  <button key={f} className="flex-1 py-2 px-2 rounded-full text-xs font-medium bg-cream text-charcoal/60" style={{ border: '1px solid var(--amina-border)' }}>{f}</button>
+                  <button key={f} className="flex-1 py-2 px-2 rounded-full text-xs font-medium bg-cream text-secondary" style={{ border: '1px solid var(--amina-border)' }}>{f}</button>
                 ))}
               </div>
             </div>
             <div className="card">
               <p className="font-semibold text-charcoal mb-1">Companion Tone</p>
-              <p className="text-charcoal/50 text-sm">Currently: Gentle &amp; Nurturing</p>
+              <p className="text-muted text-sm">Currently: Gentle &amp; Nurturing</p>
             </div>
             <div className="card">
               <p className="font-semibold text-charcoal mb-1">Topics of Interest</p>
-              <p className="text-charcoal/50 text-sm">Faith &amp; Belief, Inner Peace</p>
+              <p className="text-muted text-sm">Faith &amp; Belief, Inner Peace</p>
             </div>
           </div>
         )}
@@ -146,20 +146,20 @@ export default function ProfilePage() {
               <p className="font-semibold text-charcoal mb-2 flex items-center gap-2">
                 <ShieldCheck size={18} strokeWidth={1.5} className="text-olive" /> Your Privacy
               </p>
-              <p className="text-charcoal/60 text-sm leading-relaxed">Your conversations with Amina are private and secure. We do not share your data with third parties without your consent.</p>
+              <p className="text-secondary text-sm leading-relaxed">Your conversations with Amina are private and secure. We do not share your data with third parties without your consent.</p>
             </div>
             <button className="w-full card text-left flex items-center gap-3">
               <Download size={20} strokeWidth={1.5} className="text-olive" />
               <div>
                 <p className="font-medium text-charcoal text-sm">Download My Data</p>
-                <p className="text-charcoal/50 text-xs mt-0.5">Request a copy of all your data.</p>
+                <p className="text-muted text-xs mt-0.5">Request a copy of all your data.</p>
               </div>
             </button>
             <button className="w-full card text-left flex items-center gap-3">
               <Trash2 size={20} strokeWidth={1.5} className="text-rose-amina" />
               <div>
                 <p className="font-medium text-rose-amina text-sm">Delete My Account</p>
-                <p className="text-charcoal/50 text-xs mt-0.5">This action is permanent and cannot be undone.</p>
+                <p className="text-muted text-xs mt-0.5">This action is permanent and cannot be undone.</p>
               </div>
             </button>
           </div>
@@ -170,10 +170,10 @@ export default function ProfilePage() {
             {['Help Center', 'Contact Us', 'Report an Issue', 'Terms of Use', 'Privacy Policy'].map(item => (
               <button key={item} className="w-full flex items-center card">
                 <span className="flex-1 text-left text-charcoal text-sm font-medium">{item}</span>
-                <ChevronRight size={18} strokeWidth={1.5} className="text-charcoal/30" />
+                <ChevronRight size={18} strokeWidth={1.5} className="text-muted" />
               </button>
             ))}
-            <p className="text-center text-charcoal/30 text-xs">Amina v1.0.0 • by RedLantern Studios™</p>
+            <p className="text-center text-muted text-xs">Amina v1.0.0 • by RedLantern Studios™</p>
           </div>
         )}
       </div>

@@ -66,7 +66,7 @@ export default function LandingPage() {
       {/* Nav */}
       <nav className="flex items-center justify-between gap-6 px-8 lg:px-16 py-8 max-w-7xl mx-auto">
         <AminaWordmark size="lg" tone="gradient" className="!items-start !text-left" />
-        <div className="hidden lg:flex items-center gap-7 text-sm text-charcoal/80">
+        <div className="hidden lg:flex items-center gap-7 text-sm text-secondary">
           {NAV_LINKS.map((link) => (
             <a key={link.label} href={link.href} className="hover:text-rose-amina transition-colors whitespace-nowrap">
               {link.label}
@@ -74,11 +74,7 @@ export default function LandingPage() {
           ))}
         </div>
         <div className="flex items-center gap-3">
-          <Link
-            href="/auth"
-            className="text-sm font-medium transition-colors whitespace-nowrap"
-            style={{ color: 'var(--amina-soft-charcoal)', opacity: 0.65 }}
-          >
+          <Link href="/auth" className="text-sm font-medium text-muted transition-colors whitespace-nowrap hover:text-primary">
             Sign in
           </Link>
           <Link href="/auth" className="btn-primary text-sm px-5 py-2.5 whitespace-nowrap">
@@ -97,10 +93,10 @@ export default function LandingPage() {
             </span>
             Meet Amina
           </p>
-          <h1 className="font-display text-5xl md:text-6xl text-charcoal leading-[1.05] mb-6 text-balance">
+          <h1 className="font-display text-5xl md:text-6xl text-primary leading-[1.05] mb-6 text-balance">
             You&apos;re not meant to navigate this journey <span className="accent-italic text-rose-action">alone.</span>
           </h1>
-          <p className="text-charcoal/70 text-lg mb-8 leading-relaxed max-w-md">
+          <p className="text-secondary text-lg mb-8 leading-relaxed max-w-md">
             Meet Amina, your faith-centered reflection companion for questions, encouragement, and support — whenever you
             need it.
           </p>
@@ -108,7 +104,7 @@ export default function LandingPage() {
             {HERO_BULLETS.map((item) => {
               const Icon = item.icon
               return (
-                <li key={item.text} className="flex items-center gap-3 text-charcoal/85">
+                <li key={item.text} className="flex items-center gap-3 text-primary">
                   <span className="w-9 h-9 rounded-full bg-ivory flex items-center justify-center flex-shrink-0" style={{ border: '1px solid var(--amina-hairline)' }}>
                     <Icon size={16} strokeWidth={1.5} className="text-rose-action" />
                   </span>
@@ -137,14 +133,14 @@ export default function LandingPage() {
               sizes="(max-width: 1024px) 100vw, 50vw"
               className="object-cover"
             />
-            <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(44,41,38,0) 55%, rgba(44,41,38,0.18) 100%)' }} />
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, transparent 55%, rgba(0,0,0,0.15) 100%)' }} />
           </div>
           {/* Floating quote card */}
           <div className="absolute -bottom-6 -left-2 sm:left-6 max-w-[16rem] bg-cream rounded-3xl p-6 text-center shadow-card-lg" style={{ border: '1px solid var(--amina-hairline)' }}>
             <div className="w-12 h-12 rounded-full bg-rose-selected flex items-center justify-center mx-auto mb-3 ring-soft">
               <Sparkles size={20} strokeWidth={1.5} className="text-rose-action" />
             </div>
-            <p className="font-display text-lg text-charcoal leading-snug mb-3">
+            <p className="font-display text-lg text-primary leading-snug mb-3">
               Amina is here to walk beside you on your beautiful journey of faith, growth, and healing.
             </p>
             <div className="gold-divider mx-auto mb-3" />
@@ -157,9 +153,9 @@ export default function LandingPage() {
       <section id="how" className="max-w-7xl mx-auto px-6 lg:px-12 pt-16">
         <div className="bg-ivory rounded-[2rem] px-6 sm:px-12 py-14" style={{ border: '1px solid var(--amina-hairline)' }}>
           <div className="text-center mb-12 max-w-xl mx-auto">
-            <h2 className="font-display text-4xl text-charcoal mb-4">How Amina Supports You</h2>
+            <h2 className="font-display text-4xl text-primary mb-4">How Amina Supports You</h2>
             <div className="gold-divider mx-auto mb-4" />
-            <p className="text-charcoal/60">A personal AI companion created for women on their journey to Allah.</p>
+            <p className="text-muted">A personal AI companion created for women on their journey to Allah.</p>
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-10 gap-x-6">
             {SUPPORTS.map((item, i) => {
@@ -176,8 +172,8 @@ export default function LandingPage() {
                   >
                     <Icon size={24} strokeWidth={1.5} className="text-cream" />
                   </div>
-                  <h3 className="font-display text-lg text-charcoal mb-2">{item.title}</h3>
-                  <p className="text-sm text-charcoal/60 leading-relaxed">{item.desc}</p>
+                  <h3 className="font-display text-lg text-primary mb-2">{item.title}</h3>
+                  <p className="text-sm text-muted leading-relaxed">{item.desc}</p>
                 </div>
               )
             })}
@@ -201,8 +197,8 @@ export default function LandingPage() {
             <Lock size={14} strokeWidth={1.75} />
             Member Access
           </p>
-          <h2 className="font-display text-4xl md:text-5xl text-charcoal mb-4">Access Amina</h2>
-          <p className="text-charcoal/60 mb-8 max-w-md">
+          <h2 className="font-display text-4xl md:text-5xl text-primary mb-4">Access Amina</h2>
+          <p className="text-muted mb-8 max-w-md">
             Amina is available exclusively to The Circle members. Enter your access code to begin.
           </p>
           <form action="/auth" className="space-y-4 max-w-md">
@@ -214,13 +210,13 @@ export default function LandingPage() {
                 className="input-field pr-12"
                 aria-label="Access code"
               />
-              <Lock size={18} strokeWidth={1.5} className="text-charcoal/40 absolute right-4 top-1/2 -translate-y-1/2" />
+              <Lock size={18} strokeWidth={1.5} className="text-muted absolute right-4 top-1/2 -translate-y-1/2" />
             </div>
             <button type="submit" className="btn-primary w-full justify-center">
               Access Amina <ArrowRight size={18} strokeWidth={1.75} />
             </button>
           </form>
-          <p className="text-sm text-charcoal/55 mt-5">
+          <p className="text-sm text-muted mt-5">
             Not a member yet?{' '}
             <a href="https://theblondemuslim.com/circle" className="text-rose-action underline underline-offset-2 hover:opacity-80">
               Join The Circle
@@ -243,7 +239,7 @@ export default function LandingPage() {
           <span className="w-11 h-11 rounded-full bg-rose-action flex items-center justify-center flex-shrink-0">
             <ShieldCheck size={20} strokeWidth={1.5} className="text-cream" />
           </span>
-          <p className="relative text-sm text-charcoal/65 leading-relaxed max-w-4xl">
+          <p className="relative text-sm text-secondary leading-relaxed max-w-4xl">
             Amina is an AI companion designed to support your spiritual journey. For detailed religious rulings (fatwas),
             please consult qualified scholars. For emotional support needs, please seek professional support. Amina is not
             a replacement for human connection, scholarly guidance, or professional care.
@@ -256,12 +252,12 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-12 py-14 grid gap-10 md:grid-cols-2 lg:grid-cols-4">
           <div>
             <AminaWordmark size="md" tone="gradient" className="!items-start !text-left" />
-            <p className="font-display text-charcoal mt-4">Faith. Purpose. Sisterhood.</p>
-            <p className="text-sm text-charcoal/55 mt-1">Building a legacy of light.</p>
+            <p className="font-display text-primary mt-4">Faith. Purpose. Sisterhood.</p>
+            <p className="text-sm text-muted mt-1">Building a legacy of light.</p>
           </div>
           <div>
-            <p className="label-eyebrow text-charcoal/50 mb-4">Quick Links</p>
-            <ul className="space-y-2.5 text-sm text-charcoal/70">
+            <p className="label-eyebrow text-muted mb-4">Quick Links</p>
+            <ul className="space-y-2.5 text-sm text-secondary">
               <li><a href="#about" className="hover:text-rose-action">About</a></li>
               <li><a href="#about" className="hover:text-rose-action">Amina</a></li>
               <li><a href="https://theblondemuslim.com/circle" className="hover:text-rose-action">The Circle</a></li>
@@ -269,21 +265,21 @@ export default function LandingPage() {
             </ul>
           </div>
           <div>
-            <p className="label-eyebrow text-charcoal/50 mb-4">Resources</p>
-            <ul className="space-y-2.5 text-sm text-charcoal/70">
+            <p className="label-eyebrow text-muted mb-4">Resources</p>
+            <ul className="space-y-2.5 text-sm text-secondary">
               <li><a href="#" className="hover:text-rose-action">Saudi Journey</a></li>
               <li><a href="#" className="hover:text-rose-action">Drops</a></li>
               <li><a href="#" className="hover:text-rose-action">Partnerships</a></li>
             </ul>
           </div>
           <div>
-            <p className="label-eyebrow text-charcoal/50 mb-4">Connect</p>
+            <p className="label-eyebrow text-muted mb-4">Connect</p>
             <div className="flex gap-3">
               {[Instagram, Youtube, Mail].map((Icon, i) => (
                 <a
                   key={i}
                   href="#"
-                  className="w-10 h-10 rounded-full bg-cream flex items-center justify-center text-charcoal/70 hover:text-rose-action transition-colors"
+                  className="w-10 h-10 rounded-full bg-cream flex items-center justify-center text-secondary hover:text-rose-action transition-colors"
                   style={{ border: '1px solid var(--amina-hairline)' }}
                   aria-label="Social link"
                 >

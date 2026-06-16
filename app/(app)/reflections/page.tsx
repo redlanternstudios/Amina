@@ -40,7 +40,7 @@ export default function ReflectionsPage() {
           </button>
         </div>
         <h1 className="font-display text-3xl text-charcoal">Reflections</h1>
-        <p className="text-charcoal/50 text-sm">Your personal space for growth and clarity.</p>
+        <p className="text-muted text-sm">Your personal space for growth and clarity.</p>
       </div>
 
       {/* Filter chips */}
@@ -59,12 +59,12 @@ export default function ReflectionsPage() {
       {/* Search */}
       <div className="px-4 pb-3">
         <div className="flex items-center gap-2 bg-ivory rounded-full px-4 py-2.5" style={{ border: '1px solid var(--amina-border)' }}>
-          <Search size={16} strokeWidth={1.5} className="text-charcoal/40" />
+          <Search size={16} strokeWidth={1.5} className="text-muted" />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search your reflections..."
-            className="flex-1 bg-transparent text-charcoal text-sm outline-none placeholder:text-charcoal/40"
+            className="flex-1 bg-transparent text-charcoal text-sm outline-none placeholder:text-muted"
           />
         </div>
       </div>
@@ -75,7 +75,7 @@ export default function ReflectionsPage() {
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <NotebookPen size={36} strokeWidth={1.25} className="text-olive mb-3" />
             <p className="font-semibold text-charcoal">No reflections yet</p>
-            <p className="text-charcoal/50 text-sm mt-1">Start a conversation with Amina to save your first reflection.</p>
+            <p className="text-muted text-sm mt-1">Start a conversation with Amina to save your first reflection.</p>
           </div>
         ) : (
           filtered.map(r => (
@@ -83,17 +83,17 @@ export default function ReflectionsPage() {
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1">
                   <p className="font-semibold text-charcoal text-sm">{r.title}</p>
-                  <p className="text-charcoal/60 text-xs mt-1 leading-relaxed">{r.summary}</p>
+                  <p className="text-secondary text-xs mt-1 leading-relaxed">{r.summary}</p>
                   <div className="flex items-center gap-3 mt-2">
-                    <span className="bg-cream text-charcoal/60 text-xs px-2.5 py-0.5 rounded-full" style={{ border: '1px solid var(--amina-hairline)' }}>{r.tag}</span>
-                    <span className="text-charcoal/40 text-xs">{r.date}</span>
+                    <span className="bg-cream text-secondary text-xs px-2.5 py-0.5 rounded-full" style={{ border: '1px solid var(--amina-hairline)' }}>{r.tag}</span>
+                    <span className="text-muted text-xs">{r.date}</span>
                   </div>
                 </div>
                 <button onClick={() => toggleFavorite(r.id)} aria-label={r.favorited ? 'Remove from favorites' : 'Add to favorites'} className="flex-shrink-0 mt-0.5">
                   <Heart
                     size={18}
                     strokeWidth={1.5}
-                    className={r.favorited ? 'text-rose-amina' : 'text-charcoal/25'}
+                    className={r.favorited ? 'text-rose-amina' : 'text-muted'}
                     fill={r.favorited ? 'var(--amina-primary-action)' : 'none'}
                   />
                 </button>
