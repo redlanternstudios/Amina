@@ -10,15 +10,7 @@ export async function createClient() {
     {
       cookies: {
         getAll() {
-          // createBrowserClient URL-encodes cookie values; decode them so
-          // createServerClient can parse the JSON session blob.
-          return cookieStore.getAll().map(({ name, value }) => {
-            try {
-              return { name, value: decodeURIComponent(value) }
-            } catch {
-              return { name, value }
-            }
-          })
+          return cookieStore.getAll()
         },
         setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
           try {

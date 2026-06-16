@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { ChevronLeft, Heart, ArrowUp, MoreHorizontal } from 'lucide-react'
 
@@ -29,26 +29,15 @@ function timeLabel(dateStr: string): string {
   if (mins < 60) return `${mins}m ago`
   const hrs = Math.floor(mins / 60)
   if (hrs < 24) return `${hrs}h ago`
-  const days = Math.floor(hrs / 24)
-  return `${days}d ago`
+  return `${Math.floor(hrs / 24)}d ago`
 }
 
-function PostBubble({
-  post,
-  onReact,
-}: {
-  post: Post
-  onReact: (id: string) => void
-}) {
+function PostBubble({ post, onReact }: { post: Post; onReact: (id: string) => void }) {
   return (
     <div
       className="rounded-xl p-4"
-      style={{
-        background: 'var(--amina-warm-ivory)',
-        border: '1px solid var(--amina-hairline)',
-      }}
+      style={{ background: 'var(--amina-warm-ivory)', border: '1px solid var(--amina-hairline)' }}
     >
-      {/* Author row */}
       <div className="flex items-center justify-between mb-2.5">
         <div className="flex items-center gap-2.5">
           <div
@@ -62,9 +51,7 @@ function PostBubble({
             S
           </div>
           <div>
-            <p className="text-[13px] font-semibold text-charcoal leading-none">
-              {post.display_handle}
-            </p>
+            <p className="text-[13px] font-semibold text-charcoal leading-none">{post.display_handle}</p>
             <p className="text-[11px] mt-0.5" style={{ color: 'rgba(44,41,38,0.3)' }}>
               {timeLabel(post.created_at)}
             </p>
@@ -74,13 +61,7 @@ function PostBubble({
           <MoreHorizontal size={17} strokeWidth={1.5} />
         </button>
       </div>
-
-      {/* Content */}
-      <p className="text-[14px] leading-relaxed text-charcoal mb-3 whitespace-pre-wrap">
-        {post.content}
-      </p>
-
-      {/* Heart — no count ever */}
+      <p className="text-[14px] leading-relaxed text-charcoal mb-3 whitespace-pre-wrap">{post.content}</p>
       <div className="flex justify-end">
         <button
           onClick={() => onReact(post.id)}
@@ -88,15 +69,23 @@ function PostBubble({
           className="p-1.5 rounded-full transition-all active:scale-90"
           style={{ color: post.has_reacted ? 'var(--amina-primary-action)' : 'rgba(44,41,38,0.3)' }}
         >
-          <Heart
-            size={18}
-            strokeWidth={1.5}
-            fill={post.has_reacted ? 'currentColor' : 'none'}
-          />
+          <Heart size={18} strokeWidth={1.5} fill={post.has_reacted ? 'currentColor' : 'none'} />
         </button>
       </div>
     </div>
   )
+}
+
+/** Read the Supabase JWT directly from the auth cookie blob. */
+function getTokenFromCookie(): string {
+  try {
+    const match = document.cookie.match(/sb-[^=]+-auth-token=([^;]+)/)
+    if (!match) return ''
+    const blob = JSON.parse(decodeURIComponent(match[1]))
+    return blob?.access_token ?? ''
+  } catch {
+    return ''
+  }
 }
 
 export default function CircleDetailPage() {
@@ -106,19 +95,33 @@ export default function CircleDetailPage() {
   const [posts, setPosts] = useState<Post[]>([])
   const [memberCount, setMemberCount] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [notMember, setNotMember] = useState(false)
   const [postText, setPostText] = useState('')
   const [sending, setSending] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
 
+  const authHeaders = useCallback(
+    (): Record<string, string> => {
+      const token = getTokenFromCookie()
+      return {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      }
+    },
+    []
+  )
+
   useEffect(() => {
-    fetch(`/api/circles/${id}`)
+    fetch(`/api/circles/${id}`, { headers: authHeaders() })
       .then(r => r.json())
       .then(d => {
+        if (d.error === 'Not a member' || d.error === 'Unauthorized') { setNotMember(true); return }
         setCircle(d.circle)
         setPosts(d.posts ?? [])
         setMemberCount(d.member_count ?? 0)
       })
       .finally(() => setLoading(false))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
   useEffect(() => {
@@ -126,13 +129,10 @@ export default function CircleDetailPage() {
   }, [loading, posts.length])
 
   async function handleReact(postId: string) {
-    // Optimistic toggle
-    setPosts(prev =>
-      prev.map(p => p.id === postId ? { ...p, has_reacted: !p.has_reacted } : p)
-    )
+    setPosts(prev => prev.map(p => p.id === postId ? { ...p, has_reacted: !p.has_reacted } : p))
     await fetch(`/api/circles/${id}/react`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders(),
       body: JSON.stringify({ post_id: postId }),
     })
   }
@@ -145,7 +145,7 @@ export default function CircleDetailPage() {
     try {
       const res = await fetch(`/api/circles/${id}/posts`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(),
         body: JSON.stringify({ content: text, is_anonymous: true }),
       })
       const data = await res.json()
@@ -161,10 +161,16 @@ export default function CircleDetailPage() {
   if (loading) {
     return (
       <div className="flex flex-col min-h-dvh items-center justify-center" style={{ background: 'var(--amina-soft-cream)' }}>
-        <div
-          className="w-12 h-12 rounded-full animate-pulse"
-          style={{ background: 'var(--amina-rose-selected)' }}
-        />
+        <div className="w-12 h-12 rounded-full animate-pulse" style={{ background: 'var(--amina-rose-selected)' }} />
+      </div>
+    )
+  }
+
+  if (notMember) {
+    return (
+      <div className="flex flex-col min-h-dvh items-center justify-center px-8 text-center" style={{ background: 'var(--amina-soft-cream)' }}>
+        <p className="font-display italic text-[20px] text-charcoal mb-3">You are not a member of this circle.</p>
+        <button onClick={() => router.push('/circle/join')} className="btn-primary">Join a circle</button>
       </div>
     )
   }
@@ -172,7 +178,7 @@ export default function CircleDetailPage() {
   if (!circle) {
     return (
       <div className="flex flex-col min-h-dvh items-center justify-center px-8 text-center" style={{ background: 'var(--amina-soft-cream)' }}>
-        <p className="font-display italic text-[20px] text-charcoal mb-3">You are not a member of this circle.</p>
+        <p className="font-display italic text-[20px] text-charcoal mb-3">Circle not found.</p>
         <button onClick={() => router.push('/circle')} className="btn-primary">Back to circles</button>
       </div>
     )
@@ -187,16 +193,14 @@ export default function CircleDetailPage() {
       >
         <button
           onClick={() => router.push('/circle')}
-          aria-label="Back to circles"
+          aria-label="Back"
           className="w-9 h-9 flex items-center justify-center rounded-full flex-shrink-0"
           style={{ background: 'var(--amina-warm-ivory)', border: '1px solid var(--amina-hairline)' }}
         >
           <ChevronLeft size={18} strokeWidth={1.5} style={{ color: 'var(--amina-soft-charcoal)' }} />
         </button>
         <div className="flex-1 min-w-0">
-          <p className="font-display italic text-[18px] text-charcoal leading-tight truncate">
-            {circle.name}
-          </p>
+          <p className="font-display italic text-[18px] text-charcoal leading-tight truncate">{circle.name}</p>
           <p className="text-[11px]" style={{ color: 'rgba(44,41,38,0.45)' }}>
             {memberCount} sister{memberCount !== 1 ? 's' : ''}
           </p>
@@ -206,7 +210,7 @@ export default function CircleDetailPage() {
         </button>
       </div>
 
-      {/* Pinned intention — always visible */}
+      {/* Pinned intention */}
       <div
         className="flex-shrink-0 px-4 py-3"
         style={{
@@ -218,9 +222,7 @@ export default function CircleDetailPage() {
         <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: 'rgba(44,41,38,0.4)' }}>
           Our Intention
         </p>
-        <p className="font-display italic text-[16px] text-charcoal leading-snug">
-          {circle.intention}
-        </p>
+        <p className="font-display italic text-[16px] text-charcoal leading-snug">{circle.intention}</p>
       </div>
 
       {/* Feed */}
@@ -233,14 +235,12 @@ export default function CircleDetailPage() {
             </p>
           </div>
         ) : (
-          posts.map(post => (
-            <PostBubble key={post.id} post={post} onReact={handleReact} />
-          ))
+          posts.map(post => <PostBubble key={post.id} post={post} onReact={handleReact} />)
         )}
         <div ref={bottomRef} />
       </div>
 
-      {/* Composer — sticky bottom */}
+      {/* Composer */}
       <div
         className="flex-shrink-0 px-3 pt-3 pb-[max(env(safe-area-inset-bottom),0.75rem)]"
         style={{ borderTop: '1px solid var(--amina-hairline)', background: 'var(--amina-soft-cream)' }}
