@@ -22,11 +22,10 @@ const ThemeContext = createContext<ThemeContextValue | null>(null)
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>('light')
 
-  // On mount: read from localStorage or system preference
+  // On mount: read from localStorage only — light is the default, system preference is ignored
   useEffect(() => {
     const stored = localStorage.getItem('amina-theme') as Theme | null
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    const resolved: Theme = stored ?? (prefersDark ? 'dark' : 'light')
+    const resolved: Theme = stored === 'dark' ? 'dark' : 'light'
     setTheme(resolved)
     document.documentElement.classList.toggle('dark', resolved === 'dark')
   }, [])
