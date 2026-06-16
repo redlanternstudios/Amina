@@ -112,7 +112,7 @@ export default function LandingPage() {
           </Link>
           <p className="text-sm text-center text-[#2C2926]/50">
             Not a member yet?{' '}
-            <a href="https://theblondemuslim.com/circle" className="text-[#C9796A] hover:underline">Join The Circle</a>
+            <a href="#" className="text-[#C9796A] hover:underline">Join The Circle</a>
           </p>
         </div>
       </section>
@@ -144,7 +144,7 @@ export default function LandingPage() {
               <ul className="space-y-2 text-[#2C2926]/60">
                 <li><a href="#about" className="hover:text-[#C9796A]">About</a></li>
                 <li><Link href="/auth" className="hover:text-[#C9796A]">Access Amina</Link></li>
-                <li><a href="https://theblondemuslim.com/circle" className="hover:text-[#C9796A]">The Circle</a></li>
+                <li><a href="#" className="hover:text-[#C9796A]">The Circle</a></li>
               </ul>
             </div>
             <div>
