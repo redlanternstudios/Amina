@@ -28,7 +28,7 @@ export default function PreferencesPage() {
 
   function handleContinue() {
     sessionStorage.setItem('onboarding_prefs', JSON.stringify({ frequency, selectedTopics, address, reminders }))
-    router.push('/onboarding/complete')
+    router.push('/onboarding/account')
   }
 
   return (
