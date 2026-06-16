@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Menu, Bell, ArrowUp, Paperclip, Mic, Sparkles, MoreHorizontal, Heart, Moon, BookOpen, Leaf } from 'lucide-react'
+import { Bell, ArrowUp, Paperclip, Mic, Sparkles, MoreHorizontal, Heart, Moon, BookOpen, Leaf } from 'lucide-react'
 import BottomNav from '@/components/BottomNav'
+import AppHeader from '@/components/app/AppHeader'
 import AminaIcon from '@/components/brand/AminaIcon'
 
 const QUICK_CHIPS = [
@@ -30,17 +31,15 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col min-h-dvh bg-cream pb-28">
-      {/* Header */}
-      <div className="relative flex items-center justify-between px-4 pt-5 pb-2">
-        <button aria-label="Menu" className="w-9 h-9 flex items-center justify-center rounded-full bg-ivory text-charcoal/60">
-          <Menu size={18} strokeWidth={1.5} />
-        </button>
-        <h1 className="font-display italic text-3xl text-charcoal absolute left-1/2 -translate-x-1/2">Amina</h1>
-        <button aria-label="Notifications" className="w-9 h-9 flex items-center justify-center rounded-full bg-ivory relative text-charcoal/60">
-          <Bell size={18} strokeWidth={1.5} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-amina" />
-        </button>
-      </div>
+      <AppHeader
+        brand
+        right={
+          <button aria-label="Notifications" className="w-9 h-9 flex items-center justify-center rounded-full bg-ivory relative text-charcoal/70" style={{ border: '1px solid var(--amina-hairline)' }}>
+            <Bell size={18} strokeWidth={1.5} />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-amina" />
+          </button>
+        }
+      />
 
       {/* Arch hero + greeting */}
       <div className="relative px-4 pb-4">

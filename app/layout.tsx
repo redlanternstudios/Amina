@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, Newsreader } from 'next/font/google'
+import { Inter, Newsreader, Lora } from 'next/font/google'
 import './globals.css'
 
 const inter = Inter({
@@ -14,6 +14,15 @@ const newsreader = Newsreader({
   weight: ['400', '500', '600'],
   style: ['normal', 'italic'],
   variable: '--font-display',
+  display: 'swap',
+})
+
+// Amina's voice font — warm, literary, unmistakably feminine
+const lora = Lora({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  style: ['normal', 'italic'],
+  variable: '--font-amina-voice',
   display: 'swap',
 })
 
@@ -42,7 +51,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${newsreader.variable} bg-cream`}>
+    <html lang="en" className={`${inter.variable} ${newsreader.variable} ${lora.variable} bg-cream`}>
       <body className="bg-cream text-charcoal font-body antialiased">
         {children}
       </body>

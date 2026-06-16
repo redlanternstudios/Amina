@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Menu, Search, BookOpen, Moon, Leaf, Heart, Users, MessageCircle, ChevronRight, Bookmark, ArrowRight } from 'lucide-react'
+import { Search, BookOpen, Moon, Leaf, Heart, Users, MessageCircle, ChevronRight, Bookmark, ArrowRight } from 'lucide-react'
 import BottomNav from '@/components/BottomNav'
+import AppHeader from '@/components/app/AppHeader'
 
 const CATEGORIES = ['All', 'Faith & Belief', 'Heart & Mind', 'Relationships', 'Life']
 
@@ -24,17 +25,17 @@ export default function GuidancePage() {
 
   return (
     <div className="flex flex-col min-h-dvh bg-cream pb-28">
-      {/* Header */}
-      <div className="px-4 pt-12 pb-4">
-        <div className="flex items-center justify-between mb-4">
-          <button aria-label="Menu" className="w-9 h-9 flex items-center justify-center text-charcoal">
-            <Menu size={20} strokeWidth={1.5} />
+      <AppHeader
+        brand
+        right={
+          <button aria-label="Search" className="w-9 h-9 flex items-center justify-center rounded-full bg-ivory text-charcoal/70" style={{ border: '1px solid var(--amina-hairline)' }}>
+            <Search size={18} strokeWidth={1.5} />
           </button>
-          <div className="font-display italic text-2xl text-charcoal">Amina</div>
-          <button aria-label="Search" className="w-9 h-9 flex items-center justify-center text-charcoal/50">
-            <Search size={20} strokeWidth={1.5} />
-          </button>
-        </div>
+        }
+      />
+
+      {/* Page heading */}
+      <div className="px-4 pt-4 pb-2">
         <h1 className="font-display text-3xl text-charcoal mb-1">Guidance</h1>
         <p className="text-charcoal/60 text-sm">Explore answers, wisdom, and reminders for life&apos;s journey.</p>
       </div>

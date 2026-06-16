@@ -27,6 +27,7 @@ const config: Config = {
       fontFamily: {
         display: ['var(--font-display)', 'Newsreader', 'Georgia', 'serif'],
         body: ['var(--font-inter)', 'Inter', 'system-ui', 'sans-serif'],
+        'amina-voice': ['var(--font-amina-voice)', 'Lora', 'Georgia', 'serif'],
       },
       borderRadius: {
         xl: '1rem',

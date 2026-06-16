@@ -62,7 +62,12 @@ export default function AppHeader({ title, brand, right }: AppHeaderProps) {
       {/* Center title */}
       <div className="flex-1 flex items-center justify-center min-w-0">
         {brand ? (
-          <span className="font-display italic text-2xl text-charcoal truncate">Amina</span>
+          <img
+            src="/images/amina-logo.png"
+            alt="Amina"
+            className="object-cover rounded-full"
+            style={{ height: 38, width: 38 }}
+          />
         ) : (
           <h1 className="font-display text-xl text-charcoal truncate">{title}</h1>
         )}

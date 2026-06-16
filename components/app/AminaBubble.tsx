@@ -107,8 +107,8 @@ export default function AminaBubble() {
               <AminaIcon size={20} />
             </span>
             <div>
-              <p className="font-display italic text-xl leading-none text-charcoal">Amina</p>
-              <p className="text-[11px] text-charcoal/50">Here to walk with you</p>
+              <p className="font-amina-voice italic text-xl leading-none text-charcoal">Amina</p>
+              <p className="font-amina-voice text-[11px] text-charcoal/50">Here to walk with you</p>
             </div>
           </div>
           <button
@@ -126,10 +126,10 @@ export default function AminaBubble() {
           {messages.map((m) => (
             <div
               key={m.id}
-              className={`max-w-[85%] px-4 py-2.5 text-[15px] leading-relaxed ${
+              className={`max-w-[85%] px-4 py-2.5 leading-relaxed ${
                 m.role === 'user'
-                  ? 'self-end rounded-2xl rounded-br-md text-ivory'
-                  : 'self-start rounded-2xl rounded-bl-md text-charcoal'
+                  ? 'self-end rounded-2xl rounded-br-md text-ivory text-[15px]'
+                  : 'self-start rounded-2xl rounded-bl-md text-charcoal text-[16px] font-amina-voice'
               }`}
               style={
                 m.role === 'user'
