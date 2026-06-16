@@ -71,36 +71,32 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
     }
 
-    const gatewayKey = process.env.AI_GATEWAY_API_KEY
     const groqKey = process.env.GROQ_API_KEY
+    const gatewayKey = process.env.AI_GATEWAY_API_KEY
 
-    // Prefer the Vercel AI Gateway (zero-config Groq access) when available,
-    // fall back to a direct Groq call, then to the dev stub.
-    const provider = gatewayKey
+    // Prefer direct Groq (key is confirmed set), fall back to AI Gateway, then stub.
+    const provider = groqKey
       ? {
-          url: 'https://ai-gateway.vercel.sh/v1/chat/completions',
-          key: gatewayKey,
-          model: 'groq/llama-3.3-70b-versatile',
+          url: 'https://api.groq.com/openai/v1/chat/completions',
+          key: groqKey,
+          model: 'llama-3.3-70b-versatile',
+          source: 'groq',
         }
-      : groqKey
+      : gatewayKey
         ? {
-            url: 'https://api.groq.com/openai/v1/chat/completions',
-            key: groqKey,
-            model: 'llama-3.3-70b-versatile',
+            url: 'https://ai-gateway.vercel.sh/v1/chat/completions',
+            key: gatewayKey,
+            model: 'groq/llama-3.3-70b-versatile',
+            source: 'gateway',
           }
         : null
 
-    // Dev stub when no provider configured
+    // Dev stub — only reached when no API key is configured at all
     if (!provider) {
-      const lastUserMessage = messages[messages.length - 1]?.content || ''
-      const stubResponses = [
-        "Assalamu alaykum, sister. I'm so glad you're here. Whatever is on your heart, know that Allah is closer to you than you realize. Would you like to share more about what you're feeling?",
-        "SubhanAllah, sister. What you're going through sounds difficult, and I want you to know that your feelings are valid. Remember, Allah does not burden a soul beyond that it can bear (Quran 2:286). How can I support you right now?",
-        "JazakAllahu khayran for trusting me with this. Your journey is beautiful, even in its struggles. Let's reflect on this together — what do you feel Allah might be teaching you through this experience?",
-        "Sister, your faith is your anchor. Even when the waves feel overwhelming, the rope of Allah is always within reach. Would you like me to share a du'a that might bring you comfort?",
-      ]
-      const response = stubResponses[Math.floor(Math.random() * stubResponses.length)]
-      return NextResponse.json({ content: response, source: 'stub' })
+      return NextResponse.json({
+        content: "Assalamu alaykum, sister. I'm so glad you're here. No AI provider is configured yet — please add a GROQ_API_KEY to your environment variables.",
+        source: 'stub',
+      })
     }
 
     const callProvider = () =>
@@ -147,7 +143,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Empty response from AI' }, { status: 502 })
     }
 
-    return NextResponse.json({ content, source: gatewayKey ? 'gateway' : 'groq' })
+    return NextResponse.json({ content, source: provider.source })
   } catch (err) {
     console.error('Chat route error:', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
