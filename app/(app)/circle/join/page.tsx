@@ -95,7 +95,7 @@ export default function JoinCirclePage() {
         <h1 className="font-display italic text-[26px] text-charcoal mb-1 leading-snug">
           Join a circle
         </h1>
-        <p className="text-[14px] mb-8" style={{ color: 'rgba(44,41,38,0.55)' }}>
+        <p className="text-[14px] mb-8" style={{ color: 'var(--amina-muted-text)' }}>
           Enter the code shared with you by a sister.
         </p>
 
@@ -146,16 +146,16 @@ export default function JoinCirclePage() {
             style={{
               background: 'var(--amina-warm-ivory)',
               borderTop: '2px solid var(--amina-muted-gold)',
-              borderLeft: '1px solid var(--amina-hairline)',
-              borderRight: '1px solid var(--amina-hairline)',
-              borderBottom: '1px solid var(--amina-hairline)',
-              boxShadow: '0 1px 4px rgba(44,41,38,0.06)',
+              border: '1px solid var(--amina-hairline)',
+              borderTopWidth: '2px',
+              borderTopColor: 'var(--amina-muted-gold)',
+              boxShadow: 'var(--amina-shadow-soft)',
             }}
           >
             <p className="font-display italic text-[20px] text-charcoal mb-2 leading-tight">
               {preview.name}
             </p>
-            <p className="text-[14px] leading-relaxed mb-3" style={{ color: 'rgba(44,41,38,0.6)' }}>
+            <p className="text-[14px] leading-relaxed mb-3" style={{ color: 'var(--amina-secondary-text)' }}>
               {preview.intention}
             </p>
             <div className="flex items-center gap-3 flex-wrap">
@@ -165,7 +165,7 @@ export default function JoinCirclePage() {
               >
                 {preview.topic_tag}
               </span>
-              <span className="text-[12px]" style={{ color: 'rgba(44,41,38,0.5)' }}>
+              <span className="text-[12px]" style={{ color: 'var(--amina-muted-text)' }}>
                 {preview.member_count} sisters
               </span>
               {preview.spots_remaining <= 5 && preview.spots_remaining > 0 && (
@@ -179,7 +179,7 @@ export default function JoinCirclePage() {
 
         {/* Full message */}
         {isFull && (
-          <p className="text-center text-[14px] mb-6 px-2" style={{ color: 'rgba(44,41,38,0.55)' }}>
+          <p className="text-center text-[14px] mb-6 px-2" style={{ color: 'var(--amina-muted-text)' }}>
             This circle is full, sister. Ask the creator to increase the limit.
           </p>
         )}
