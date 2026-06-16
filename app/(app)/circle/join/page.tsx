@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useRef, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ChevronLeft } from 'lucide-react'
 
 type CirclePreview = {
@@ -26,12 +26,24 @@ const TOPIC_COLORS: Record<string, string> = {
 
 export default function JoinCirclePage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [code, setCode] = useState('')
   const [preview, setPreview] = useState<CirclePreview | null>(null)
   const [error, setError] = useState('')
   const [isFull, setIsFull] = useState(false)
   const [joining, setJoining] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Pre-fill code when returning from auth redirect
+  useEffect(() => {
+    const urlCode = searchParams.get('code')
+    if (urlCode) {
+      const cleaned = urlCode.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10)
+      setCode(cleaned)
+      if (cleaned.length >= 5) fetchPreview(cleaned)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   function handleCodeChange(val: string) {
     const cleaned = val.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10)
@@ -67,6 +79,11 @@ export default function JoinCirclePage() {
         body: JSON.stringify({ invite_code: code }),
       })
       const data = await res.json()
+      if (res.status === 401) {
+        // Not signed in — send to auth and return here with the code pre-filled
+        router.push(`/auth?redirect=/circle/join&code=${encodeURIComponent(code)}`)
+        return
+      }
       if (data.circle) {
         router.push(`/circle/${data.circle.id}`)
       } else {

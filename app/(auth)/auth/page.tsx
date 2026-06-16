@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowRight, Leaf } from 'lucide-react'
 import AminaWordmark from '@/components/brand/AminaWordmark'
 import AminaIcon from '@/components/brand/AminaIcon'
@@ -9,6 +9,8 @@ import SignInForm from '@/components/auth/SignInForm'
 
 export default function SplashPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirectTo = searchParams.get('redirect') ?? '/home'
   const [showSignIn, setShowSignIn] = useState(false)
 
   return (
@@ -47,7 +49,7 @@ export default function SplashPage() {
       {/* CTA stack */}
       <div className="px-6 pb-10 flex flex-col gap-3">
         {showSignIn ? (
-          <SignInForm onClose={() => setShowSignIn(false)} />
+          <SignInForm onClose={() => setShowSignIn(false)} redirectTo={redirectTo} />
         ) : (
           <>
             <button onClick={() => setShowSignIn(true)} className="btn-primary w-full">

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowRight, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
-export default function SignInForm({ onClose }: { onClose?: () => void }) {
+export default function SignInForm({ onClose, redirectTo = '/home' }: { onClose?: () => void; redirectTo?: string }) {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -26,7 +26,7 @@ export default function SignInForm({ onClose }: { onClose?: () => void }) {
         setError(signInError.message)
         return
       }
-      router.push('/home')
+      router.push(redirectTo)
       router.refresh()
     } catch {
       setError('Something went wrong. Please try again.')
