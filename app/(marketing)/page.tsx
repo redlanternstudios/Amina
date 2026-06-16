@@ -73,10 +73,19 @@ export default function LandingPage() {
             </a>
           ))}
         </div>
-        <Link href="/auth" className="btn-primary text-sm px-5 py-2.5 whitespace-nowrap">
-          Join The Circle
-          <HandHeart size={16} strokeWidth={1.75} />
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/auth"
+            className="text-sm font-medium transition-colors whitespace-nowrap"
+            style={{ color: 'var(--amina-soft-charcoal)', opacity: 0.65 }}
+          >
+            Sign in
+          </Link>
+          <Link href="/auth" className="btn-primary text-sm px-5 py-2.5 whitespace-nowrap">
+            Join The Circle
+            <HandHeart size={16} strokeWidth={1.75} />
+          </Link>
+        </div>
       </nav>
 
       {/* Hero */}

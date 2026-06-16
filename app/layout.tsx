@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Newsreader, Lora } from 'next/font/google'
+import { ThemeProvider } from '@/components/app/ThemeProvider'
 import './globals.css'
 
 const inter = Inter({
@@ -53,7 +54,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${newsreader.variable} ${lora.variable} bg-cream`}>
       <body className="bg-cream text-charcoal font-body antialiased">
-        {children}
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   )

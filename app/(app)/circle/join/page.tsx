@@ -34,15 +34,15 @@ export default function JoinCirclePage() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   function handleCodeChange(val: string) {
-    const cleaned = val.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8)
+    const cleaned = val.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10)
     setCode(cleaned)
     setError('')
     setPreview(null)
     setIsFull(false)
 
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    if (cleaned.length === 8) {
-      debounceRef.current = setTimeout(() => fetchPreview(cleaned), 400)
+    if (cleaned.length >= 5) {
+      debounceRef.current = setTimeout(() => fetchPreview(cleaned), 600)
     }
   }
 
@@ -118,10 +118,17 @@ export default function JoinCirclePage() {
                   : '2px solid var(--amina-hairline)',
             }}
           />
-          {code.length > 0 && code.length < 8 && (
-            <p className="text-[12px] mt-2" style={{ color: 'rgba(44,41,38,0.4)' }}>
-              {8 - code.length} more character{8 - code.length !== 1 ? 's' : ''}
-            </p>
+          {code.length >= 5 && !preview && !error && (
+            <button
+              onClick={() => fetchPreview(code)}
+              className="mt-4 text-[13px] font-medium px-5 py-2 rounded-full transition-colors"
+              style={{
+                background: 'var(--amina-rose-selected)',
+                color: 'var(--amina-primary-action)',
+              }}
+            >
+              Check code
+            </button>
           )}
         </div>
 

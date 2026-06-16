@@ -41,15 +41,47 @@
     --gold: var(--amina-muted-gold);
   }
 
+  /* Dark mode — warm dark inversion */
+  html.dark {
+    --amina-soft-cream: #1C1714;
+    --amina-warm-ivory: #2C2520;
+    --amina-soft-charcoal: #F7F2E8;
+    --amina-secondary-text: rgba(247, 242, 232, 0.70);
+    --amina-muted-text: rgba(247, 242, 232, 0.50);
+    --amina-border: rgba(247, 242, 232, 0.12);
+    --amina-hairline: rgba(247, 242, 232, 0.07);
+    --amina-primary-action: #D6909C;
+    --amina-primary-action-hover: #C4788A;
+    --amina-rose-selected: rgba(214, 144, 156, 0.20);
+    --amina-warm-highlight: rgba(215, 186, 130, 0.14);
+    --amina-focus-ring: rgba(214, 144, 156, 0.35);
+    --amina-shadow-soft: 0 12px 32px rgba(0, 0, 0, 0.28);
+    --amina-shadow-button: 0 8px 18px rgba(0, 0, 0, 0.32);
+    --amina-shadow-nav: 0 -4px 20px rgba(0, 0, 0, 0.30);
+    --amina-muted-gold: #C8A85A;
+
+    /* Legacy aliases */
+    --cream: var(--amina-soft-cream);
+    --ivory: var(--amina-warm-ivory);
+    --charcoal: var(--amina-soft-charcoal);
+    --gold: var(--amina-muted-gold);
+    --rose: var(--amina-primary-action);
+
+    color-scheme: dark;
+  }
+
   html {
     background-color: var(--amina-soft-cream);
     color: var(--amina-soft-charcoal);
     -webkit-font-smoothing: antialiased;
+    transition: background-color 0.25s ease, color 0.25s ease;
   }
 
   body {
     min-height: 100dvh;
     background-color: var(--amina-soft-cream);
+    color: var(--amina-soft-charcoal);
+    transition: background-color 0.25s ease, color 0.25s ease;
   }
 }
 

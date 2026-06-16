@@ -4,6 +4,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import { Menu, ChevronLeft, Home } from 'lucide-react'
 import { ReactNode } from 'react'
 import { useChrome } from './ChromeContext'
+import ThemeToggle from './ThemeToggle'
 
 type AppHeaderProps = {
   title?: string
@@ -74,8 +75,9 @@ export default function AppHeader({ title, brand, right }: AppHeaderProps) {
       </div>
 
       {/* Right slot (kept same width as left for centering balance) */}
-      <div className="flex items-center justify-end gap-1 flex-shrink-0 min-w-[2.25rem]">
+      <div className="flex items-center justify-end gap-1 flex-shrink-0">
         {right}
+        <ThemeToggle />
       </div>
     </header>
   )

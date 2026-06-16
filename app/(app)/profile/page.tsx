@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import BottomNav from '@/components/BottomNav'
 import AppHeader from '@/components/app/AppHeader'
+import { useTheme } from '@/components/app/ThemeProvider'
 import { createClient } from '@/lib/supabase/client'
 
 const TABS = ['Profile', 'Preferences', 'Privacy', 'Support']
@@ -15,7 +16,7 @@ const TABS = ['Profile', 'Preferences', 'Privacy', 'Support']
 export default function ProfilePage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('Profile')
-  const [theme] = useState('Light')
+  const { isDark, toggleTheme } = useTheme()
   const [language] = useState('English')
 
   async function handleLogout() {
@@ -89,11 +90,19 @@ export default function ProfilePage() {
             })}
 
             {/* Theme */}
-            <div className="card flex items-center gap-3">
+            <button onClick={toggleTheme} className="w-full card flex items-center gap-3">
               <Palette size={20} strokeWidth={1.5} className="text-olive" />
-              <span className="flex-1 text-charcoal text-sm font-medium">Theme</span>
-              <button className="text-charcoal/60 text-sm flex items-center gap-1">{theme} <ChevronRight size={16} strokeWidth={1.5} /></button>
-            </div>
+              <span className="flex-1 text-left text-charcoal text-sm font-medium">Theme</span>
+              <span
+                className="text-xs font-semibold px-3 py-1 rounded-full"
+                style={{
+                  background: 'var(--amina-rose-selected)',
+                  color: 'var(--amina-primary-action)',
+                }}
+              >
+                {isDark ? 'Dark' : 'Light'}
+              </span>
+            </button>
 
             {/* Language */}
             <div className="card flex items-center gap-3">
