@@ -54,6 +54,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${newsreader.variable} ${lora.variable} bg-cream`}>
       <body className="bg-cream text-charcoal font-body antialiased">
+        {/* Runs synchronously before first paint — prevents flash of wrong theme */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('amina-theme');var d=window.matchMedia('(prefers-color-scheme: dark)').matches;if(t==='dark'||(t===null&&d)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
+          }}
+        />
         <ThemeProvider>
           {children}
         </ThemeProvider>

@@ -9,20 +9,21 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Amina exact palette — SightEngine spec §4
-        cream: '#F7F2E8',
-        ivory: '#F2ECE4',
+        // All colors read from CSS vars so dark mode overrides work
+        cream: 'var(--amina-soft-cream)',
+        ivory: 'var(--amina-warm-ivory)',
         rose: {
-          DEFAULT: '#D6AAA3', // dusty rose (brand base)
-          action: '#C78072', // primary action / button
-          hover: '#B96E62',
+          DEFAULT: '#D6AAA3',
+          action: 'var(--amina-primary-action)',
+          hover: 'var(--amina-primary-action-hover)',
+          selected: 'var(--amina-rose-selected)',
         },
         olive: {
           DEFAULT: '#8E9878',
           dark: '#6B7A5C',
         },
-        charcoal: '#2C2926',
-        gold: '#D7BA82',
+        charcoal: 'var(--amina-soft-charcoal)',
+        gold: 'var(--amina-muted-gold)',
       },
       fontFamily: {
         display: ['var(--font-display)', 'Newsreader', 'Georgia', 'serif'],
@@ -35,9 +36,9 @@ const config: Config = {
         '3xl': '1.5rem',
       },
       boxShadow: {
-        soft: '0 12px 32px rgba(44, 41, 38, 0.07)',
-        button: '0 8px 18px rgba(120, 74, 64, 0.14)',
-        nav: '0 12px 30px rgba(44, 41, 38, 0.08)',
+        soft: 'var(--amina-shadow-soft)',
+        button: 'var(--amina-shadow-button)',
+        nav: 'var(--amina-shadow-nav)',
       },
     },
   },
