@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ChevronLeft } from 'lucide-react'
 
@@ -24,7 +24,7 @@ const TOPIC_COLORS: Record<string, string> = {
   'New Muslims': '#A8B89A',
 }
 
-export default function JoinCirclePage() {
+function JoinCircleInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [code, setCode] = useState('')
@@ -223,5 +223,14 @@ export default function JoinCirclePage() {
         )}
       </div>
     </div>
+  )
+}
+
+
+export default function JoinCirclePage() {
+  return (
+    <Suspense fallback={null}>
+      <JoinCircleInner />
+    </Suspense>
   )
 }
