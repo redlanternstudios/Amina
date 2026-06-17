@@ -28,13 +28,14 @@ export interface DBMessage {
 export async function createConversation(id?: string, title?: string, topicTag?: string): Promise<DBConversation> {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Not authenticated')
+  const userId = user?.id ?? getUserIdFromCookie()
+  if (!userId) throw new Error('Not authenticated')
 
   const { data, error } = await supabase
     .from('amina_conversations')
     .insert({
       ...(id ? { id } : {}),
-      user_id: user.id,
+      user_id: userId,
       title: title ?? null,
       topic_tag: topicTag ?? null,
     })
@@ -70,6 +71,26 @@ export async function loadMessages(conversationId: string): Promise<DBMessage[]>
   return data ?? []
 }
 
+/**
+ * Parse the user ID directly from the Supabase auth cookie JWT payload.
+ * createBrowserClient's getUser() fails in Next 14 with ssr 0.1.0 because
+ * it cannot parse the URL-encoded JSON cookie blob it writes itself.
+ */
+function getUserIdFromCookie(): string | null {
+  if (typeof document === 'undefined') return null
+  try {
+    const match = document.cookie.match(/sb-[^=]+-auth-token=([^;]+)/)
+    if (!match) return null
+    const blob = JSON.parse(decodeURIComponent(match[1]))
+    const jwt = blob?.access_token
+    if (!jwt) return null
+    const payload = JSON.parse(atob(jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
+    return payload?.sub ?? null
+  } catch {
+    return null
+  }
+}
+
 /** Save a single message to the DB */
 export async function saveMessage(
   conversationId: string,
@@ -77,12 +98,16 @@ export async function saveMessage(
   content: string
 ): Promise<DBMessage> {
   const supabase = createClient()
+
+  // Prefer getUser(), fall back to cookie-parsed uid
+  let userId: string | null = null
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Not authenticated')
+  userId = user?.id ?? getUserIdFromCookie()
+  if (!userId) throw new Error('Not authenticated')
 
   const { data, error } = await supabase
     .from('amina_messages')
-    .insert({ conversation_id: conversationId, user_id: user.id, role, content })
+    .insert({ conversation_id: conversationId, user_id: userId, role, content })
     .select()
     .single()
 

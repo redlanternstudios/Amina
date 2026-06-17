@@ -134,13 +134,13 @@ function ChatInner() {
       .map(m => ({ role: m.role, content: m.content }))
 
     try {
-      // Save user message to DB
-      let savedUserMsg: DBMessage | null = null
+      // Fire-and-forget: save user message to DB without blocking the AI call
       if (conversationId) {
-        savedUserMsg = await saveMessage(conversationId, 'user', text.trim())
-        setMessagesAndRef(prev =>
-          prev.map(m => m.id === userMsg.id ? { ...m, id: savedUserMsg!.id, persisted: true } : m)
-        )
+        saveMessage(conversationId, 'user', text.trim())
+          .then(saved => setMessagesAndRef(prev =>
+            prev.map(m => m.id === userMsg.id ? { ...m, id: saved.id, persisted: true } : m)
+          ))
+          .catch(() => { /* persistence failure is non-fatal */ })
       }
 
       const res = await fetch('/api/chat', {
@@ -151,6 +151,7 @@ function ChatInner() {
 
       if (res.status === 429) {
         setError('Taking a breath... please try again in a moment.')
+        setIsLoading(false)
         return
       }
       if (!res.ok) throw new Error('api_error')
@@ -158,7 +159,6 @@ function ChatInner() {
       const data = await res.json()
       const assistantContent: string = data.content
 
-      // Add assistant response to UI
       const assistantMsg: UIMessage = {
         id: `a_${Date.now()}`,
         role: 'assistant',
@@ -167,16 +167,16 @@ function ChatInner() {
       }
       setMessagesAndRef(prev => [...prev, assistantMsg])
 
-      // Save assistant response to DB
+      // Fire-and-forget: save assistant response to DB
       if (conversationId) {
-        const savedAssistant = await saveMessage(conversationId, 'assistant', assistantContent)
-        setMessagesAndRef(prev =>
-          prev.map(m => m.id === assistantMsg.id ? { ...m, id: savedAssistant.id, persisted: true } : m)
-        )
+        saveMessage(conversationId, 'assistant', assistantContent)
+          .then(saved => setMessagesAndRef(prev =>
+            prev.map(m => m.id === assistantMsg.id ? { ...m, id: saved.id, persisted: true } : m)
+          ))
+          .catch(() => { /* persistence failure is non-fatal */ })
       }
     } catch {
       setError('Something went wrong. Please try again.')
-      // Remove the optimistic user message on failure
       setMessagesAndRef(prev => prev.filter(m => m.id !== userMsg.id))
     } finally {
       setIsLoading(false)
