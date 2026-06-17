@@ -110,7 +110,7 @@ export default function LandingPage() {
       {/* ── Hero ── */}
       <section
         id="about"
-        className="max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 pt-14 pb-20 grid lg:grid-cols-2 gap-10 lg:gap-16 items-center"
+        className="max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 pt-8 pb-12 grid lg:grid-cols-2 gap-10 lg:gap-16 items-center"
       >
         {/* Left — copy */}
         <div>
@@ -196,7 +196,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── How it supports you ── */}
-      <section id="how" className="max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 pb-20">
+      <section id="how" className="max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 pb-12">
         <div
           className="bg-ivory rounded-2xl sm:rounded-[2rem] px-5 sm:px-10 lg:px-14 py-12 lg:py-16"
           style={{ border: '1px solid var(--amina-hairline)' }}
@@ -243,7 +243,7 @@ export default function LandingPage() {
       {/* ── Access Gate ── */}
       <section
         id="access"
-        className="max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 pb-20 grid lg:grid-cols-2 gap-10 lg:gap-14 items-center"
+        className="max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 pb-12 grid lg:grid-cols-2 gap-10 lg:gap-14 items-center"
       >
         <div className="relative aspect-[5/4] rounded-2xl lg:rounded-3xl overflow-hidden shadow-card-lg">
           <Image
@@ -283,7 +283,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Disclaimer ── */}
-      <section className="max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 pb-20">
+      <section className="max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 pb-12">
         <div
           className="relative overflow-hidden rounded-2xl p-6 sm:p-7 flex gap-4 sm:gap-5 items-start"
           style={{ backgroundColor: 'var(--amina-rose-selected)' }}

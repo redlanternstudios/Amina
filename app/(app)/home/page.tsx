@@ -35,7 +35,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex flex-col min-h-dvh bg-cream pb-28">
+    <div className="flex flex-col bg-cream pb-20">
       <AppHeader
         brand
         right={
@@ -47,19 +47,19 @@ export default function HomePage() {
       />
 
       {/* Arch hero + greeting */}
-      <div className="relative px-4 pb-4">
-        <div className="relative rounded-3xl overflow-hidden bg-ivory min-h-[160px] flex flex-col justify-end p-5" style={{ border: '1px solid var(--amina-hairline)' }}>
+      <div className="relative px-4 pb-3">
+        <div className="relative rounded-3xl overflow-hidden bg-ivory flex flex-col justify-end p-4" style={{ border: '1px solid var(--amina-hairline)' }}>
           {/* Arch motif */}
           <div className="absolute inset-0 flex items-center justify-end opacity-20">
             <div className="w-32 h-40 rounded-t-full mr-4" style={{ border: '3px solid var(--amina-muted-gold)' }} />
           </div>
-          <h2 className="font-display text-3xl text-charcoal leading-tight">
+          <h2 className="font-display text-2xl text-charcoal leading-tight">
             Assalamu alaykum, <span className="text-rose-amina">Sister</span>
           </h2>
-          <p className="text-muted text-sm mt-1">How can I support you today?</p>
+          <p className="text-muted text-xs mt-0.5">How can I support you today?</p>
 
           {/* Quick chips */}
-          <div className="flex gap-2 mt-3 overflow-x-auto pb-1 -mx-1 px-1">
+          <div className="flex gap-2 mt-2.5 overflow-x-auto pb-1 -mx-1 px-1">
             {QUICK_CHIPS.map(chip => {
               const Icon = chip.icon
               return (
@@ -73,9 +73,9 @@ export default function HomePage() {
       </div>
 
       {/* Amina chat card */}
-      <div className="px-4 mb-4">
+      <div className="px-4 mb-3">
         <div className="card">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-2.5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-cream flex items-center justify-center" style={{ border: '1px solid var(--amina-hairline)' }}>
                 <AminaIcon size={22} />
@@ -91,7 +91,7 @@ export default function HomePage() {
           </div>
 
           {/* Opening message */}
-          <div className="bg-cream rounded-2xl p-3 mb-3">
+          <div className="bg-cream rounded-2xl p-3 mb-2.5">
             <p className="text-charcoal text-sm leading-relaxed">
               Salam, Sister.<br />
               I&apos;m so happy you&apos;re here.<br />
@@ -130,8 +130,8 @@ export default function HomePage() {
       </div>
 
       {/* Continue Your Journey */}
-      <div className="px-4 mb-4">
-        <div className="flex items-center justify-between mb-3">
+      <div className="px-4 mb-3">
+        <div className="flex items-center justify-between mb-2.5">
           <p className="font-semibold text-charcoal text-sm">Continue Your Journey</p>
           <button className="btn-tertiary">View all</button>
         </div>
@@ -152,8 +152,8 @@ export default function HomePage() {
       </div>
 
       {/* Daily Reflection */}
-      <div className="px-4 mb-6">
-        <div className="flex items-center justify-between mb-3">
+      <div className="px-4 mb-4">
+        <div className="flex items-center justify-between mb-2.5">
           <p className="font-semibold text-charcoal text-sm">Daily Reflection</p>
           <button className="btn-tertiary">View all</button>
         </div>
