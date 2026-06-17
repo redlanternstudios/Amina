@@ -2,9 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ArrowRight, Leaf } from 'lucide-react'
-import AminaWordmark from '@/components/brand/AminaWordmark'
-import AminaIcon from '@/components/brand/AminaIcon'
+import { ArrowRight } from 'lucide-react'
 import SignInForm from '@/components/auth/SignInForm'
 import { createClient } from '@/lib/supabase/client'
 
@@ -25,20 +23,14 @@ function SplashPageInner() {
     <div className="flex flex-col min-h-dvh bg-cream relative overflow-hidden">
       {/* Hero */}
       <div className="flex-1 flex flex-col items-center justify-start pt-16 px-6">
-        <AminaWordmark size="xl" tone="gradient" showSignature />
+        <h1 className="font-display text-7xl italic" style={{ backgroundImage: 'linear-gradient(95deg, var(--amina-soft-olive) 0%, var(--amina-dusty-rose) 55%, var(--amina-muted-gold) 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>
+          Amina
+        </h1>
 
-        {/* Divider */}
-        <div className="flex items-center gap-2 my-5">
-          <div className="h-px w-12" style={{ backgroundColor: 'rgba(215,186,130,0.4)' }} />
-          <Leaf size={18} strokeWidth={1.5} className="text-gold" />
-          <div className="h-px w-12" style={{ backgroundColor: 'rgba(215,186,130,0.4)' }} />
-        </div>
-
-        <p className="font-display text-2xl text-charcoal/80 text-center">
+        <p className="font-display text-2xl text-charcoal/80 text-center mt-8">
           Faith centered reflection for women.
         </p>
 
-        {/* Lantern-glow motif */}
         <div className="flex-1 flex items-end justify-center pb-8">
           <div
             className="w-48 h-64 rounded-3xl flex items-center justify-center bg-ivory"
@@ -48,7 +40,7 @@ function SplashPageInner() {
               className="w-24 h-24 rounded-full flex items-center justify-center"
               style={{ backgroundColor: 'var(--amina-warm-highlight)' }}
             >
-              <AminaIcon size={56} />
+              🌙
             </div>
           </div>
         </div>
