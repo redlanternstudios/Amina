@@ -1,40 +1,37 @@
-# Muslim Texas + Saudi Journey Cleanup Audit
+# Cleanup Audit: Muslim Texas + Saudi Journey
 
 **Date:** 2026-06-17
 **Branch:** backend/amina/cleanup-mt-sj
-**Status:** VERIFIED — nothing to clean
+**Repo:** /Users/rorysemeah/amina
+**Supabase Project:** endovljmaudnxdzdapmf
 
 ## Scope
 Remove ALL Muslim Texas and Saudi Journey related content from Amina.
 
-## Findings
+## Results
 
-### Codebase (`/Users/rorysemeah/amina`)
-- **Zero files** with "muslim_texas", "muslimtexas", "saudi_journey", "saudijourney", "texas", or "saudi" in filenames or directories
-- **Zero content references** across all `.ts`, `.tsx`, `.js`, `.sql`, `.md`, `.json`, and config files
-- **Commit history** confirms: Saudi Journey was **already renamed** to "Hajj & Umrah" in commit `1d7a544`
-- **Scope lock doc** (`AMINA_SCOPE_LOCK_V2.md`) lists Muslim Texas removal as a past **AC:** (completed action item)
+### Codebase Scan
+- File/directory search for `muslim_texas`, `muslimtexas`, `saudi_journey`, `saudijourney`: **0 matches** across 93 files/dirs
+- Content search in `.tsx`, `.ts`, `.js`, `.css`, `.sql` files: **0 references**
+- Supabase migration files (001-007): **0 references**
+- Generic "New Muslim Guidance" marketing card found — this is generic, not feature-specific
 
-### Migration Files
-- All 7 migration files (`001`–`007`) checked — zero references to either feature
+### Git History
+- **No files** matching these features ever committed to this repo
+- Commit `1d7a544` confirms "Saudi Journey renamed to Hajj & Umrah" was already done
+- Git stash listing showed the rename commit already applied
 
-### Supabase Schema (project: `endovljmaudnxdzdapmf`)
-- Cannot verify directly — no live credentials available in env files
-- Migration files show **no tables, columns, triggers, or RLS policies** referencing these features
+### Scope-Lock Doc
+- `AMINA_SCOPE_LOCK_V2.md` lists Muslim Texas removal as a **completed AC** (already done prior)
 
-## Actions Taken
-| Action | Status |
-|---|---|
-| Schema check | ✅ — No evidence in migrations; live DB unverifiable without credentials |
-| Codebase scan | ✅ — 0 files, 0 references found |
-| Data orphan check | ✅ — No FK constraints or orphan data possible (nothing existed) |
-| Branch created | ✅ — `backend/amina/cleanup-mt-sj` |
-| Commit | ✅ — Audit document committed |
+### Live Supabase Schema
+- Could not directly query project `endovljmaudnxdzdapmf` — no service role key available in local env files
+- No migration files reference either feature, so if tables exist they'd be manual additions outside migration history
 
-## Build Status
-- `npm run build` fails with pre-existing error: `next build doesn't support turbopack yet`
-- This is not related to MT/SJ cleanup — it's a Next.js 14.2.0 config issue with Turbopack
-- `next dev` (dev mode) works fine on this project
+## Verdict
+**Nothing to clean.** Both features were never built in this codebase, or were already renamed/removed in prior commits. The rename "Saudi Journey → Hajj & Umrah" was already committed. Muslim Texas was already recorded as removed in the scope-lock doc.
 
-## Conclusion
-**These features were never built in this repo.** Saudi Journey was already renamed to Hajj & Umrah in a prior commit. Muslim Texas was never implemented. No cleanup action was required.
+## Branch
+- Created branch `backend/amina/cleanup-mt-sj` on 2026-06-17
+- Audit document committed
+- No code deletions performed (nothing to delete)
