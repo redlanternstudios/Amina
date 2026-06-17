@@ -9,6 +9,7 @@ import {
   saveMessage,
   createConversation,
 } from '@/lib/supabase/chat'
+import { stripPhaseLabels, renderMarkdown } from '@/lib/amina-response-utils'
 
 interface UIMessage {
   id: string
@@ -235,8 +236,12 @@ function ChatInner() {
               >
                 {msg.role === 'assistant' ? (
                   <div className="font-amina-voice text-[15px] leading-relaxed space-y-2">
-                    {msg.content.split(/\n\n+/).map((para, i) => (
-                      <p key={i} className="whitespace-pre-wrap">{para.trim()}</p>
+                    {stripPhaseLabels(msg.content).split(/\n\n+/).map((para, i) => (
+                      <p
+                        key={i}
+                        className="whitespace-pre-wrap"
+                        dangerouslySetInnerHTML={{ __html: renderMarkdown(para.trim()) }}
+                      />
                     ))}
                   </div>
                 ) : (

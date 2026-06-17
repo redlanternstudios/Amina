@@ -1,13 +1,12 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, BookOpen, NotebookPen, Users, User } from 'lucide-react'
+import { MessageCircle, BookMarked, Hands, User } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { label: 'Home', icon: Home, href: '/home' },
-  { label: 'Guidance', icon: BookOpen, href: '/guidance' },
-  { label: 'Reflections', icon: NotebookPen, href: '/reflections' },
-  { label: 'Circle', icon: Users, href: '/circle' },
+  { label: 'Amina', icon: MessageCircle, href: '/home' },
+  { label: 'Reflections', icon: BookMarked, href: '/reflections' },
+  { label: "Du'a Wall", icon: Hands, href: '/dua-wall' },
   { label: 'Profile', icon: User, href: '/profile' },
 ]
 
@@ -16,27 +15,43 @@ export default function BottomNav() {
   const router = useRouter()
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 flex justify-center px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-2 pointer-events-none">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none" style={{ background: '#07080D' }}>
       <div
-        className="pointer-events-auto flex items-center justify-around gap-1 w-full max-w-md rounded-[28px] bg-ivory px-2 py-2"
+        className="pointer-events-auto flex items-center justify-around gap-0 w-full"
         style={{
-          border: '1px solid var(--amina-hairline)',
-          boxShadow: 'var(--amina-shadow-nav)',
+          background: '#07080D',
+          height: '64px',
+          paddingBottom: 'max(env(safe-area-inset-bottom), 0px)',
+          paddingTop: '8px',
         }}
       >
         {NAV_ITEMS.map(item => {
           const Icon = item.icon
-          const isActive = pathname.startsWith(item.href)
+          const isActive = pathname === item.href || (item.href !== '/profile' && pathname.startsWith(item.href))
           return (
             <button
               key={item.href}
               onClick={() => router.push(item.href)}
               aria-current={isActive ? 'page' : undefined}
-              className="flex flex-1 flex-col items-center gap-1 rounded-2xl py-1.5 transition-colors"
-              style={{ color: isActive ? 'var(--amina-primary-action)' : 'var(--amina-muted-text)' }}
+              className="flex flex-1 flex-col items-center justify-center gap-1 transition-colors relative"
+              style={{
+                color: isActive ? '#F7F2EE' : '#8A8A8A',
+              }}
             >
-              <Icon size={22} strokeWidth={1.5} />
-              <span className="text-[11px] font-medium">{item.label}</span>
+              <Icon size={24} strokeWidth={1.5} />
+              <span className="text-[10px] font-medium">{item.label}</span>
+              {isActive && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: '-4px',
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    background: '#D92532',
+                  }}
+                />
+              )}
             </button>
           )
         })}

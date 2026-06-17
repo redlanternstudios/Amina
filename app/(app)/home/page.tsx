@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Bell, ArrowUp, Paperclip, Mic, Sparkles, MoreHorizontal, Heart, Moon, BookOpen, Leaf } from 'lucide-react'
+import { Bell, ArrowUp, Paperclip, Mic, Sparkles, MoreHorizontal, Heart, Moon, BookOpen, Leaf, X } from 'lucide-react'
 import BottomNav from '@/components/BottomNav'
 import AppHeader from '@/components/app/AppHeader'
 import AminaIcon from '@/components/brand/AminaIcon'
@@ -23,6 +23,7 @@ const RECENT_CONVERSATIONS = [
 export default function HomePage() {
   const router = useRouter()
   const [message, setMessage] = useState('')
+  const [showNotifications, setShowNotifications] = useState(false)
 
   function startChat(text: string) {
     if (!text.trim()) return
@@ -39,9 +40,13 @@ export default function HomePage() {
       <AppHeader
         brand
         right={
-          <button aria-label="Notifications" className="w-9 h-9 flex items-center justify-center rounded-full bg-ivory relative text-secondary" style={{ border: '1px solid var(--amina-hairline)' }}>
+          <button
+            onClick={() => setShowNotifications(true)}
+            aria-label="Notifications"
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-ivory relative text-secondary"
+            style={{ border: '1px solid var(--amina-hairline)' }}
+          >
             <Bell size={18} strokeWidth={1.5} />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-amina" />
           </button>
         }
       />
@@ -129,26 +134,45 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Continue Your Journey */}
+          {/* Continue Your Journey */}
       <div className="px-4 mb-3">
         <div className="flex items-center justify-between mb-2.5">
-          <p className="font-semibold text-charcoal text-sm">Continue Your Journey</p>
-          <button className="btn-tertiary">View all</button>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#8A8A8A' }}>Your Conversations</p>
+          <button className="text-xs text-rose-amina font-medium">View all</button>
         </div>
-        <div className="flex gap-3 overflow-x-auto pb-1">
-          {RECENT_CONVERSATIONS.map(conv => (
-            <button key={conv.id} onClick={() => router.push(`/chat/${conv.id}`)} className="flex-shrink-0 w-44 card text-left">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center mb-2" style={{ backgroundColor: 'var(--amina-warm-highlight)' }}>
-                <BookOpen size={18} strokeWidth={1.5} className="text-olive" />
-              </div>
-              <p className="font-semibold text-charcoal text-xs leading-snug mb-1">{conv.title}</p>
-              <p className="text-muted text-xs mb-2">Last chat • {conv.time}</p>
-              <div className="h-1 rounded-full bg-charcoal/10">
-                <div className="h-1 rounded-full" style={{ width: `${conv.progress}%`, backgroundColor: conv.color }} />
-              </div>
-            </button>
-          ))}
-        </div>
+        {RECENT_CONVERSATIONS.length === 0 ? (
+          <div className="text-center py-8">
+            <p style={{ color: '#8A8A8A' }} className="text-sm mb-3">Start your first conversation with Amina</p>
+            <div className="text-3xl mb-2">🌙</div>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {RECENT_CONVERSATIONS.map(conv => (
+              <button
+                key={conv.id}
+                onClick={() => router.push(`/chat/${conv.id}`)}
+                className="w-full flex items-center gap-3 p-3 rounded-lg transition-opacity"
+                style={{
+                  background: '#F7F2EE',
+                  opacity: 0.9,
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.9')}
+              >
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
+                  style={{ background: '#D92532', color: '#F7F2EE' }}
+                >
+                  A
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-medium text-charcoal">{conv.title}</p>
+                  <p className="text-xs" style={{ color: '#8A8A8A' }}>Last chat • {conv.time}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Daily Reflection */}
@@ -173,6 +197,46 @@ export default function HomePage() {
       </div>
 
       <BottomNav />
+
+      {/* Notifications Bottom Sheet */}
+      {showNotifications && (
+        <div className="fixed inset-0 z-50 flex items-end">
+          <div
+            className="fixed inset-0"
+            onClick={() => setShowNotifications(false)}
+            style={{ background: 'rgba(0, 0, 0, 0.5)' }}
+          />
+          <div
+            className="relative w-full rounded-t-3xl p-6"
+            style={{ background: 'var(--amina-card-bg, #F7F2EE)' }}
+          >
+            {/* Drag handle */}
+            <div className="flex justify-center mb-4">
+              <div className="w-12 h-1 rounded-full" style={{ background: 'var(--amina-border)' }} />
+            </div>
+
+            {/* Icon and title */}
+            <div className="flex flex-col items-center mb-6">
+              <div className="text-3xl mb-3">🌙</div>
+              <h2 className="text-lg font-semibold text-charcoal">Notifications coming soon</h2>
+            </div>
+
+            {/* Message */}
+            <p className="text-center text-muted text-sm leading-relaxed mb-6">
+              You&apos;ll be notified when sisters respond to your du&apos;as, and when Amina has a reflection waiting for you inshallah.
+            </p>
+
+            {/* Close button */}
+            <button
+              onClick={() => setShowNotifications(false)}
+              className="w-full py-3 rounded-lg font-medium transition-opacity"
+              style={{ background: '#F7F2EE', color: '#07080D' }}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
