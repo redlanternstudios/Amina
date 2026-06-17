@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowRight, Leaf } from 'lucide-react'
 import AminaWordmark from '@/components/brand/AminaWordmark'
@@ -8,7 +8,7 @@ import AminaIcon from '@/components/brand/AminaIcon'
 import SignInForm from '@/components/auth/SignInForm'
 import { createClient } from '@/lib/supabase/client'
 
-export default function SplashPage() {
+function SplashPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get('redirect') ?? '/home'
@@ -79,5 +79,13 @@ export default function SplashPage() {
         <p className="text-center text-xs text-charcoal/30 mt-2">by RedLantern Studios™</p>
       </div>
     </div>
+  )
+}
+
+export default function SplashPage() {
+  return (
+    <Suspense fallback={null}>
+      <SplashPageInner />
+    </Suspense>
   )
 }
