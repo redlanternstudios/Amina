@@ -264,7 +264,7 @@ export default function LandingPage() {
           <p className="text-muted mb-7 max-w-md text-[15px] leading-relaxed">
             Amina is available exclusively to The Circle members. Enter your access code to begin.
           </p>
-          <form action="/auth" className="space-y-3 max-w-sm">
+          <form action="/circle/join" className="space-y-3 max-w-sm">
             <div className="relative">
               <input
                 type="text"
