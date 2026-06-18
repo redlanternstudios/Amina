@@ -23,7 +23,7 @@ const slides = [
     features: [
       { icon: '💬', label: 'AI Companion', desc: 'Talk to Amina about anything on your heart.' },
       { icon: '📖', label: 'Guidance Library', desc: 'Curated Islamic knowledge and inspiration.' },
-      { icon: '👥', label: 'The Circle', desc: 'A sisterhood of Muslim women supporting each other.' },
+      { icon: '🤲', label: "Du'a Wall", desc: 'A collection of powerful duas for every moment.' },
     ],
   },
   {

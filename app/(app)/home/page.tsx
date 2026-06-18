@@ -21,6 +21,7 @@ const RECENT_CONVERSATIONS = [
 export default function HomePage() {
   const router = useRouter()
   const [message, setMessage] = useState('')
+  const [showNotifications, setShowNotifications] = useState(false)
   const session = useSession()
   const accessToken = session?.access_token ?? ''
 
@@ -39,7 +40,9 @@ export default function HomePage() {
         <h1 className="font-display text-2xl text-charcoal italic absolute left-1/2 -translate-x-1/2">
           Amina
         </h1>
-        <button className="w-9 h-9 flex items-center justify-center rounded-full bg-ivory relative">
+        <button
+          onClick={() => setShowNotifications(true)}
+          className="w-9 h-9 flex items-center justify-center rounded-full bg-ivory relative">
           <span className="text-charcoal/60 text-lg">🔔</span>
           <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-amina" />
         </button>
@@ -185,5 +188,35 @@ export default function HomePage() {
         </div>
       </div>
     </div>
+
+      {/* Notifications bottom sheet stub */}
+      {showNotifications && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div
+            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+            onClick={() => setShowNotifications(false)}
+          />
+          <div className="relative bg-cream rounded-t-3xl w-full max-w-lg px-6 pt-6 pb-10 shadow-xl animate-slide-up">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-display text-xl text-charcoal">Notifications</h3>
+              <button
+                onClick={() => setShowNotifications(false)}
+                className="w-8 h-8 rounded-full bg-charcoal/10 flex items-center justify-center text-charcoal/50"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex flex-col items-center py-10">
+              <span className="text-4xl mb-4">🌙</span>
+              <p className="text-charcoal text-center font-medium">
+                Notifications coming soon inshallah 🌙
+              </p>
+              <p className="text-charcoal/40 text-sm text-center mt-2">
+                We&apos;re working on something special for you.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
   )
 }
