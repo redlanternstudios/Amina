@@ -3,10 +3,9 @@
 import { usePathname, useRouter } from 'next/navigation'
 
 const NAV_ITEMS = [
-  { label: 'Home', icon: '🏠', href: '/home' },
-  { label: 'Guidance', icon: '📖', href: '/guidance' },
+  { label: 'Amina', icon: '🌙', href: '/chat' },
   { label: 'Reflections', icon: '📝', href: '/reflections' },
-  { label: 'Circle', icon: '👥', href: '/circle' },
+  { label: "Du'a Wall", icon: '🤲', href: '/dua-wall' },
   { label: 'Profile', icon: '👤', href: '/profile' },
 ]
 
