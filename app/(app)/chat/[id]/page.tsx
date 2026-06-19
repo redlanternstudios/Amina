@@ -8,6 +8,7 @@ import {
   loadMessages,
   saveMessage,
   createConversation,
+  type DBMessage,
 } from '@/lib/supabase/chat'
 import { stripPhaseLabels, renderMarkdown } from '@/lib/amina-response-utils'
 
