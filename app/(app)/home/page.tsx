@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Bell, ArrowUp, Paperclip, Mic, Sparkles, MoreHorizontal, Heart, Moon, BookOpen, Leaf, X } from 'lucide-react'
-import BottomNav from '@/components/BottomNav'
+import { Bell, ArrowUp, Paperclip, Mic, Sparkles, MoreHorizontal, Heart, Moon, BookOpen, Leaf } from 'lucide-react'
 import AppHeader from '@/components/app/AppHeader'
 import AminaIcon from '@/components/brand/AminaIcon'
+import { listConversations, type DBConversation } from '@/lib/supabase/chat'
 
 const QUICK_CHIPS = [
   { id: 'reflect', icon: Heart, label: 'Reflect', q: 'I need help reflecting on something.' },
@@ -14,16 +14,29 @@ const QUICK_CHIPS = [
   { id: 'grow', icon: Leaf, label: 'Grow', q: 'Help me grow in my faith and character.' },
 ]
 
-const RECENT_CONVERSATIONS = [
-  { id: '1', title: 'Finding Peace in Uncertainty', time: 'Today', color: 'var(--amina-dusty-rose)', progress: 70 },
-  { id: '2', title: 'Building a Stronger Connection with Allah', time: 'Yesterday', color: 'var(--amina-soft-olive)', progress: 45 },
-  { id: '3', title: 'Letting Go & Trusting Allah', time: '2 days ago', color: 'var(--amina-muted-gold)', progress: 30 },
-]
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 60) return mins <= 1 ? 'Just now' : `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return hrs === 1 ? '1h ago' : `${hrs}h ago`
+  const days = Math.floor(hrs / 24)
+  if (days === 1) return 'Yesterday'
+  if (days < 7) return `${days} days ago`
+  return new Date(dateStr).toLocaleDateString()
+}
 
 export default function HomePage() {
   const router = useRouter()
   const [message, setMessage] = useState('')
   const [showNotifications, setShowNotifications] = useState(false)
+  const [conversations, setConversations] = useState<DBConversation[]>([])
+
+  useEffect(() => {
+    listConversations()
+      .then(data => setConversations(data.slice(0, 5)))
+      .catch(() => {})
+  }, [])
 
   function startChat(text: string) {
     if (!text.trim()) return
@@ -134,46 +147,35 @@ export default function HomePage() {
         </div>
       </div>
 
-          {/* Continue Your Journey */}
-      <div className="px-4 mb-3">
-        <div className="flex items-center justify-between mb-2.5">
-          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#8A8A8A' }}>Your Conversations</p>
-          <button className="text-xs text-rose-amina font-medium">View all</button>
-        </div>
-        {RECENT_CONVERSATIONS.length === 0 ? (
-          <div className="text-center py-8">
-            <p style={{ color: '#8A8A8A' }} className="text-sm mb-3">Start your first conversation with Amina</p>
-            <div className="text-3xl mb-2">🌙</div>
+      {/* Your Conversations */}
+      {conversations.length > 0 && (
+        <div className="px-4 mb-3">
+          <div className="flex items-center justify-between mb-2.5">
+            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#8A8A8A' }}>Your Conversations</p>
           </div>
-        ) : (
           <div className="space-y-2">
-            {RECENT_CONVERSATIONS.map(conv => (
+            {conversations.map(conv => (
               <button
                 key={conv.id}
                 onClick={() => router.push(`/chat/${conv.id}`)}
-                className="w-full flex items-center gap-3 p-3 rounded-lg transition-opacity"
-                style={{
-                  background: '#F7F2EE',
-                  opacity: 0.9,
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
-                onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.9')}
+                className="w-full flex items-center gap-3 p-3 rounded-lg"
+                style={{ background: 'var(--amina-ivory)' }}
               >
                 <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
-                  style={{ background: '#D92532', color: '#F7F2EE' }}
+                  className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ background: 'var(--amina-primary-action)' }}
                 >
-                  A
+                  <AminaIcon size={20} />
                 </div>
                 <div className="flex-1 min-w-0 text-left">
-                  <p className="text-sm font-medium text-charcoal">{conv.title}</p>
-                  <p className="text-xs" style={{ color: '#8A8A8A' }}>Last chat • {conv.time}</p>
+                  <p className="text-sm font-medium text-charcoal truncate">{conv.title ?? 'Chat with Amina'}</p>
+                  <p className="text-xs" style={{ color: '#8A8A8A' }}>Last chat • {timeAgo(conv.updated_at)}</p>
                 </div>
               </button>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Daily Reflection */}
       <div className="px-4 mb-4">
@@ -195,8 +197,6 @@ export default function HomePage() {
           </div>
         </div>
       </div>
-
-      <BottomNav />
 
       {/* Notifications Bottom Sheet */}
       {showNotifications && (
