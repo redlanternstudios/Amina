@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
+import { streamText, convertToModelMessages, type UIMessage } from 'ai'
+import { createClient } from '@/lib/supabase/server'
 
 const SYSTEM_PROMPT = `You are the wise older sister. Not a scholar. Not a therapist. The one who actually listens before she speaks.
 
@@ -77,65 +79,58 @@ If she describes abuse or danger: respond with warmth, provide the National Dome
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages } = await req.json()
+    const body = await req.json()
+    const messages: UIMessage[] = body.messages
+    const conversationId: string | null = body.conversationId ?? null
 
     if (!messages || !Array.isArray(messages)) {
-      return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
+      return new Response(JSON.stringify({ error: 'Invalid request' }), { status: 400 })
     }
 
-    const gatewayKey = process.env.AI_GATEWAY_API_KEY
-    if (!gatewayKey) {
-      return NextResponse.json({
-        content: "Assalamu alaykum, sister. I'm here — but no AI provider is configured yet. Please add an AI_GATEWAY_API_KEY to your environment variables.",
-        source: 'stub',
-      })
-    }
+    // Determine the last user message for DB persistence
+    const lastUserMsg = [...messages].reverse().find(m => m.role === 'user')
+    const lastUserText = lastUserMsg?.parts
+      ?.filter((p): p is { type: 'text'; text: string } => p.type === 'text')
+      .map(p => p.text)
+      .join('') ?? ''
 
-    const callDeepSeek = () =>
-      fetch('https://ai-gateway.vercel.sh/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${gatewayKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'deepseek/deepseek-chat',
-          messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
-            ...messages,
-          ],
-          max_tokens: 300,
-          temperature: 0.75,
-        }),
-      })
+    const result = streamText({
+      model: 'anthropic/claude-sonnet-4-5',
+      system: SYSTEM_PROMPT,
+      messages: await convertToModelMessages(messages),
+      maxOutputTokens: 350,
+      temperature: 0.75,
+      onFinish: async ({ text }) => {
+        if (!conversationId) return
+        try {
+          const supabase = await createClient()
+          const { data: { user } } = await supabase.auth.getUser()
+          if (!user) return
 
-    let response = await callDeepSeek()
+          // Save user message + assistant reply
+          if (lastUserText) {
+            await supabase.from('amina_messages').insert({
+              conversation_id: conversationId,
+              user_id: user.id,
+              role: 'user',
+              content: lastUserText,
+            })
+          }
+          await supabase.from('amina_messages').insert({
+            conversation_id: conversationId,
+            user_id: user.id,
+            role: 'assistant',
+            content: text,
+          })
+        } catch {
+          // Non-blocking — persistence failure should not break the response
+        }
+      },
+    })
 
-    if (response.status === 429) {
-      await new Promise(r => setTimeout(r, 1200))
-      response = await callDeepSeek()
-    }
-
-    if (response.status === 429) {
-      return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
-    }
-
-    if (!response.ok) {
-      const err = await response.text()
-      console.error('[amina] DeepSeek error:', response.status, err)
-      return NextResponse.json({ error: 'AI service unavailable' }, { status: 502 })
-    }
-
-    const data = await response.json()
-    const content = data.choices?.[0]?.message?.content
-
-    if (!content) {
-      return NextResponse.json({ error: 'Empty response from AI' }, { status: 502 })
-    }
-
-    return NextResponse.json({ content, source: 'deepseek' })
+    return result.toUIMessageStreamResponse()
   } catch (err) {
     console.error('[amina] Chat route error:', err)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 })
   }
 }
