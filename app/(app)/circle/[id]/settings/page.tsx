@@ -35,6 +35,8 @@ export default function CircleSettingsPage() {
   const [maxMembers, setMaxMembers] = useState(50)
   const [dirty, setDirty] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [inviteCode, setInviteCode] = useState('')
+  const [regenLoading, setRegenLoading] = useState(false)
 
   const load = useCallback(async () => {
     setPhase('loading')
@@ -55,6 +57,7 @@ export default function CircleSettingsPage() {
       setIntention(c.intention || '')
       setTopicTag(c.topic_tag)
       setMaxMembers(c.max_members)
+      setInviteCode(c.invite_code || '')
 
       const { data: membership } = await supabase
         .from('circle_group_members').select('role')
@@ -71,6 +74,28 @@ export default function CircleSettingsPage() {
   useEffect(() => { load() }, [load])
 
   const isAdmin = circle?.created_by === currentUserId && userRole === 'admin'
+
+  const handleRegenerateCode = async () => {
+    setRegenLoading(true)
+    try {
+      const token = await supabase.auth.getSession().then(s => s.data?.session?.access_token)
+      const res = await fetch(`/api/circles/${circleId}/invite-regen`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error || 'Failed to regenerate code'); return }
+      setInviteCode(data.invite_code)
+      setSuccess('Invite code regenerated!')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to regenerate code')
+    } finally {
+      setRegenLoading(false)
+    }
+  }
 
   async function handleSave(e: FormEvent) {
     e.preventDefault()
@@ -237,6 +262,36 @@ export default function CircleSettingsPage() {
             disabled={!isAdmin || phase === 'saving'} min={2} max={500}
             className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 disabled:opacity-50 disabled:bg-gray-50" />
         </div>
+
+        {isAdmin && inviteCode && (
+          <div className="border-t border-gray-200 pt-6">
+            <p className="text-sm font-medium text-gray-700 mb-3">Invite Sisters</p>
+            <div className="flex gap-2 items-center">
+              <div className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl font-mono text-sm tracking-widest text-center">
+                {inviteCode}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(inviteCode)
+                  setSuccess('Code copied!')
+                }}
+                className="px-3 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200"
+              >
+                Copy
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={handleRegenerateCode}
+              disabled={regenLoading || phase === 'saving'}
+              className="mt-3 w-full px-4 py-2 text-red-500 border border-red-200 rounded-xl text-sm font-medium hover:bg-red-50 disabled:opacity-50"
+            >
+              {regenLoading ? 'Regenerating...' : 'Regenerate Code'}
+            </button>
+            <p className="text-xs text-gray-400 mt-2">Create a new code to revoke the current one</p>
+          </div>
+        )}
 
         {isAdmin && (
           <div className="flex gap-3 pt-4 border-t border-gray-200">

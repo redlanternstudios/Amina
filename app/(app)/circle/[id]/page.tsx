@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ChevronLeft, ArrowUp, MoreHorizontal } from 'lucide-react'
+import { ChevronLeft, ArrowUp, MoreHorizontal, MessageCircle } from 'lucide-react'
 import FaithReactions from '@/components/circle/FaithReactions'
 
 type Post = {
@@ -214,6 +214,13 @@ export default function CircleDetailPage() {
             {memberCount} sister{memberCount !== 1 ? 's' : ''}
           </p>
         </div>
+        <button 
+          onClick={() => router.push(`/circle/${id}/chat`)}
+          aria-label="Circle chat"
+          style={{ color: 'rgba(44,41,38,0.4)' }}
+        >
+          <MessageCircle size={20} strokeWidth={1.5} />
+        </button>
         <button aria-label="Circle options" style={{ color: 'rgba(44,41,38,0.4)' }}>
           <MoreHorizontal size={20} strokeWidth={1.5} />
         </button>

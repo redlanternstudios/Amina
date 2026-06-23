@@ -12,7 +12,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
   const [circleRes, postsRes, memberCountRes, membersRes] = await Promise.all([
     client.from('circle_groups').select('id, name, intention, topic_tag, invite_code, max_members').eq('id', id).single(),
-    client.from('circle_posts').select('id, content_text, is_anonymous, created_at, user_id').eq('circle_id', id).order('created_at', { ascending: true }),
+    client.from('circle_posts').select('id, content_text, is_anonymous, content_status, created_at, user_id').eq('circle_id', id).neq('content_status', 'flagged').order('created_at', { ascending: true }),
     client.from('circle_group_members').select('*', { count: 'exact', head: true }).eq('circle_id', id),
     client.from('circle_group_members').select('user_id, display_handle').eq('circle_id', id),
   ])
@@ -30,9 +30,16 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const reactedSet = new Set((myReactions ?? []).map((r: { target_id: string }) => r.target_id))
   const posts = (postsRes.data ?? []).map((p: Record<string, unknown>) => {
     const displayHandle = p.is_anonymous ? 'Sister' : (memberHandles.get(p.user_id as string) || 'Sister')
+    const contentDisplayed = p.content_status === 'reviewing' ? '[This post is being reviewed for community safety...]' : p.content_text
     return {
-      id: p.id, content: p.content_text, is_anonymous: p.is_anonymous, created_at: p.created_at,
-      display_handle: displayHandle, has_reacted: reactedSet.has(p.id as string), is_mine: p.user_id === user.id,
+      id: p.id, 
+      content: contentDisplayed, 
+      is_anonymous: p.is_anonymous, 
+      content_status: p.content_status,
+      created_at: p.created_at,
+      display_handle: displayHandle, 
+      has_reacted: reactedSet.has(p.id as string), 
+      is_mine: p.user_id === user.id,
     }
   })
 
