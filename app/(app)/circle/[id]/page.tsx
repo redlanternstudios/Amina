@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import { ChevronLeft, ArrowUp, MoreHorizontal, MessageCircle } from 'lucide-react'
+import { useParams } from 'next/navigation'
+import { ArrowUp } from 'lucide-react'
 import FaithReactions from '@/components/circle/FaithReactions'
 
 type Post = {
@@ -194,38 +194,7 @@ export default function CircleDetailPage() {
   }
 
   return (
-    <div className="flex flex-col h-dvh" style={{ background: 'var(--amina-soft-cream)' }}>
-      {/* Header */}
-      <div
-        className="flex items-center gap-3 px-4 pt-12 pb-3 flex-shrink-0"
-        style={{ borderBottom: '1px solid var(--amina-hairline)' }}
-      >
-        <button
-          onClick={() => router.push('/circle')}
-          aria-label="Back"
-          className="w-9 h-9 flex items-center justify-center rounded-full flex-shrink-0"
-          style={{ background: 'var(--amina-warm-ivory)', border: '1px solid var(--amina-hairline)' }}
-        >
-          <ChevronLeft size={18} strokeWidth={1.5} style={{ color: 'var(--amina-soft-charcoal)' }} />
-        </button>
-        <div className="flex-1 min-w-0">
-          <p className="font-display italic text-[18px] text-charcoal leading-tight truncate">{circle.name}</p>
-          <p className="text-[11px]" style={{ color: 'rgba(44,41,38,0.45)' }}>
-            {memberCount} sister{memberCount !== 1 ? 's' : ''}
-          </p>
-        </div>
-        <button 
-          onClick={() => router.push(`/circle/${id}/chat`)}
-          aria-label="Circle chat"
-          style={{ color: 'rgba(44,41,38,0.4)' }}
-        >
-          <MessageCircle size={20} strokeWidth={1.5} />
-        </button>
-        <button aria-label="Circle options" style={{ color: 'rgba(44,41,38,0.4)' }}>
-          <MoreHorizontal size={20} strokeWidth={1.5} />
-        </button>
-      </div>
-
+    <div className="flex flex-col h-full" style={{ background: 'var(--amina-soft-cream)' }}>
       {/* Pinned intention */}
       <div
         className="flex-shrink-0 px-4 py-3"
