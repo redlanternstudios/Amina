@@ -1,161 +1,112 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { generateText } from 'ai'
 
-export async function GET(request: NextRequest) {
-  try {
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const url = new URL(request.url)
-    const type = url.searchParams.get('type')
-
-    // Discover: public circles the user is NOT a member of
-    if (type === 'discover') {
-      const { data: memberCircleIds } = await supabase
-        .from('circle_memberships')
-        .select('circle_id')
-        .eq('user_id', user.id)
-
-      const excludeIds = memberCircleIds?.map(m => m.circle_id) ?? []
-
-      let query = supabase
-        .from('circles')
-        .select('*')
-        .eq('is_public', true)
-        .order('created_at', { ascending: false })
-
-      if (excludeIds.length > 0) {
-        query = query.not('id', 'in', `(${excludeIds.join(',')})`)
-      }
-
-      const { data, error } = await query
-      if (error) {
-        console.error('Error fetching discoverable circles:', error)
-        return NextResponse.json({ error: 'Failed to fetch circles' }, { status: 500 })
-      }
-      return NextResponse.json({ circles: data })
-    }
-
-    // Default: user's circles with member count and last message
-    const { data: memberCircles, error: memberError } = await supabase
-      .from('circle_memberships')
-      .select('circle_id')
-      .eq('user_id', user.id)
-      .eq('status', 'active')
-
-    if (memberError) {
-      console.error('Error fetching member circle ids:', memberError)
-      return NextResponse.json({ error: 'Failed to fetch circles' }, { status: 500 })
-    }
-
-    if (!memberCircles || memberCircles.length === 0) {
-      return NextResponse.json({ circles: [] })
-    }
-
-    const circleIds = memberCircles.map(m => m.circle_id)
-
-    // Fetch circles with member count via a raw count query
-    const { data: circles, error: circlesError } = await supabase
-      .from('circles')
-      .select('*')
-      .in('id', circleIds)
-      .order('created_at', { ascending: false })
-
-    if (circlesError) {
-      console.error('Error fetching circles:', circlesError)
-      return NextResponse.json({ error: 'Failed to fetch circles' }, { status: 500 })
-    }
-
-    // Enrich each circle with member count and last message
-    const enriched = await Promise.all(
-      (circles || []).map(async (circle) => {
-        const { count: memberCount, error: countError } = await supabase
-          .from('circle_memberships')
-          .select('*', { count: 'exact', head: true })
-          .eq('circle_id', circle.id)
-          .eq('status', 'active')
-
-        if (countError) {
-          console.error(`Error counting members for circle ${circle.id}:`, countError)
-        }
-
-        const { data: lastMessage } = await supabase
-          .from('circle_messages')
-          .select('id, content, created_at, user_id')
-          .eq('circle_id', circle.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single()
-
-        return {
-          ...circle,
-          member_count: memberCount ?? 0,
-          last_message: lastMessage ?? null,
-        }
-      })
-    )
-
-    return NextResponse.json({ circles: enriched })
-  } catch (err) {
-    console.error('Unexpected error in GET /api/circles:', err)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
+function generateInviteCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  let code = ''
+  for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)]
+  return code
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+// GET /api/circles — my circles
+export async function GET() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const body = await request.json()
-    const { name, description, avatar_url, is_public } = body
+  const { data, error } = await supabase
+    .from('circle_group_members')
+    .select(`
+      joined_at,
+      circle_groups (
+        id, name, intention, topic_tag, invite_code, is_open, max_members, created_by, updated_at,
+        circle_group_members ( count )
+      )
+    `)
+    .eq('user_id', user.id)
+    .order('joined_at', { ascending: false })
 
-    if (!name?.trim()) {
-      return NextResponse.json({ error: 'Name is required' }, { status: 400 })
-    }
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-    const { data: circle, error: createError } = await supabase
-      .from('circles')
-      .insert({
-        name: name.trim(),
-        description: description?.trim() ?? null,
-        avatar_url: avatar_url ?? null,
-        is_public: is_public ?? false,
-        creator_id: user.id,
-      })
-      .select()
-      .single()
+  const circles = (data ?? []).map((row: any) => ({
+    ...row.circle_groups,
+    member_count: row.circle_groups.circle_group_members?.[0]?.count ?? 0,
+    joined_at: row.joined_at,
+  }))
 
-    if (createError) {
-      console.error('Error creating circle:', createError)
-      return NextResponse.json({ error: 'Failed to create circle' }, { status: 500 })
-    }
+  return NextResponse.json({ circles })
+}
 
-    // Auto-add creator as admin member
-    const { error: memberError } = await supabase
-      .from('circle_memberships')
-      .insert({
-        circle_id: circle.id,
-        user_id: user.id,
-        role: 'admin',
-      })
+// POST /api/circles — create circle
+export async function POST(req: Request) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    if (memberError) {
-      // Rollback circle creation
-      await supabase.from('circles').delete().eq('id', circle.id)
-      console.error('Error adding creator as member:', memberError)
-      return NextResponse.json({ error: 'Failed to set up circle membership' }, { status: 500 })
-    }
+  const body = await req.json()
+  const { name, intention, topic_tag, is_open = false } = body
 
-    return NextResponse.json({ circle }, { status: 201 })
-  } catch (err) {
-    console.error('Unexpected error in POST /api/circles:', err)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  if (!name?.trim() || !intention?.trim() || !topic_tag?.trim()) {
+    return NextResponse.json({ error: 'name, intention and topic_tag are required' }, { status: 400 })
   }
+
+  // Generate a unique invite code
+  let invite_code = generateInviteCode()
+  let attempts = 0
+  while (attempts < 5) {
+    const { data: existing } = await supabase
+      .from('circle_groups')
+      .select('id')
+      .eq('invite_code', invite_code)
+      .single()
+    if (!existing) break
+    invite_code = generateInviteCode()
+    attempts++
+  }
+
+  const { data: circle, error } = await supabase
+    .from('circle_groups')
+    .insert({ name: name.trim(), intention: intention.trim(), topic_tag, invite_code, is_open, created_by: user.id })
+    .select()
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Auto-join the creator
+  await supabase.from('circle_group_members').insert({
+    circle_id: circle.id,
+    user_id: user.id,
+    display_handle: 'Sister',
+  })
+
+  // Seed Amina's welcome post (async, fire and forget)
+  try {
+    const topicPrompts: Record<string, string> = {
+      'Faith & Belief': 'Provide a warm, brief 1-sentence welcome message from Amina for a sisterhood circle focused on faith and belief. Keep it under 40 words. Sign off with "💫 Amina"',
+      'Mental Health': 'Provide a warm, brief 1-sentence welcome message from Amina for a sisterhood circle focused on mental health support. Keep it under 40 words. Sign off with "💫 Amina"',
+      'Prayer & Worship': 'Provide a warm, brief 1-sentence welcome message from Amina for a sisterhood circle focused on prayer and worship. Keep it under 40 words. Sign off with "💫 Amina"',
+      'Family & Relationships': 'Provide a warm, brief 1-sentence welcome message from Amina for a sisterhood circle focused on family and relationships. Keep it under 40 words. Sign off with "💫 Amina"',
+    }
+    
+    const prompt = topicPrompts[topic_tag] || `Provide a warm, brief 1-sentence welcome message from Amina for a sisterhood circle. Keep it under 40 words. Sign off with "💫 Amina"`
+
+    const { text: welcome } = await generateText({
+      model: 'anthropic/claude-opus-4-1-20250805',
+      prompt,
+    })
+
+    // Insert Amina's welcome post
+    await supabase.from('circle_posts').insert({
+      circle_id: circle.id,
+      user_id: 'amina-system',
+      content_text: welcome,
+      is_anonymous: false,
+    })
+  } catch {
+    // Silently fail if seeding doesn't work
+    console.error('[Circle seed] Failed to create Amina welcome post')
+  }
+
+  return NextResponse.json({ circle }, { status: 201 })
 }

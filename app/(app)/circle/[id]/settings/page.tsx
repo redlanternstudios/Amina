@@ -8,10 +8,11 @@ import { ArrowLeft } from 'lucide-react'
 interface CircleData {
   id: string
   name: string
-  description: string | null
-  avatar_url: string | null
-  is_public: boolean
-  creator_id: string
+  intention: string | null
+  topic_tag: string
+  is_open: boolean
+  max_members: number
+  created_by: string
 }
 
 type Phase = 'loading' | 'form' | 'saving' | 'error' | 'delete_confirm' | 'deleting' | 'deleted'
@@ -29,9 +30,13 @@ export default function CircleSettingsPage() {
   const [success, setSuccess] = useState<string | null>(null)
 
   const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
-  const [isPublic, setIsPublic] = useState(false)
+  const [intention, setIntention] = useState('')
+  const [topicTag, setTopicTag] = useState('Faith & Belief')
+  const [maxMembers, setMaxMembers] = useState(50)
   const [dirty, setDirty] = useState(false)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [inviteCode, setInviteCode] = useState('')
+  const [regenLoading, setRegenLoading] = useState(false)
 
   const load = useCallback(async () => {
     setPhase('loading')
@@ -40,19 +45,23 @@ export default function CircleSettingsPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
 
+      setCurrentUserId(user.id)
+
       const { data: c, error: cErr } = await supabase
-        .from('circles').select('*').eq('id', circleId).single()
+        .from('circle_groups').select('*').eq('id', circleId).single()
 
       if (cErr || !c) { setError('Circle not found'); setPhase('error'); return }
 
       setCircle(c)
       setName(c.name)
-      setDescription(c.description || '')
-      setIsPublic(c.is_public)
+      setIntention(c.intention || '')
+      setTopicTag(c.topic_tag)
+      setMaxMembers(c.max_members)
+      setInviteCode(c.invite_code || '')
 
       const { data: membership } = await supabase
-        .from('circle_memberships').select('role')
-        .eq('circle_id', circleId).eq('user_id', user.id).eq('status', 'active').single()
+        .from('circle_group_members').select('role')
+        .eq('circle_id', circleId).eq('user_id', user.id).single()
 
       setUserRole(membership?.role || null)
       setPhase('form')
@@ -64,7 +73,29 @@ export default function CircleSettingsPage() {
 
   useEffect(() => { load() }, [load])
 
-  const isAdmin = userRole === 'creator' || userRole === 'admin'
+  const isAdmin = circle?.created_by === currentUserId && userRole === 'admin'
+
+  const handleRegenerateCode = async () => {
+    setRegenLoading(true)
+    try {
+      const token = await supabase.auth.getSession().then(s => s.data?.session?.access_token)
+      const res = await fetch(`/api/circles/${circleId}/invite-regen`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error || 'Failed to regenerate code'); return }
+      setInviteCode(data.invite_code)
+      setSuccess('Invite code regenerated!')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to regenerate code')
+    } finally {
+      setRegenLoading(false)
+    }
+  }
 
   async function handleSave(e: FormEvent) {
     e.preventDefault()
@@ -76,8 +107,9 @@ export default function CircleSettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: name.trim(),
-          description: description.trim() || null,
-          is_public: isPublic,
+          intention: intention.trim() || null,
+          topic_tag: topicTag,
+          max_members: maxMembers,
         }),
       })
       if (!response.ok) {
@@ -202,23 +234,62 @@ export default function CircleSettingsPage() {
         </div>
 
         <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-          <textarea id="description" value={description} onChange={(e) => { setDescription(e.target.value); markDirty() }}
-            disabled={!isAdmin || phase === 'saving'} rows={4}
+          <label htmlFor="intention" className="block text-sm font-medium text-gray-700 mb-1">Intention</label>
+          <textarea id="intention" value={intention} onChange={(e) => { setIntention(e.target.value); markDirty() }}
+            disabled={!isAdmin || phase === 'saving'} rows={2} maxLength={150}
             className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 disabled:opacity-50 disabled:bg-gray-50 resize-none" />
+          <p className="text-xs text-gray-400 mt-1">{intention.length}/150</p>
         </div>
 
-        {isAdmin && (
-          <div className="flex items-center justify-between py-2">
-            <div>
-              <label htmlFor="isPublic" className="text-sm font-medium text-gray-900 cursor-pointer">Public circle</label>
-              <p className="text-xs text-gray-400 mt-0.5">Anyone can find and join this circle</p>
+        <div>
+          <label htmlFor="topicTag" className="block text-sm font-medium text-gray-700 mb-1">Topic</label>
+          <select id="topicTag" value={topicTag} onChange={(e) => { setTopicTag(e.target.value); markDirty() }}
+            disabled={!isAdmin || phase === 'saving'}
+            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 disabled:opacity-50 disabled:bg-gray-50">
+            <option value="Faith & Belief">Faith & Belief</option>
+            <option value="Mental Health">Mental Health</option>
+            <option value="Prayer & Worship">Prayer & Worship</option>
+            <option value="Family & Relationships">Family & Relationships</option>
+            <option value="Parenting">Parenting</option>
+            <option value="Career & Education">Career & Education</option>
+            <option value="Hobbies & Interests">Hobbies & Interests</option>
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="maxMembers" className="block text-sm font-medium text-gray-700 mb-1">Max Members</label>
+          <input id="maxMembers" type="number" value={maxMembers} onChange={(e) => { setMaxMembers(parseInt(e.target.value) || 50); markDirty() }}
+            disabled={!isAdmin || phase === 'saving'} min={2} max={500}
+            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 disabled:opacity-50 disabled:bg-gray-50" />
+        </div>
+
+        {isAdmin && inviteCode && (
+          <div className="border-t border-gray-200 pt-6">
+            <p className="text-sm font-medium text-gray-700 mb-3">Invite Sisters</p>
+            <div className="flex gap-2 items-center">
+              <div className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl font-mono text-sm tracking-widest text-center">
+                {inviteCode}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(inviteCode)
+                  setSuccess('Code copied!')
+                }}
+                className="px-3 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200"
+              >
+                Copy
+              </button>
             </div>
-            <button id="isPublic" type="button" role="switch" aria-checked={isPublic}
-              onClick={() => { setIsPublic(!isPublic); markDirty() }} disabled={phase === 'saving'}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isPublic ? 'bg-emerald-500' : 'bg-gray-300'} disabled:opacity-50`}>
-              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isPublic ? 'translate-x-6' : 'translate-x-1'}`} />
+            <button
+              type="button"
+              onClick={handleRegenerateCode}
+              disabled={regenLoading || phase === 'saving'}
+              className="mt-3 w-full px-4 py-2 text-red-500 border border-red-200 rounded-xl text-sm font-medium hover:bg-red-50 disabled:opacity-50"
+            >
+              {regenLoading ? 'Regenerating...' : 'Regenerate Code'}
             </button>
+            <p className="text-xs text-gray-400 mt-2">Create a new code to revoke the current one</p>
           </div>
         )}
 

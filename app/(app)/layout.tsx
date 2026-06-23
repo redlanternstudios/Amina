@@ -1,3 +1,9 @@
+'use client'
+
+import { usePathname } from 'next/navigation'
+import { ChromeProvider } from '@/components/app/ChromeContext'
+import Sidebar from '@/components/app/Sidebar'
+import AminaBubble from '@/components/app/AminaBubble'
 import BottomNav from '@/components/BottomNav'
 
 export default function AppLayout({
@@ -5,12 +11,22 @@ export default function AppLayout({
 }: {
   children: React.ReactNode
 }) {
+  const pathname = usePathname()
+  // Chat pages manage their own full-height layout — no nav chrome
+  const isChat = pathname?.startsWith('/chat/')
+
   return (
-    <div className="min-h-dvh bg-cream flex flex-col">
-      <main className="flex-1 pb-20">
+    <ChromeProvider>
+      <div className={`min-h-dvh bg-cream flex flex-col${isChat ? '' : ' pb-20'}`}>
         {children}
-      </main>
-      <BottomNav />
-    </div>
+      </div>
+      {!isChat && (
+        <>
+          <Sidebar />
+          <AminaBubble />
+          <BottomNav />
+        </>
+      )}
+    </ChromeProvider>
   )
 }

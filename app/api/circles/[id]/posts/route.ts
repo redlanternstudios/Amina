@@ -1,73 +1,63 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { NextResponse } from 'next/server'
+import { getApiUser } from '@/lib/supabase/api-client'
+import { generateText } from 'ai'
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const { user, client } = await getApiUser(req.headers.get('Authorization'))
+  if (!user || !client) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { data: membership } = await client
+    .from('circle_group_members').select('id').eq('circle_id', id).eq('user_id', user.id).single()
+  if (!membership) return NextResponse.json({ error: 'Not a member' }, { status: 403 })
+
+  const { content, is_anonymous = true } = await req.json()
+  const text = content?.trim()
+  if (!text) return NextResponse.json({ error: 'content required' }, { status: 400 })
+
+  // Get member's display_handle
+  const { data: member } = await client
+    .from('circle_group_members')
+    .select('display_handle')
+    .eq('circle_id', id)
+    .eq('user_id', user.id)
+    .single()
+
+  // Content validation via AI (halal gate)
+  let contentStatus = 'approved'
+  
   try {
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { text: assessment } = await generateText({
+      model: 'anthropic/claude-opus-4-1-20250805',
+      prompt: `Assess this post for a Muslim sisterhood community. Respond with ONLY one word: "approved" if it's respectful and appropriate, "review" if uncertain, or "flagged" if inappropriate/harmful.
 
-    const { id } = await params
-
-    const { data, error } = await supabase
-      .from('circle_posts')
-      .select('*, circle_profiles!inner(display_name, avatar_url), circle_reactions(*)')
-      .eq('circle_id', id)
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      console.error('Error fetching circle posts:', error)
-      return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 })
-    }
-
-    return NextResponse.json(data || [])
-  } catch (err) {
-    console.error('Unexpected error in GET /api/circles/[id]/posts:', err)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+Post: "${text}"`,
+    })
+    const verdict = assessment.trim().toLowerCase()
+    contentStatus = verdict === 'approved' ? 'approved' : verdict === 'review' ? 'reviewing' : 'flagged'
+  } catch {
+    // If AI validation fails, default to 'approved' and proceed
+    contentStatus = 'approved'
   }
-}
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { data: post, error } = await client
+    .from('circle_posts')
+    .insert({ circle_id: id, user_id: user.id, content_text: text, is_anonymous, content_status: contentStatus })
+    .select('id, content_text, is_anonymous, content_status, created_at')
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  const displayHandle = is_anonymous ? 'Sister' : (member?.display_handle || 'Sister')
+  return NextResponse.json({
+    post: { 
+      id: post.id, 
+      content: post.content_text, 
+      is_anonymous: post.is_anonymous, 
+      content_status: post.content_status,
+      created_at: post.created_at, 
+      display_handle: displayHandle, 
+      has_reacted: false, 
+      is_mine: true 
     }
-
-    const { id } = await params
-    const body = await request.json()
-
-    if (!body.content?.trim()) {
-      return NextResponse.json({ error: 'Content is required' }, { status: 400 })
-    }
-
-    const { data, error } = await supabase
-      .from('circle_posts')
-      .insert({
-        circle_id: id,
-        user_id: user.id,
-        content: body.content.trim(),
-      })
-      .select('*, circle_profiles!inner(display_name, avatar_url), circle_reactions(*)')
-      .single()
-
-    if (error) {
-      console.error('Error creating circle post:', error)
-      return NextResponse.json({ error: 'Failed to create post' }, { status: 500 })
-    }
-
-    return NextResponse.json(data, { status: 201 })
-  } catch (err) {
-    console.error('Unexpected error in POST /api/circles/[id]/posts:', err)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
+  }, { status: 201 })
 }

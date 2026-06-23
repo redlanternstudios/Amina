@@ -32,9 +32,9 @@ export async function POST(req: NextRequest) {
     {
       cookies: {
         getAll() { return cookieStore.getAll() },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
           cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
+            cookieStore.set(name, value, options as Parameters<typeof cookieStore.set>[2])
           )
         },
       },
@@ -69,9 +69,10 @@ export async function POST(req: NextRequest) {
       verdict: result.verdict,
       reasons: result.reasons,
       reviewed: false,
-    }).throwOnError().catch((err: Error) => {
+    }).then(({ error: err }) => { if (err) {
       // Log but don't fail the moderation response
       console.error('[moderate-image] Failed to insert moderation_queue row', err.message)
+    }
     })
   }
 
