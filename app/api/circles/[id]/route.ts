@@ -38,3 +38,39 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
   return NextResponse.json({ circle: circleRes.data, posts, member_count: memberCountRes.count ?? 0 })
 }
+
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const { user, client } = await getApiUser(req.headers.get('Authorization'))
+  if (!user || !client) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  // Check if creator
+  const { data: circle } = await client.from('circle_groups').select('created_by').eq('id', id).single()
+  if (circle?.created_by !== user.id) return NextResponse.json({ error: 'Only creator can edit' }, { status: 403 })
+
+  const { name, intention, topic_tag, max_members } = await req.json()
+  
+  const { data: updated, error } = await client
+    .from('circle_groups')
+    .update({ name, intention, topic_tag, max_members, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ circle: updated }, { status: 200 })
+}
+
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const { user, client } = await getApiUser(req.headers.get('Authorization'))
+  if (!user || !client) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  // Check if creator
+  const { data: circle } = await client.from('circle_groups').select('created_by').eq('id', id).single()
+  if (circle?.created_by !== user.id) return NextResponse.json({ error: 'Only creator can delete' }, { status: 403 })
+
+  const { error } = await client.from('circle_groups').delete().eq('id', id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true }, { status: 200 })
+}
