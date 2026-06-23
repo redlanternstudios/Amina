@@ -73,11 +73,11 @@ export async function POST(req: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Auto-join the creator
+  // Auto-join the creator — accept displayHandle or fall back to 'Sister'
   await supabase.from('circle_group_members').insert({
     circle_id: circle.id,
     user_id: user.id,
-    display_handle: 'Sister',
+    display_handle: body.displayHandle?.trim() || 'Sister',
   })
 
   // Seed Amina's welcome post (async, fire and forget)
