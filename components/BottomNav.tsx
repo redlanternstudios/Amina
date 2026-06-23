@@ -1,14 +1,13 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { MessageCircle, BookOpen, Heart, User, Users } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { label: 'Guidance', icon: MessageCircle, href: '/home' },
-  { label: 'Circle', icon: Users, href: '/circle' },
-  { label: 'Reflections', icon: BookOpen, href: '/reflections' },
-  { label: "Du'a Wall", icon: Heart, href: '/dua-wall' },
-  { label: 'Profile', icon: User, href: '/profile' },
+  { label: 'Home', icon: '🏠', href: '/home' },
+  { label: 'Circle', icon: '🔮', href: '/circle' },
+  { label: 'Reflections', icon: '🔖', href: '/reflections' },
+  { label: "Du'a Wall", icon: '🤲', href: '/dua-wall' },
+  { label: 'Profile', icon: '👤', href: '/profile' },
 ]
 
 export default function BottomNav() {
@@ -27,7 +26,6 @@ export default function BottomNav() {
         }}
       >
         {NAV_ITEMS.map(item => {
-          const Icon = item.icon
           const isActive = pathname === item.href || (item.href !== '/profile' && pathname.startsWith(item.href))
           return (
             <button
@@ -39,7 +37,7 @@ export default function BottomNav() {
                 color: isActive ? '#F7F2EE' : '#8A8A8A',
               }}
             >
-              <Icon size={24} strokeWidth={1.5} />
+              <span className="text-2xl">{item.icon}</span>
               <span className="text-[10px] font-medium">{item.label}</span>
               {isActive && (
                 <div
