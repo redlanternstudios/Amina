@@ -1,274 +1,296 @@
 'use client'
 
-import { useEffect, useRef, Suspense } from 'react'
-import { useRouter, useSearchParams, usePathname, useParams } from 'next/navigation'
-import { ChevronLeft, MoreHorizontal, ArrowUp, Heart, Bell, HandHeart, BookOpen } from 'lucide-react'
-import { useChat } from '@ai-sdk/react'
-import { DefaultChatTransport, type UIMessage } from 'ai'
-import AminaIcon from '@/components/brand/AminaIcon'
-import { loadMessages, type DBMessage } from '@/lib/supabase/chat'
-import { stripPhaseLabels, renderMarkdown } from '@/lib/amina-response-utils'
+import { useState, useRef, useEffect, Suspense } from 'react'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+
+interface Message {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: Date
+}
 
 const QUICK_CHIPS = [
-  { id: 'reflect', label: 'Help me reflect', icon: Heart, prompt: 'I need help reflecting on something.' },
-  { id: 'reminder', label: 'Give me a reminder', icon: Bell, prompt: 'Give me an Islamic reminder for today.' },
-  { id: 'dua', label: "Make du'a for me", icon: HandHeart, prompt: "Please make du'a for me." },
-  { id: 'quran', label: 'Quranic guidance', icon: BookOpen, prompt: 'I need Quranic guidance on something.' },
+  { id: 'reflect', label: '🧘 Help me reflect' },
+  { id: 'reminder', label: '🔔 Give me a reminder' },
+  { id: 'dua', label: '🤲 Make du\'a for me' },
+  { id: 'quran', label: '📖 Quranic guidance' },
 ]
-
-function getMessageText(msg: UIMessage): string {
-  if (!msg.parts || !Array.isArray(msg.parts)) return ''
-  return msg.parts
-    .filter((p): p is { type: 'text'; text: string } => p.type === 'text')
-    .map(p => p.text)
-    .join('')
-}
-
-const GREETING: UIMessage = {
-  id: '__greeting__',
-  role: 'assistant',
-  parts: [{ type: 'text', text: "Salam, sister.\nI'm so glad you're here.\nWhat's on your heart today?" }],
-}
-
-function AminaAvatar({ size = 32 }: { size?: number }) {
-  return (
-    <div
-      className="flex items-center justify-center rounded-full bg-cream flex-shrink-0"
-      style={{ width: size, height: size, border: '1px solid var(--amina-hairline)' }}
-    >
-      <AminaIcon size={Math.round(size * 0.62)} />
-    </div>
-  )
-}
 
 function ChatInner() {
   const router = useRouter()
-  const pathname = usePathname()
+  const params = useParams()
   const searchParams = useSearchParams()
-  const params = useParams<{ id: string }>()
-  const conversationId = params?.id
-
-  const bottomRef = useRef<HTMLDivElement>(null)
+  const conversationId = params.id as string
+  const supabase = createClient()
+  const initialMessage = searchParams.get('q') ?? ''
   const autoSentRef = useRef(false)
-  const historyLoadedRef = useRef(false)
 
-  const { messages, sendMessage, status, setMessages } = useChat({
-    messages: [GREETING],
-    transport: new DefaultChatTransport({
-      api: '/api/chat',
-      prepareSendMessagesRequest: ({ id, messages: msgs }) => ({
-        body: {
-          id,
-          messages: msgs,
-          conversationId: conversationId ?? null,
-        },
-      }),
-    }),
-  })
+  const [messages, setMessages] = useState<Message[]>([])
+  const [input, setInput] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [isInitializing, setIsInitializing] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
+  const bottomRef = useRef<HTMLDivElement>(null)
 
-  const isLoading = status === 'streaming' || status === 'submitted'
-
-  // Load conversation history from DB on mount
+  // Load conversation + messages on mount
   useEffect(() => {
-    if (!conversationId || historyLoadedRef.current) return
-    historyLoadedRef.current = true
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.replace('/'); return }
+      setUserId(user.id)
 
-    loadMessages(conversationId)
-      .then((dbMessages: DBMessage[]) => {
-        if (dbMessages.length === 0) return
-        setMessages([
-          GREETING,
-          ...dbMessages.map((m): UIMessage => ({
-            id: m.id,
-            role: m.role as 'user' | 'assistant',
-            parts: [{ type: 'text', text: m.content }],
-          })),
-        ])
-      })
-      .catch(() => {})
-  }, [conversationId, setMessages])
+      // Ensure conversation exists; create if not
+      const { data: conv, error: convErr } = await supabase
+        .from('amina_conversations')
+        .select('id')
+        .eq('id', conversationId)
+        .eq('user_id', user.id)
+        .single()
 
-  // Auto-send ?q= param from home page chips
-  useEffect(() => {
-    const q = searchParams.get('q')
-    if (!q || autoSentRef.current) return
-    autoSentRef.current = true
-    router.replace(pathname, { scroll: false })
-    sendMessage({ text: q }, { body: { conversationId: conversationId ?? null } })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+      if (convErr || !conv) {
+        const { error: insertErr } = await supabase
+          .from('amina_conversations')
+          .insert({ id: conversationId, user_id: user.id, title: 'New conversation' })
+        if (insertErr) console.error('Failed to create conversation:', insertErr)
+      }
+
+      // Load existing messages
+      const { data: rows } = await supabase
+        .from('amina_messages')
+        .select('id, role, content, created_at')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true })
+
+      if (rows && rows.length > 0) {
+        setMessages(rows.map(r => ({
+          id: r.id,
+          role: r.role as 'user' | 'assistant',
+          content: r.content,
+          timestamp: new Date(r.created_at),
+        })))
+      } else {
+        // Seed the opening greeting (only on fresh conversation)
+        setMessages([{
+          id: 'greeting',
+          role: 'assistant',
+          content: 'As-salamu alaykum, sister ♥️\nHow can I support you today?',
+          timestamp: new Date(),
+        }])
+      }
+
+      setIsInitializing(false)
+    }
+    init()
+  }, [conversationId])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, isLoading])
+  }, [messages])
 
-  function handleSend(text: string) {
-    if (!text.trim() || isLoading) return
-    sendMessage({ text }, { body: { conversationId: conversationId ?? null } })
+  // Auto-send initial message passed via ?q= param (runs once after init)
+  useEffect(() => {
+    if (!isInitializing && initialMessage && !autoSentRef.current && userId) {
+      autoSentRef.current = true
+      // Remove ?q= from URL so refresh doesn't re-send
+      router.replace(`/chat/${conversationId}`, { scroll: false })
+      sendMessage(initialMessage)
+    }
+  }, [isInitializing, userId])
+
+  async function saveMessage(role: 'user' | 'assistant', content: string): Promise<string> {
+    const { data, error } = await supabase
+      .from('amina_messages')
+      .insert({ conversation_id: conversationId, user_id: userId, role, content })
+      .select('id')
+      .single()
+    if (error) console.error('Failed to save message:', error)
+    return data?.id ?? Date.now().toString()
   }
 
-  const userMessageCount = messages.filter(m => m.role === 'user').length
+  async function sendMessage(text: string) {
+    if (!text.trim() || isLoading || !userId) return
+    setError(null)
+
+    const savedUserId = await saveMessage('user', text.trim())
+    const userMsg: Message = {
+      id: savedUserId,
+      role: 'user',
+      content: text.trim(),
+      timestamp: new Date(),
+    }
+    setMessages(prev => [...prev, userMsg])
+    setInput('')
+    setIsLoading(true)
+
+    // Update conversation updated_at
+    await supabase
+      .from('amina_conversations')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', conversationId)
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [...messages, userMsg].map(m => ({ role: m.role, content: m.content })),
+        }),
+      })
+      if (res.status === 429) {
+        setError('Taking a breath... please try again in a moment.')
+        setIsLoading(false)
+        return
+      }
+      if (!res.ok) throw new Error('Response error')
+      const data = await res.json()
+
+      const savedAssistantId = await saveMessage('assistant', data.content)
+      setMessages(prev => [
+        ...prev,
+        { id: savedAssistantId, role: 'assistant', content: data.content, timestamp: new Date() },
+      ])
+    } catch {
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  if (isInitializing) {
+    return (
+      <div className="flex items-center justify-center min-h-dvh bg-cream">
+        <div className="flex flex-col items-center gap-3">
+          <span className="text-3xl animate-pulse">🌙</span>
+          <p className="text-charcoal/40 text-sm">Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="flex flex-col h-dvh" style={{ background: 'var(--amina-soft-cream)' }}>
+    <div className="flex flex-col min-h-dvh bg-cream">
       {/* Header */}
-      <div
-        className="flex items-center gap-3 px-4 pt-12 pb-3 flex-shrink-0"
-        style={{ borderBottom: '1px solid var(--amina-hairline)', background: 'var(--amina-soft-cream)' }}
-      >
-        <button onClick={() => router.push('/home')} aria-label="Back" style={{ color: 'var(--amina-soft-charcoal)' }}>
-          <ChevronLeft size={24} strokeWidth={1.5} />
-        </button>
-        <div className="flex items-center gap-2.5 flex-1">
-          <AminaAvatar size={36} />
+      <div className="flex items-center gap-3 px-4 pt-4 pb-3 bg-cream border-b border-charcoal/5">
+        <button onClick={() => router.back()} className="text-charcoal/60 text-2xl">‹</button>
+        <div className="flex items-center gap-2 flex-1">
+          <div className="w-9 h-9 rounded-full bg-rose-amina flex items-center justify-center">
+            <span className="text-white">🌙</span>
+          </div>
           <div>
-            <p className="font-semibold text-charcoal text-[14px]">Amina</p>
-            <p className="text-[11px]" style={{ color: 'rgba(44,41,38,0.45)' }}>Faith companion</p>
+            <p className="font-semibold text-charcoal text-sm">Amina</p>
+            <p className="text-charcoal/40 text-xs">Faith companion</p>
           </div>
         </div>
-        <button aria-label="More options" style={{ color: 'rgba(44,41,38,0.4)' }}>
-          <MoreHorizontal size={20} strokeWidth={1.5} />
-        </button>
+        <button className="text-charcoal/40">…</button>
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
-        {messages.map(msg => {
-          const text = getMessageText(msg)
-          return (
-            <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start items-end gap-2'}`}>
-              {msg.role === 'assistant' && <AminaAvatar size={28} />}
-              <div
-                className={`rounded-2xl px-4 py-3 ${
-                  msg.role === 'user'
-                    ? 'text-white rounded-tr-sm max-w-[78%]'
-                    : 'text-charcoal rounded-tl-sm max-w-[82%]'
-                }`}
-                style={
-                  msg.role === 'user'
-                    ? { background: 'var(--amina-primary-action)' }
-                    : { background: 'var(--amina-warm-ivory)', border: '1px solid var(--amina-hairline)' }
-                }
-              >
-                {msg.role === 'assistant' ? (
-                  <div className="font-amina-voice text-[15px] leading-relaxed space-y-2">
-                    {stripPhaseLabels(text).split(/\n\n+/).map((para, i) => (
-                      <p
-                        key={i}
-                        className="whitespace-pre-wrap"
-                        dangerouslySetInnerHTML={{ __html: renderMarkdown(para.trim()) }}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-[14px] leading-relaxed whitespace-pre-wrap">{text}</p>
-                )}
+        {messages.map(msg => (
+          <div key={msg.id} className={`flex ${ msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            {msg.role === 'assistant' && (
+              <div className="w-7 h-7 rounded-full bg-rose-amina flex items-center justify-center mr-2 flex-shrink-0 mt-1">
+                <span className="text-white text-xs">🌙</span>
               </div>
-            </div>
-          )
-        })}
-
-        {isLoading && (
-          <div className="flex justify-start items-end gap-2">
-            <AminaAvatar size={28} />
-            <div
-              className="rounded-2xl rounded-tl-sm px-4 py-3"
-              style={{ background: 'var(--amina-warm-ivory)', border: '1px solid var(--amina-hairline)' }}
-            >
-              <div className="flex gap-1">
-                {[0, 1, 2].map(i => (
-                  <span key={i} className="w-2 h-2 rounded-full animate-bounce" style={{ background: 'rgba(44,41,38,0.25)', animationDelay: `${i * 150}ms` }} />
+            )}
+            <div className={`max-w-[78%] rounded-2xl px-4 py-3 ${
+              msg.role === 'user'
+                ? 'bg-rose-amina text-white rounded-tr-sm'
+                : 'bg-ivory text-charcoal rounded-tl-sm'
+            }`}>
+              <div className="text-sm leading-relaxed space-y-2">
+                {msg.content.split(/\n\n+/).map((para, i) => (
+                  <p key={i} className="whitespace-pre-wrap">{para.trim()}</p>
                 ))}
               </div>
+              <p className={`text-xs mt-2 ${
+                msg.role === 'user' ? 'text-white/60' : 'text-charcoal/30'
+              }`}>
+                {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </p>
             </div>
+          </div>
+        ))}
+
+        {isLoading && (
+          <div className="flex justify-start">
+            <div className="w-7 h-7 rounded-full bg-rose-amina flex items-center justify-center mr-2 flex-shrink-0">
+              <span className="text-white text-xs">🌙</span>
+            </div>
+            <div className="bg-ivory rounded-2xl rounded-tl-sm px-4 py-3">
+              <div className="flex gap-1">
+                <span className="w-2 h-2 rounded-full bg-charcoal/20 animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-2 h-2 rounded-full bg-charcoal/20 animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-2 h-2 rounded-full bg-charcoal/20 animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {error && (
+          <div className="bg-rose-amina/10 border border-rose-amina/20 rounded-xl px-4 py-3 text-center">
+            <p className="text-rose-amina text-sm">{error}</p>
+            <button onClick={() => setError(null)} className="text-charcoal/40 text-xs mt-1">Dismiss</button>
           </div>
         )}
 
         <div ref={bottomRef} />
       </div>
 
-      {/* Quick chips — only before any user messages */}
-      {userMessageCount === 0 && (
-        <div className="px-4 pb-2 flex gap-2 overflow-x-auto flex-shrink-0">
-          {QUICK_CHIPS.map(chip => {
-            const Icon = chip.icon
-            return (
-              <button
-                key={chip.id}
-                onClick={() => handleSend(chip.prompt)}
-                className="chip flex-shrink-0 text-xs"
-              >
-                <Icon size={14} strokeWidth={1.5} className="text-olive" /> {chip.label}
-              </button>
-            )
-          })}
+      {/* Quick chips */}
+      {messages.length <= 1 && (
+        <div className="px-4 pb-2 flex gap-2 overflow-x-auto">
+          {QUICK_CHIPS.map(chip => (
+            <button
+              key={chip.id}
+              onClick={() => sendMessage(chip.label.replace(/^[\S]+ /, ''))}
+              className="chip flex-shrink-0 text-xs"
+            >
+              {chip.label}
+            </button>
+          ))}
         </div>
       )}
 
       {/* Input */}
-      <ChatInput onSend={handleSend} disabled={isLoading} />
-    </div>
-  )
-}
-
-function ChatInput({ onSend, disabled }: { onSend: (text: string) => void; disabled: boolean }) {
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  function submit() {
-    const val = inputRef.current?.value.trim()
-    if (!val || disabled) return
-    onSend(val)
-    if (inputRef.current) inputRef.current.value = ''
-  }
-
-  return (
-    <div
-      className="px-4 pb-[max(env(safe-area-inset-bottom),1.25rem)] pt-2 flex-shrink-0"
-      style={{ borderTop: '1px solid var(--amina-hairline)', background: 'var(--amina-soft-cream)' }}
-    >
-      <div
-        className="flex items-center gap-2 rounded-full px-4 py-2.5"
-        style={{ background: 'var(--amina-warm-ivory)', border: '1px solid var(--amina-hairline)' }}
-      >
-        <input
-          ref={inputRef}
-          onKeyDown={e => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault()
-              submit()
-            }
-          }}
-          placeholder="Share what's on your heart..."
-          className="flex-1 bg-transparent text-[14px] text-charcoal placeholder:text-muted outline-none"
-        />
-        <button
-          onClick={submit}
-          disabled={disabled}
-          aria-label="Send message"
-          className="w-8 h-8 rounded-full flex items-center justify-center disabled:opacity-40 transition-opacity"
-          style={{ background: 'var(--amina-primary-action)' }}
-        >
-          <ArrowUp size={16} strokeWidth={2} className="text-white" />
-        </button>
+      <div className="px-4 pb-6 pt-2 border-t border-charcoal/5">
+        <div className="flex items-center gap-2 bg-ivory rounded-full px-4 py-2.5 border border-charcoal/10">
+          <input
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage(input)}
+            placeholder="Message Amina..."
+            className="flex-1 bg-transparent text-sm text-charcoal placeholder:text-charcoal/30 outline-none"
+          />
+          <button
+            onClick={() => sendMessage(input)}
+            disabled={!input.trim() || isLoading}
+            className="w-8 h-8 rounded-full bg-rose-amina flex items-center justify-center disabled:opacity-40"
+          >
+            <span className="text-white text-sm">↑</span>
+          </button>
+        </div>
+        <p className="text-center text-xs text-charcoal/30 mt-2">
+          Amina can make mistakes. Please review important information.
+        </p>
       </div>
-      <p className="text-center text-[11px] mt-2" style={{ color: 'rgba(44,41,38,0.35)' }}>
-        Amina is an AI companion, not a scholar or therapist.
-      </p>
     </div>
   )
 }
 
 export default function ChatPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center min-h-dvh" style={{ background: 'var(--amina-soft-cream)' }}>
-          <div className="flex flex-col items-center gap-3">
-            <AminaIcon size={40} className="animate-pulse" />
-          </div>
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-dvh bg-cream">
+        <div className="flex flex-col items-center gap-3">
+          <span className="text-3xl animate-pulse">🌙</span>
+          <p className="text-charcoal/40 text-sm">Loading...</p>
         </div>
-      }
-    >
+      </div>
+    }>
       <ChatInner />
     </Suspense>
   )
