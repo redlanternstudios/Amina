@@ -14,13 +14,12 @@ export async function POST(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Verify circle membership
+  // Verify circle membership (V2: circle_group_members)
   const { data: membership } = await supabase
-    .from('circle_memberships')
+    .from('circle_group_members')
     .select('id')
     .eq('circle_id', id)
     .eq('user_id', user.id)
-    .eq('status', 'active')
     .maybeSingle()
 
   if (!membership) {
