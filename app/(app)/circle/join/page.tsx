@@ -32,6 +32,8 @@ function JoinCircleInner() {
   const [error, setError] = useState('')
   const [isFull, setIsFull] = useState(false)
   const [joining, setJoining] = useState(false)
+  const [displayHandle, setDisplayHandle] = useState('')
+  const [anonymousMode, setAnonymousMode] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Pre-fill code when returning from auth redirect
@@ -86,7 +88,10 @@ function JoinCircleInner() {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ invite_code: code }),
+        body: JSON.stringify({ 
+          invite_code: code,
+          display_handle: anonymousMode ? 'Sister' : displayHandle,
+        }),
       })
       const data = await res.json()
       if (res.status === 401) {
@@ -211,11 +216,53 @@ function JoinCircleInner() {
           </p>
         )}
 
+        {/* Display Handle Selection */}
+        {preview && !isFull && (
+          <div className="mb-6">
+            <p className="text-[14px] font-semibold text-charcoal mb-3">How should sisters know you?</p>
+            <div className="flex gap-3 mb-3">
+              <button
+                onClick={() => setAnonymousMode(true)}
+                className="flex-1 py-3 px-3 rounded-xl border-2 transition-colors font-medium text-[13px]"
+                style={{
+                  background: anonymousMode ? 'var(--amina-rose-selected)' : 'transparent',
+                  borderColor: anonymousMode ? 'var(--amina-primary-action)' : 'var(--amina-hairline)',
+                  color: anonymousMode ? 'var(--amina-primary-action)' : 'var(--amina-soft-charcoal)',
+                }}
+              >
+                Stay anonymous (Sister)
+              </button>
+              <button
+                onClick={() => setAnonymousMode(false)}
+                className="flex-1 py-3 px-3 rounded-xl border-2 transition-colors font-medium text-[13px]"
+                style={{
+                  background: !anonymousMode ? 'var(--amina-rose-selected)' : 'transparent',
+                  borderColor: !anonymousMode ? 'var(--amina-primary-action)' : 'var(--amina-hairline)',
+                  color: !anonymousMode ? 'var(--amina-primary-action)' : 'var(--amina-soft-charcoal)',
+                }}
+              >
+                Use my name
+              </button>
+            </div>
+            {!anonymousMode && (
+              <input
+                value={displayHandle}
+                onChange={e => setDisplayHandle(e.target.value)}
+                placeholder="e.g., Sister Nur or Umm Sara"
+                className="w-full px-3 py-2 rounded-xl bg-white text-[14px] border-2 outline-none transition-colors text-charcoal"
+                style={{
+                  borderColor: displayHandle ? 'var(--amina-primary-action)' : 'var(--amina-hairline)',
+                }}
+              />
+            )}
+          </div>
+        )}
+
         {/* Join button */}
         {preview && !isFull && (
           <button
             onClick={handleJoin}
-            disabled={joining}
+            disabled={joining || (!anonymousMode && !displayHandle.trim())}
             className="btn-primary w-full disabled:opacity-40"
           >
             {joining ? 'Joining...' : 'Join this circle'}

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { generateText } from 'ai'
 
 function generateInviteCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -78,6 +79,34 @@ export async function POST(req: Request) {
     user_id: user.id,
     display_handle: 'Sister',
   })
+
+  // Seed Amina's welcome post (async, fire and forget)
+  try {
+    const topicPrompts: Record<string, string> = {
+      'Faith & Belief': 'Provide a warm, brief 1-sentence welcome message from Amina for a sisterhood circle focused on faith and belief. Keep it under 40 words. Sign off with "💫 Amina"',
+      'Mental Health': 'Provide a warm, brief 1-sentence welcome message from Amina for a sisterhood circle focused on mental health support. Keep it under 40 words. Sign off with "💫 Amina"',
+      'Prayer & Worship': 'Provide a warm, brief 1-sentence welcome message from Amina for a sisterhood circle focused on prayer and worship. Keep it under 40 words. Sign off with "💫 Amina"',
+      'Family & Relationships': 'Provide a warm, brief 1-sentence welcome message from Amina for a sisterhood circle focused on family and relationships. Keep it under 40 words. Sign off with "💫 Amina"',
+    }
+    
+    const prompt = topicPrompts[topic_tag] || `Provide a warm, brief 1-sentence welcome message from Amina for a sisterhood circle. Keep it under 40 words. Sign off with "💫 Amina"`
+
+    const { text: welcome } = await generateText({
+      model: 'anthropic/claude-opus-4-1-20250805',
+      prompt,
+    })
+
+    // Insert Amina's welcome post
+    await supabase.from('circle_posts').insert({
+      circle_id: circle.id,
+      user_id: 'amina-system',
+      content_text: welcome,
+      is_anonymous: false,
+    })
+  } catch {
+    // Silently fail if seeding doesn't work
+    console.error('[Circle seed] Failed to create Amina welcome post')
+  }
 
   return NextResponse.json({ circle }, { status: 201 })
 }

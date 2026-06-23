@@ -1,10 +1,11 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { MessageCircle, BookOpen, Heart, User } from 'lucide-react'
+import { MessageCircle, BookOpen, Heart, User, Users } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { label: 'Amina', icon: MessageCircle, href: '/home' },
+  { label: 'Guidance', icon: MessageCircle, href: '/home' },
+  { label: 'Circle', icon: Users, href: '/circle' },
   { label: 'Reflections', icon: BookOpen, href: '/reflections' },
   { label: "Du'a Wall", icon: Heart, href: '/dua-wall' },
   { label: 'Profile', icon: User, href: '/profile' },

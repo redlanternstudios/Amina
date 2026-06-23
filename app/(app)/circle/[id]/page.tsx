@@ -2,16 +2,17 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ChevronLeft, Heart, ArrowUp, MoreHorizontal } from 'lucide-react'
+import { ChevronLeft, ArrowUp, MoreHorizontal } from 'lucide-react'
+import FaithReactions from '@/components/circle/FaithReactions'
 
 type Post = {
   id: string
   content: string
   is_anonymous: boolean
   display_handle: string
-  has_reacted: boolean
   is_mine: boolean
   created_at: string
+  reactions?: Array<{ reaction: string; user_id: string }>
 }
 
 type Circle = {
@@ -32,10 +33,12 @@ function timeLabel(dateStr: string): string {
   return `${Math.floor(hrs / 24)}d ago`
 }
 
-function PostBubble({ post, onReact }: { post: Post; onReact: (id: string) => void }) {
+function PostBubble({ post, userId, circleId }: { post: Post; userId?: string; circleId?: string }) {
+  const [reactions, setReactions] = useState(post.reactions ?? [])
+
   return (
     <div
-      className="rounded-xl p-4"
+      className="rounded-2xl p-4"
       style={{ background: 'var(--amina-warm-ivory)', border: '1px solid var(--amina-hairline)' }}
     >
       <div className="flex items-center justify-between mb-2.5">
@@ -45,10 +48,9 @@ function PostBubble({ post, onReact }: { post: Post; onReact: (id: string) => vo
             style={{
               background: 'var(--amina-rose-selected)',
               color: 'var(--amina-primary-action)',
-              boxShadow: '0 0 0 2px var(--amina-primary-action)',
             }}
           >
-            S
+            {post.display_handle.charAt(0).toUpperCase()}
           </div>
           <div>
             <p className="text-[13px] font-semibold text-charcoal leading-none">{post.display_handle}</p>
@@ -62,16 +64,16 @@ function PostBubble({ post, onReact }: { post: Post; onReact: (id: string) => vo
         </button>
       </div>
       <p className="text-[14px] leading-relaxed text-charcoal mb-3 whitespace-pre-wrap">{post.content}</p>
-      <div className="flex justify-end">
-        <button
-          onClick={() => onReact(post.id)}
-          aria-label={post.has_reacted ? 'Remove reaction' : 'React with heart'}
-          className="p-1.5 rounded-full transition-all active:scale-90"
-          style={{ color: post.has_reacted ? 'var(--amina-primary-action)' : 'rgba(44,41,38,0.3)' }}
-        >
-          <Heart size={18} strokeWidth={1.5} fill={post.has_reacted ? 'currentColor' : 'none'} />
-        </button>
-      </div>
+      {userId && circleId && (
+        <FaithReactions
+          targetId={post.id}
+          targetType="post"
+          circleId={circleId}
+          existingReactions={reactions}
+          currentUserId={userId}
+          compact={true}
+        />
+      )}
     </div>
   )
 }
@@ -98,6 +100,7 @@ export default function CircleDetailPage() {
   const [notMember, setNotMember] = useState(false)
   const [postText, setPostText] = useState('')
   const [sending, setSending] = useState(false)
+  const [currentUserId, setCurrentUserId] = useState<string | undefined>()
   const bottomRef = useRef<HTMLDivElement>(null)
 
   const authHeaders = useCallback(
@@ -110,6 +113,19 @@ export default function CircleDetailPage() {
     },
     []
   )
+
+  useEffect(() => {
+    // Extract user ID from token
+    try {
+      const match = document.cookie.match(/sb-[^=]+-auth-token=([^;]+)/)
+      if (match) {
+        const blob = JSON.parse(decodeURIComponent(match[1]))
+        setCurrentUserId(blob?.user?.id)
+      }
+    } catch {
+      // Ignore
+    }
+  }, [])
 
   useEffect(() => {
     fetch(`/api/circles/${id}`, { headers: authHeaders() })
@@ -128,14 +144,7 @@ export default function CircleDetailPage() {
     if (!loading) bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [loading, posts.length])
 
-  async function handleReact(postId: string) {
-    setPosts(prev => prev.map(p => p.id === postId ? { ...p, has_reacted: !p.has_reacted } : p))
-    await fetch(`/api/circles/${id}/react`, {
-      method: 'POST',
-      headers: authHeaders(),
-      body: JSON.stringify({ post_id: postId }),
-    })
-  }
+
 
   async function handlePost() {
     const text = postText.trim()
@@ -235,7 +244,7 @@ export default function CircleDetailPage() {
             </p>
           </div>
         ) : (
-          posts.map(post => <PostBubble key={post.id} post={post} onReact={handleReact} />)
+          posts.map(post => <PostBubble key={post.id} post={post} userId={currentUserId} circleId={id} />)
         )}
         <div ref={bottomRef} />
       </div>

@@ -18,6 +18,7 @@ interface ExistingReaction {
 interface Props {
   targetId: string
   targetType: 'message' | 'post'
+  circleId?: string
   existingReactions?: ExistingReaction[]
   currentUserId?: string
   compact?: boolean
@@ -26,6 +27,7 @@ interface Props {
 export default function FaithReactions({
   targetId,
   targetType,
+  circleId,
   existingReactions = [],
   currentUserId,
   compact = true,
@@ -41,15 +43,19 @@ export default function FaithReactions({
     if (!targetId || !currentUserId) return
 
     const existing = reactions.find(r => r.reaction === key && r.user_id === currentUserId)
+    const apiEndpoint = circleId && targetType === 'post' 
+      ? `/api/circles/${circleId}/react`
+      : '/api/reactions'
 
     if (existing) {
       // Optimistic remove
       setReactions(prev => prev.filter(r => !(r.reaction === key && r.user_id === currentUserId)))
       try {
-        const res = await fetch('/api/reactions', {
-          method: 'DELETE',
+        const method = circleId && targetType === 'post' ? 'DELETE' : 'DELETE'
+        const res = await fetch(apiEndpoint, {
+          method,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ target_id: targetId, target_type: targetType, reaction: key }),
+          body: JSON.stringify({ post_id: targetId, target_id: targetId, target_type: targetType, reaction: key }),
         })
         if (!res.ok) {
           // Rollback on failure
@@ -63,10 +69,10 @@ export default function FaithReactions({
       // Optimistic add
       setReactions(prev => [...prev, { reaction: key, user_id: currentUserId }])
       try {
-        const res = await fetch('/api/reactions', {
+        const res = await fetch(apiEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ target_id: targetId, target_type: targetType, reaction: key }),
+          body: JSON.stringify({ post_id: targetId, target_id: targetId, target_type: targetType, reaction: key }),
         })
         if (!res.ok) {
           // Rollback on failure
@@ -77,7 +83,7 @@ export default function FaithReactions({
         setReactions(prev => prev.filter(r => !(r.reaction === key && r.user_id === currentUserId)))
       }
     }
-  }, [targetId, targetType, currentUserId, reactions])
+  }, [targetId, targetType, circleId, currentUserId, reactions])
 
   if (!currentUserId) return null
 
