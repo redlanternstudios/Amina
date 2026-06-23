@@ -13,6 +13,8 @@ type Post = {
   is_mine: boolean
   created_at: string
   reactions?: Array<{ reaction: string; user_id: string }>
+  is_amina_post?: boolean
+  user_id?: string
 }
 
 type Circle = {
@@ -22,6 +24,8 @@ type Circle = {
   topic_tag: string
   invite_code: string
 }
+
+const AMINA_USER_ID = process.env.NEXT_PUBLIC_AMINA_SYSTEM_USER_ID
 
 function timeLabel(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -35,11 +39,12 @@ function timeLabel(dateStr: string): string {
 
 function PostBubble({ post, userId, circleId }: { post: Post; userId?: string; circleId?: string }) {
   const [reactions, setReactions] = useState(post.reactions ?? [])
+  const isAminaPost = post.is_amina_post || (AMINA_USER_ID && post.user_id === AMINA_USER_ID)
 
   return (
     <div
-      className="rounded-2xl p-4"
-      style={{ background: 'var(--amina-warm-ivory)', border: '1px solid var(--amina-hairline)' }}
+      className={`rounded-2xl p-4 ${isAminaPost ? 'border-l-4 border-[#D7BA82]' : ''}`}
+      style={{ background: 'var(--amina-warm-ivory)', border: isAminaPost ? '1px solid var(--amina-hairline)' : '1px solid var(--amina-hairline)' }}
     >
       <div className="flex items-center justify-between mb-2.5">
         <div className="flex items-center gap-2.5">
@@ -53,7 +58,12 @@ function PostBubble({ post, userId, circleId }: { post: Post; userId?: string; c
             {post.display_handle.charAt(0).toUpperCase()}
           </div>
           <div>
-            <p className="text-[13px] font-semibold text-charcoal leading-none">{post.display_handle}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-[13px] font-semibold text-charcoal leading-none">{post.display_handle}</p>
+              {isAminaPost && (
+                <span className="text-[10px] font-medium text-[#D7BA82] uppercase tracking-wide">✦ Amina</span>
+              )}
+            </div>
             <p className="text-[11px] mt-0.5" style={{ color: 'rgba(44,41,38,0.3)' }}>
               {timeLabel(post.created_at)}
             </p>
