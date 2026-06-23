@@ -43,10 +43,9 @@ export default function FaithReactions({
     if (!targetId || !currentUserId) return
 
     const existing = reactions.find(r => r.reaction === key && r.user_id === currentUserId)
-    // Use the correct API endpoint: /api/circles/:id/reactions (with 's')
-    const apiEndpoint = circleId && targetType === 'post' 
-      ? `/api/circles/${circleId}/reactions`
-      : '/api/circles/${circleId}/reactions'
+    // Use /api/circles/:circleId/reactions (with 's') — no legacy /api/reactions fallback
+    if (!circleId) return
+    const apiEndpoint = `/api/circles/${circleId}/reactions`
 
     if (existing) {
       // Optimistic remove
