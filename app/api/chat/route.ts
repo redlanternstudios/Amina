@@ -1,5 +1,4 @@
-import { NextRequest } from 'next/server'
-import { streamText, convertToModelMessages, type UIMessage } from 'ai'
+import { streamText, convertToModelMessages, type UIMessage, consumeStream } from 'ai'
 import { createClient } from '@/lib/supabase/server'
 
 const SYSTEM_PROMPT = `You are the wise older sister. Not a scholar. Not a therapist. The one who actually listens before she speaks.
@@ -77,55 +76,69 @@ CRISIS PROTOCOL:
 If she expresses thoughts of self-harm or suicide: be gentle, provide the 988 crisis line, encourage her to reach out to someone she trusts right now.
 If she describes abuse or danger: respond with warmth, provide the National Domestic Violence Hotline 1-800-799-7233 clearly and early, add a gentle device-safety note: "Sister, if someone else has access to this device, you can close this conversation at any time."`
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
+  const maxDuration = 30
   try {
-    const body = await req.json()
-    let messages = body.messages
-    const conversationId: string | null = body.conversationId ?? null
+    const { messages, conversationId }: { messages: UIMessage[]; conversationId: string | null } = await req.json()
 
     if (!messages || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: 'messages array required' }), { status: 400 })
     }
 
+    // Filter out greeting message and convert UIMessages to ModelMessages
+    const conversationMessages = messages.filter(m => !m.id?.startsWith('__'))
+    
     // Determine the last user message for DB persistence
-    const lastUserMsg = [...messages].reverse().find((m: any) => m.role === 'user')
-    const lastUserText = lastUserMsg?.content || lastUserMsg?.text || ''
+    const lastUserMsg = [...conversationMessages].reverse().find(m => m.role === 'user')
+    const lastUserText = lastUserMsg?.parts
+      ?.filter((p): p is { type: 'text'; text: string } => p.type === 'text')
+      .map(p => p.text)
+      .join('') ?? ''
 
     const result = streamText({
       model: 'anthropic/claude-opus-4-1-20250805',
       system: SYSTEM_PROMPT,
-      messages: messages,
+      messages: await convertToModelMessages(conversationMessages),
       maxOutputTokens: 350,
       temperature: 0.75,
-      onFinish: async ({ text }) => {
-        if (!conversationId) return
+      abortSignal: req.signal,
+    })
+
+    return result.toUIMessageStreamResponse({
+      originalMessages: messages,
+      onFinish: async ({ messages: allMessages, isAborted }) => {
+        if (isAborted || !conversationId) return
         try {
           const supabase = await createClient()
           const { data: { user } } = await supabase.auth.getUser()
           if (!user) return
 
-          // Save user message + assistant reply
-          if (lastUserText) {
-            await supabase.from('amina_messages').insert({
-              conversation_id: conversationId,
-              user_id: user.id,
-              role: 'user',
-              content: lastUserText,
-            })
+          // Save all messages from this exchange
+          for (const msg of allMessages) {
+            if (!msg.id?.startsWith('__')) {
+              // Don't save the greeting message
+              const msgText = msg.parts
+                ?.filter((p): p is { type: 'text'; text: string } => p.type === 'text')
+                .map(p => p.text)
+                .join('') ?? ''
+              
+              if (msgText) {
+                await supabase.from('amina_messages').insert({
+                  conversation_id: conversationId,
+                  user_id: user.id,
+                  role: msg.role,
+                  content: msgText,
+                })
+              }
+            }
           }
-          await supabase.from('amina_messages').insert({
-            conversation_id: conversationId,
-            user_id: user.id,
-            role: 'assistant',
-            content: text,
-          })
-        } catch {
+        } catch (err) {
+          console.error('[amina] Failed to persist messages:', err)
           // Non-blocking — persistence failure should not break the response
         }
       },
+      consumeSseStream: consumeStream,
     })
-
-    return result.toUIMessageStreamResponse()
   } catch (err) {
     console.error('[amina] Chat route error:', err)
     return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 })

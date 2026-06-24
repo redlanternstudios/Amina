@@ -56,9 +56,8 @@ function ChatInner() {
     messages: [GREETING],
     transport: new DefaultChatTransport({
       api: '/api/chat',
-      prepareSendMessagesRequest: ({ id, messages: msgs }) => ({
+      prepareSendMessagesRequest: ({ messages: msgs }) => ({
         body: {
-          id,
           messages: msgs,
           conversationId: conversationId ?? null,
         },
