@@ -80,24 +80,21 @@ If she describes abuse or danger: respond with warmth, provide the National Dome
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const messages: UIMessage[] = body.messages
+    let messages = body.messages
     const conversationId: string | null = body.conversationId ?? null
 
     if (!messages || !Array.isArray(messages)) {
-      return new Response(JSON.stringify({ error: 'Invalid request' }), { status: 400 })
+      return new Response(JSON.stringify({ error: 'messages array required' }), { status: 400 })
     }
 
     // Determine the last user message for DB persistence
-    const lastUserMsg = [...messages].reverse().find(m => m.role === 'user')
-    const lastUserText = lastUserMsg?.parts
-      ?.filter((p): p is { type: 'text'; text: string } => p.type === 'text')
-      .map(p => p.text)
-      .join('') ?? ''
+    const lastUserMsg = [...messages].reverse().find((m: any) => m.role === 'user')
+    const lastUserText = lastUserMsg?.content || lastUserMsg?.text || ''
 
     const result = streamText({
-      model: 'anthropic/claude-sonnet-4-5',
+      model: 'anthropic/claude-opus-4-1-20250805',
       system: SYSTEM_PROMPT,
-      messages: await convertToModelMessages(messages),
+      messages: messages,
       maxOutputTokens: 350,
       temperature: 0.75,
       onFinish: async ({ text }) => {
