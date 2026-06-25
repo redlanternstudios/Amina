@@ -60,7 +60,7 @@ export default function WelcomePage() {
 
   function next() {
     if (isLast) {
-      router.push('/onboarding/intent')
+      router.push('/auth')
     } else {
       setCurrent(current + 1)
     }
@@ -70,7 +70,7 @@ export default function WelcomePage() {
     <div className="min-h-dvh bg-cream flex flex-col px-6 py-8">
       {/* Skip */}
       <div className="flex justify-end mb-4">
-        <button onClick={() => router.push('/onboarding/intent')} className="text-olive text-sm font-medium">
+        <button onClick={() => router.push('/auth')} className="text-olive text-sm font-medium">
           Skip
         </button>
       </div>
