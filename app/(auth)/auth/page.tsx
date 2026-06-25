@@ -11,7 +11,7 @@ export default function SplashPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get('redirect') ?? '/home'
-  const [showSignIn, setShowSignIn] = useState(false)
+  const [showSignIn, setShowSignIn] = useState(true)
 
   return (
     <div className="flex flex-col min-h-dvh bg-cream relative overflow-hidden">
@@ -49,7 +49,15 @@ export default function SplashPage() {
       {/* CTA stack */}
       <div className="px-6 pb-10 flex flex-col gap-3">
         {showSignIn ? (
-          <SignInForm onClose={() => setShowSignIn(false)} redirectTo={redirectTo} />
+          <>
+            <SignInForm onClose={() => setShowSignIn(false)} redirectTo={redirectTo} />
+            <p className="text-center text-xs text-charcoal/40 mt-3">
+              New to Amina?{" "}
+              <button onClick={() => router.push("/welcome")} className="text-rose-amina font-medium">
+                Create an account
+              </button>
+            </p>
+          </>
         ) : (
           <>
             <button onClick={() => setShowSignIn(true)} className="btn-primary w-full">
