@@ -73,39 +73,44 @@ export async function POST(req: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Auto-join the creator
+  // Auto-join the creator — accept displayHandle or fall back to 'Sister'
   await supabase.from('circle_group_members').insert({
     circle_id: circle.id,
     user_id: user.id,
-    display_handle: 'Sister',
+    display_handle: body.displayHandle?.trim() || 'Sister',
   })
 
   // Seed Amina's welcome post (async, fire and forget)
-  try {
-    const topicPrompts: Record<string, string> = {
-      'Faith & Belief': 'Provide a warm, brief 1-sentence welcome message from Amina for a sisterhood circle focused on faith and belief. Keep it under 40 words. Sign off with "💫 Amina"',
-      'Mental Health': 'Provide a warm, brief 1-sentence welcome message from Amina for a sisterhood circle focused on mental health support. Keep it under 40 words. Sign off with "💫 Amina"',
-      'Prayer & Worship': 'Provide a warm, brief 1-sentence welcome message from Amina for a sisterhood circle focused on prayer and worship. Keep it under 40 words. Sign off with "💫 Amina"',
-      'Family & Relationships': 'Provide a warm, brief 1-sentence welcome message from Amina for a sisterhood circle focused on family and relationships. Keep it under 40 words. Sign off with "💫 Amina"',
+  const AMINA_SYSTEM_USER_ID = process.env.AMINA_SYSTEM_USER_ID
+  if (AMINA_SYSTEM_USER_ID) {
+    try {
+      const topicPrompts: Record<string, string> = {
+        'Faith & Belief': `You are Amina, a warm AI companion for Muslim women. Post a welcome to the circle "${name}" (intention: ${intention || 'sisterhood'}). 2-3 sentences, max 200 chars. Include a relevant du'a. Use 🌙 or 🌿 sparingly.`,
+        'Mental Health': `You are Amina, a warm AI companion for Muslim women. Post a welcome to the circle "${name}" (intention: ${intention || 'sisterhood'}). 2-3 sentences, max 200 chars. Include a relevant du'a. Use 🌙 or 🌿 sparingly.`,
+        'Prayer & Worship': `You are Amina, a warm AI companion for Muslim women. Post a welcome to the circle "${name}" (intention: ${intention || 'sisterhood'}). 2-3 sentences, max 200 chars. Include a relevant du'a. Use 🌙 or 🌿 sparingly.`,
+        'Family & Relationships': `You are Amina, a warm AI companion for Muslim women. Post a welcome to the circle "${name}" (intention: ${intention || 'sisterhood'}). 2-3 sentences, max 200 chars. Include a relevant du'a. Use 🌙 or 🌿 sparingly.`,
+      }
+
+      const prompt = topicPrompts[topic_tag] || 
+        `You are Amina, a warm AI companion for Muslim women. Post a welcome to the circle "${name}". 2-3 sentences, max 200 chars. Include a relevant du'a. Use 🌙 or 🌿 sparingly.`
+
+      const { text: welcome } = await generateText({
+        model: 'anthropic/claude-opus-4-1-20250805',
+        prompt,
+      })
+
+      // Insert Amina's welcome post with is_amina_post flag
+      await supabase.from('circle_posts').insert({
+        circle_id: circle.id,
+        user_id: AMINA_SYSTEM_USER_ID,
+        content_text: welcome.trim(),
+        is_anonymous: false,
+        is_amina_post: true,
+      })
+    } catch {
+      // Silently fail if seeding doesn't work — circle creation still succeeds
+      console.error('[Circle seed] Failed to create Amina welcome post')
     }
-    
-    const prompt = topicPrompts[topic_tag] || `Provide a warm, brief 1-sentence welcome message from Amina for a sisterhood circle. Keep it under 40 words. Sign off with "💫 Amina"`
-
-    const { text: welcome } = await generateText({
-      model: 'anthropic/claude-opus-4-1-20250805',
-      prompt,
-    })
-
-    // Insert Amina's welcome post
-    await supabase.from('circle_posts').insert({
-      circle_id: circle.id,
-      user_id: 'amina-system',
-      content_text: welcome,
-      is_anonymous: false,
-    })
-  } catch {
-    // Silently fail if seeding doesn't work
-    console.error('[Circle seed] Failed to create Amina welcome post')
   }
 
   return NextResponse.json({ circle }, { status: 201 })

@@ -43,17 +43,16 @@ export default function FaithReactions({
     if (!targetId || !currentUserId) return
 
     const existing = reactions.find(r => r.reaction === key && r.user_id === currentUserId)
-    const apiEndpoint = circleId && targetType === 'post' 
-      ? `/api/circles/${circleId}/react`
-      : '/api/reactions'
+    // Use /api/circles/:circleId/reactions (with 's') — no legacy /api/reactions fallback
+    if (!circleId) return
+    const apiEndpoint = `/api/circles/${circleId}/reactions`
 
     if (existing) {
       // Optimistic remove
       setReactions(prev => prev.filter(r => !(r.reaction === key && r.user_id === currentUserId)))
       try {
-        const method = circleId && targetType === 'post' ? 'DELETE' : 'DELETE'
         const res = await fetch(apiEndpoint, {
-          method,
+          method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ post_id: targetId, target_id: targetId, target_type: targetType, reaction: key }),
         })

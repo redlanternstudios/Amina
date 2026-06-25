@@ -1,299 +1,253 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { Heart, Plus, X } from 'lucide-react'
+import { useEffect, useState, useRef } from 'react'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import CircleDetailSkeleton from '@/components/circle/CircleDetailSkeleton'
 
-interface DuaPost {
+interface Dua {
   id: string
   content: string
-  created_at: string
   is_answered: boolean
   ameen_count: number
   user_has_ameened: boolean
-  user_initial: string
+  created_at: string
 }
 
-const HADITH_QUOTES = [
-  { text: 'Indeed, Allah is near and responsive.', source: 'Quran 2:186' },
-  { text: 'Call upon Me; I will respond to you.', source: 'Quran 40:60' },
-  { text: 'Do not despair of Allah\'s mercy.', source: 'Quran 39:53' },
-  { text: 'Allah does not burden a soul except with that which it can bear.', source: 'Quran 2:286' },
-  { text: 'Verily, with hardship comes ease.', source: 'Quran 94:5' },
-]
+function timeAgo(date: string) {
+  const sec = Math.floor((Date.now() - new Date(date).getTime()) / 1000)
+  if (sec < 60) return 'just now'
+  const min = Math.floor(sec / 60)
+  if (min < 60) return `${min}m ago`
+  const hr = Math.floor(min / 60)
+  if (hr < 24) return `${hr}h ago`
+  const d = Math.floor(hr / 24)
+  return `${d}d ago`
+}
 
 export default function DuaWallPage() {
-  const [duas, setDuas] = useState<DuaPost[]>([])
+  const supabase = createClientComponentClient()
+  const [duas, setDuas] = useState<Dua[]>([])
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [showWriteSheet, setShowWriteSheet] = useState(false)
-  const [duaText, setDuaText] = useState('')
-  const [isAnswered, setIsAnswered] = useState(false)
+  const [nextCursor, setNextCursor] = useState<string | null>(null)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [showSheet, setShowSheet] = useState(false)
+  const [newDuaContent, setNewDuaContent] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const supabase = createClient()
+  const sheetRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    loadDuas()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setCurrentUserId(user?.id ?? null)
+    })
+    loadDuas(true)
   }, [])
 
-  async function loadDuas() {
-    setLoading(true)
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      const { data: posts, error } = await supabase
-        .from('dua_wall_posts')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50)
-
-      if (error) throw error
-
-      // Get ameen counts and user's ameens
-      const { data: ameens } = await supabase
-        .from('dua_ameens')
-        .select('dua_id, user_id')
-
-      const ameenMap = new Map<string, number>()
-      const userAmeenedSet = new Set<string>()
-      
-      ameens?.forEach(ameen => {
-        ameenMap.set(ameen.dua_id, (ameenMap.get(ameen.dua_id) || 0) + 1)
-        if (ameen.user_id === user?.id) {
-          userAmeenedSet.add(ameen.dua_id)
-        }
-      })
-
-      const formattedDuas = posts.map(post => ({
-        id: post.id,
-        content: post.content,
-        created_at: post.created_at,
-        is_answered: post.is_answered,
-        ameen_count: ameenMap.get(post.id) || 0,
-        user_has_ameened: userAmeenedSet.has(post.id),
-        user_initial: String(Math.floor(Math.random() * 26) + 65),
-      }))
-
-      setDuas(formattedDuas)
-    } catch (err) {
-      console.error('Failed to load duas', err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function submitDua() {
-    if (!duaText.trim() || submitting) return
-    setSubmitting(true)
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated')
-
-      const { error } = await supabase
-        .from('dua_wall_posts')
-        .insert({
-          user_id: user.id,
-          content: duaText.trim(),
-          is_answered: isAnswered,
-        })
-
-      if (error) throw error
-
-      setDuaText('')
-      setIsAnswered(false)
-      setShowWriteSheet(false)
-      await loadDuas()
-    } catch (err) {
-      console.error('Failed to submit dua', err)
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  async function toggleAmeen(duaId: string, hasAmeened: boolean) {
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated')
-
-      if (hasAmeened) {
-        const { error } = await supabase
-          .from('dua_ameens')
-          .delete()
-          .eq('dua_id', duaId)
-          .eq('user_id', user.id)
-        if (error) throw error
-      } else {
-        const { error } = await supabase
-          .from('dua_ameens')
-          .insert({ dua_id: duaId, user_id: user.id })
-        if (error) throw error
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (sheetRef.current && !sheetRef.current.contains(e.target as Node)) {
+        setShowSheet(false)
       }
+    }
+    if (showSheet) document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showSheet])
 
-      await loadDuas()
-    } catch (err) {
-      console.error('Failed to toggle ameen', err)
+  const loadDuas = async (reset = false) => {
+    if (reset) setNextCursor(null)
+    const url = new URL('/api/dua-wall', window.location.origin)
+    if (!reset && nextCursor) url.searchParams.set('cursor', nextCursor)
+    url.searchParams.set('limit', '20')
+
+    setLoadingMore(true)
+    const res = await fetch(url.toString())
+    if (res.ok) {
+      const data = await res.json()
+      if (reset) setDuas(data.duas)
+      else setDuas(prev => [...prev, ...data.duas])
+      setNextCursor(data.nextCursor)
+    }
+    setLoading(false)
+    setLoadingMore(false)
+  }
+
+  const toggleAmeen = async (duaId: string) => {
+    const dua = duas.find(d => d.id === duaId)
+    if (!dua) return
+
+    // Optimistic update
+    setDuas(prev => prev.map(d =>
+      d.id === duaId ? {
+        ...d,
+        ameen_count: d.user_has_ameened ? d.ameen_count - 1 : d.ameen_count + 1,
+        user_has_ameened: !d.user_has_ameened,
+      } : d
+    ))
+
+    const method = dua.user_has_ameened ? 'DELETE' : 'POST'
+    const res = await fetch(`/api/dua-wall/${duaId}/ameen`, { method })
+    if (!res.ok) {
+      // Rollback
+      setDuas(prev => prev.map(d =>
+        d.id === duaId ? { ...dua } : d
+      ))
     }
   }
 
-  const getRelativeTime = (created: string) => {
-    const now = new Date()
-    const then = new Date(created)
-    const seconds = Math.floor((now.getTime() - then.getTime()) / 1000)
-    
-    if (seconds < 60) return 'just now'
-    const minutes = Math.floor(seconds / 60)
-    if (minutes < 60) return `${minutes}m ago`
-    const hours = Math.floor(minutes / 60)
-    if (hours < 24) return `${hours}h ago`
-    const days = Math.floor(hours / 24)
-    return `${days}d ago`
+  const markFulfilled = async (duaId: string) => {
+    const res = await fetch(`/api/dua-wall/${duaId}/fulfilled`, {
+      method: 'PATCH',
+    })
+    if (res.ok) {
+      setDuas(prev => prev.map(d =>
+        d.id === duaId ? { ...d, is_answered: true } : d
+      ))
+    }
   }
+
+  const submitDua = async () => {
+    if (!newDuaContent.trim() || submitting) return
+    setSubmitting(true)
+    const res = await fetch('/api/dua-wall', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: newDuaContent.trim() }),
+    })
+    if (res.ok) {
+      const data = await res.json()
+      setDuas(prev => [data.dua, ...prev])
+      setNewDuaContent('')
+      setShowSheet(false)
+    }
+    setSubmitting(false)
+  }
+
+  if (loading) return <CircleDetailSkeleton />
 
   return (
-    <div className="relative pb-32" style={{ background: '#07080D', minHeight: '100dvh' }}>
+    <div className="min-h-screen bg-cream">
       {/* Header */}
-      <div className="pt-6 px-4 pb-4" style={{ background: '#07080D' }}>
-        <h1 className="text-3xl font-serif" style={{ color: '#F7F2EE' }}>Du'a Wall</h1>
-        <p className="text-sm mt-1" style={{ color: '#8A8A8A' }}>Sisters are praying with you</p>
-      </div>
-
-      {/* Du'a Feed */}
-      <div className="px-4 space-y-3">
-        {loading ? (
-          <div className="text-center py-8" style={{ color: '#8A8A8A' }}>Loading duas...</div>
-        ) : duas.length === 0 ? (
-          <div className="text-center py-12">
-            <p style={{ color: '#8A8A8A' }} className="text-sm">No duas yet. Be the first to share.</p>
+      <header className="sticky top-0 z-10 bg-cream px-4 py-4 border-b border-charcoal/5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-display text-2xl text-charcoal">Du'a Wall</h1>
+            <p className="text-xs text-charcoal/50 mt-0.5">Lift each other in prayer.</p>
           </div>
-        ) : (
-          duas.map(dua => {
-            const quote = HADITH_QUOTES[Math.floor(Math.random() * HADITH_QUOTES.length)]
-            return (
-              <div key={dua.id} className="rounded-lg p-4" style={{ background: '#111318' }}>
-                {/* Post header */}
-                <div className="flex items-center gap-3 mb-3">
-                  <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
-                    style={{ background: '#D92532', color: '#F7F2EE' }}
-                  >
-                    {dua.user_initial}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p style={{ color: '#F7F2EE' }} className="text-sm font-medium">A sister</p>
-                    <p style={{ color: '#8A8A8A' }} className="text-xs">{getRelativeTime(dua.created_at)}</p>
-                  </div>
-                  {dua.is_answered && (
-                    <span className="text-xs px-2 py-1 rounded" style={{ background: '#1E4D2B', color: '#7FE8B5' }}>
-                      Answered ✓
-                    </span>
-                  )}
-                </div>
+          <button
+            onClick={() => setShowSheet(true)}
+            className="w-10 h-10 rounded-full bg-[#C9796A] flex items-center justify-center"
+          >
+            <span className="text-white text-lg">🤲</span>
+          </button>
+        </div>
+      </header>
 
-                {/* Du'a content */}
-                <p style={{ color: '#F7F2EE' }} className="text-sm leading-relaxed mb-3 line-clamp-3">
-                  {dua.content}
-                </p>
+      <div className="px-4 py-4 space-y-4">
+        {/* Amina weekly du'a */}
+        <article className="bg-ivory rounded-2xl p-4 border-l-4 border-gold shadow-soft">
+          <span className="text-xs font-medium text-gold uppercase tracking-wide">✦ From Amina</span>
+          <p className="font-display italic text-sm text-charcoal mt-2 leading-relaxed">
+            Rabbana hab lana min azwajina wa dhurriyatina qurrata a'yun — 
+            Our Lord, grant us from among our spouses and offspring comfort to our eyes.
+          </p>
+          <p className="text-xs text-charcoal/40 mt-2">Surah Al-Furqan 25:74</p>
+        </article>
 
-                {/* Quote */}
-                <div
-                  className="pl-3 py-2 mb-3 rounded-sm text-xs italic"
-                  style={{
-                    background: '#0A0B0F',
-                    borderLeft: '3px solid #D92532',
-                    color: '#F7F2EE',
-                  }}
-                >
-                  "{quote.text}"
-                  <br />
-                  <span style={{ color: '#8A8A8A' }}>— {quote.source}</span>
-                </div>
+        {/* Empty state */}
+        {duas.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16 gap-4">
+            <p className="text-4xl">🤲</p>
+            <p className="font-display italic text-xl text-charcoal">No du'as yet</p>
+            <p className="text-sm text-charcoal/50 text-center max-w-xs">
+              Be the first to lift your sisters in prayer.
+            </p>
+            <button
+              onClick={() => setShowSheet(true)}
+              className="px-6 py-3 bg-[#C9796A] text-white rounded-xl text-sm font-medium"
+            >
+              Make the first Du'a
+            </button>
+          </div>
+        )}
 
-                {/* Ameen button */}
+        {/* Du'a feed */}
+        {duas.map(dua => (
+          <article key={dua.id} className="bg-ivory rounded-2xl p-4 shadow-soft">
+            <p className="text-xs text-charcoal/40 mb-2">
+              A sister from the community · {timeAgo(dua.created_at)}
+            </p>
+            <p className="text-sm text-charcoal leading-relaxed">{dua.content}</p>
+            {dua.is_answered && (
+              <p className="text-xs text-[#8E9878] mt-2">✓ Answered — Alhamdulillah</p>
+            )}
+            <div className="flex items-center justify-between mt-3">
+              <button
+                onClick={() => toggleAmeen(dua.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-colors ${
+                  dua.user_has_ameened
+                    ? 'bg-[#C9796A] text-white'
+                    : 'bg-transparent border border-charcoal/10 text-charcoal/60'
+                }`}
+              >
+                <span>🤲</span>
+                <span>Ameen</span>
+                {dua.ameen_count > 0 && <span>· {dua.ameen_count}</span>}
+              </button>
+              {currentUserId && !dua.is_answered && (
                 <button
-                  onClick={() => toggleAmeen(dua.id, dua.user_has_ameened)}
-                  className="flex items-center gap-2 text-sm transition-opacity"
-                  style={{
-                    color: dua.user_has_ameened ? '#D92532' : '#8A8A8A',
-                  }}
+                  onClick={() => markFulfilled(dua.id)}
+                  className="text-xs text-[#8E9878]/70"
                 >
-                  <span>🤲</span>
-                  <span>{dua.ameen_count}</span>
-                  <span className="text-xs">Ameen</span>
+                  Mark as answered
                 </button>
-              </div>
-            )
-          })
+              )}
+            </div>
+          </article>
+        ))}
+
+        {nextCursor && (
+          <button
+            onClick={() => loadDuas(false)}
+            disabled={loadingMore}
+            className="w-full py-3 text-sm text-charcoal/50 font-medium"
+          >
+            {loadingMore ? 'Loading...' : 'Load more'}
+          </button>
         )}
       </div>
 
-      {/* FAB Button */}
-      <button
-        onClick={() => setShowWriteSheet(true)}
-        className="fixed bottom-24 right-4 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110"
-        style={{ background: '#D92532', color: '#F7F2EE' }}
-      >
-        <Plus size={24} />
-      </button>
-
-      {/* Write Sheet */}
-      {showWriteSheet && (
-        <div className="fixed inset-0 z-50 flex items-end">
+      {/* Post Du'a Sheet */}
+      {showSheet && (
+        <div className="fixed inset-0 z-50 bg-black/20" onClick={() => setShowSheet(false)}>
           <div
-            className="fixed inset-0"
-            onClick={() => setShowWriteSheet(false)}
-            style={{ background: 'rgba(0, 0, 0, 0.5)' }}
-          />
-          <div
-            className="relative w-full rounded-t-2xl p-6"
-            style={{ background: '#111318' }}
+            ref={sheetRef}
+            className="absolute bottom-0 left-0 right-0 bg-cream rounded-t-3xl p-6 animate-slide-up"
+            onClick={e => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-4">
-              <h2 style={{ color: '#F7F2EE' }} className="text-lg font-serif">Share Your Du'a</h2>
+              <h2 className="font-display text-xl text-charcoal">Make a Du'a</h2>
+              <button onClick={() => setShowSheet(false)} className="text-charcoal/40 text-lg">×</button>
+            </div>
+            <p className="text-xs text-charcoal/50 mb-4">
+              Your du'a will be shared anonymously with the community.
+            </p>
+            <textarea
+              value={newDuaContent}
+              onChange={e => setNewDuaContent(e.target.value)}
+              placeholder="Ya Allah..."
+              className="w-full bg-ivory rounded-xl p-4 text-sm text-charcoal placeholder:text-charcoal/30 outline-none resize-none h-24"
+              maxLength={280}
+            />
+            <div className="flex items-center justify-between mt-2">
+              <span className="text-xs text-charcoal/40">{newDuaContent.length}/280</span>
               <button
-                onClick={() => setShowWriteSheet(false)}
-                style={{ color: '#8A8A8A' }}
+                onClick={submitDua}
+                disabled={!newDuaContent.trim() || submitting}
+                className="px-6 py-3 bg-[#C9796A] text-white rounded-xl text-sm font-medium disabled:opacity-40"
               >
-                <X size={20} />
+                Share Du'a 🤲
               </button>
             </div>
-
-            <textarea
-              value={duaText}
-              onChange={(e) => setDuaText(e.target.value.slice(0, 280))}
-              placeholder="Share your du'a with your sisters..."
-              className="w-full p-3 rounded-lg mb-3 text-sm resize-none focus:outline-none"
-              style={{
-                background: '#07080D',
-                color: '#F7F2EE',
-              }}
-              rows={4}
-            />
-
-            <div className="text-xs mb-4" style={{ color: '#8A8A8A' }}>
-              {duaText.length}/280 characters
-            </div>
-
-            <label className="flex items-center gap-2 mb-4 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={isAnswered}
-                onChange={(e) => setIsAnswered(e.target.checked)}
-                className="w-4 h-4 rounded"
-              />
-              <span style={{ color: '#F7F2EE' }} className="text-sm">Mark as answered</span>
-            </label>
-
-            <p style={{ color: '#8A8A8A' }} className="text-xs mb-4">
-              Posted anonymously to protect your privacy
-            </p>
-
-            <button
-              onClick={submitDua}
-              disabled={submitting || !duaText.trim()}
-              className="w-full py-3 rounded-lg font-medium transition-opacity disabled:opacity-50"
-              style={{ background: '#D92532', color: '#F7F2EE' }}
-            >
-              {submitting ? 'Posting...' : 'Post Du\'a'}
-            </button>
           </div>
         </div>
       )}

@@ -1,83 +1,82 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { ArrowRight } from 'lucide-react'
-import SignInForm from '@/components/auth/SignInForm'
-import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
-function SplashPageInner() {
+export default function SplashPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirectTo = searchParams.get('redirect') ?? '/home'
-  const [showSignIn, setShowSignIn] = useState(false)
-
-  // If already signed in, go straight to the destination
-  useEffect(() => {
-    createClient().auth.getSession().then(({ data }) => {
-      if (data.session) router.replace(redirectTo)
-    })
-  }, [redirectTo, router])
 
   return (
     <div className="flex flex-col min-h-dvh bg-cream relative overflow-hidden">
-      {/* Hero */}
-      <div className="flex-1 flex flex-col items-center justify-start pt-16 px-6">
-        <h1 className="font-display text-7xl italic" style={{ backgroundImage: 'linear-gradient(95deg, var(--amina-soft-olive) 0%, var(--amina-dusty-rose) 55%, var(--amina-muted-gold) 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>
+      {/* Hero background */}
+      <div className="flex-1 flex flex-col items-center justify-start pt-16 px-6 relative">
+        {/* Logo mark */}
+        <div className="text-center mb-2">
+          <span className="text-gold text-3xl">⌙★</span>
+        </div>
+
+        {/* Wordmark */}
+        <h1 className="font-display text-6xl text-olive mb-1" style={{ fontStyle: 'italic' }}>
           Amina
         </h1>
+        <p className="text-charcoal/50 text-sm tracking-wide mb-1">by RedLantern Studios™</p>
 
-        <p className="font-display text-2xl text-charcoal/80 text-center mt-8">
+        {/* Divider */}
+        <div className="flex items-center gap-2 my-4">
+          <div className="h-px w-12 bg-gold/40" />
+          <span className="text-gold text-lg">🌿</span>
+          <div className="h-px w-12 bg-gold/40" />
+        </div>
+
+        <p className="text-charcoal/70 text-base text-center">
           Faith centered reflection for women.
         </p>
 
+        {/* Lantern illustration placeholder */}
         <div className="flex-1 flex items-end justify-center pb-8">
-          <div
-            className="w-48 h-64 rounded-3xl flex items-center justify-center bg-ivory"
-            style={{ border: '1px solid var(--amina-hairline)' }}
-          >
-            <div
-              className="w-24 h-24 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: 'var(--amina-warm-highlight)' }}
-            >
-              🌙
-            </div>
+          <div className="w-48 h-64 rounded-3xl bg-ivory/60 flex items-center justify-center">
+            <span className="text-6xl">🪭</span>
           </div>
         </div>
       </div>
 
       {/* CTA stack */}
       <div className="px-6 pb-10 flex flex-col gap-3">
-        {showSignIn ? (
-          <SignInForm onClose={() => setShowSignIn(false)} redirectTo={redirectTo} />
-        ) : (
-          <>
-            <button onClick={() => setShowSignIn(true)} className="btn-primary w-full">
-              Continue <ArrowRight size={18} strokeWidth={1.75} />
-            </button>
+        <button
+          onClick={() => router.push('/signup')}
+          className="btn-primary w-full"
+        >
+          Create an Account <span>→</span>
+        </button>
 
-            <button onClick={() => router.push('/welcome')} className="btn-secondary w-full">
-              Create an Account
-            </button>
-          </>
-        )}
+        <div className="flex items-center gap-3 my-1">
+          <div className="flex-1 h-px bg-charcoal/10" />
+          <span className="text-charcoal/40 text-sm">or</span>
+          <div className="flex-1 h-px bg-charcoal/10" />
+        </div>
+
+        <button className="btn-secondary w-full">
+          <span className="text-lg"></span> Continue with Apple
+        </button>
+
+        <p className="text-center text-xs text-charcoal/50 mt-1">
+          Already have an account?{' '}
+          <button
+            onClick={() => router.push('/welcome')}
+            className="text-rose-amina underline underline-offset-2"
+          >
+            Sign In
+          </button>
+        </p>
 
         <p className="text-center text-xs text-charcoal/40 mt-1">
           By continuing, you agree to our{' '}
-          <a href="/terms" className="text-rose-amina">Terms of Use</a> and{' '}
+          <a href="/terms" className="text-rose-amina">Terms of Use</a>{' '}and{' '}
           <a href="/privacy" className="text-rose-amina">Privacy Policy</a>.
         </p>
 
         <p className="text-center text-xs text-charcoal/30 mt-2">by RedLantern Studios™</p>
       </div>
     </div>
-  )
-}
-
-export default function SplashPage() {
-  return (
-    <Suspense fallback={null}>
-      <SplashPageInner />
-    </Suspense>
   )
 }

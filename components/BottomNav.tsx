@@ -2,6 +2,9 @@
 
 import { usePathname, useRouter } from 'next/navigation'
 
+// Final nav spec — locked 2026-06-22
+// Home | Circle | Reflections | Du'a Wall | Profile
+// Guidance dropped from nav — accessible via Home chips and /guidance direct link
 const NAV_ITEMS = [
   { label: 'Home', icon: '🏠', href: '/home' },
   { label: 'Circle', icon: '🔮', href: '/circle' },
@@ -15,27 +18,17 @@ export default function BottomNav() {
   const router = useRouter()
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none" style={{ background: '#07080D' }}>
-      <div
-        className="pointer-events-auto flex items-center justify-around gap-0 w-full"
-        style={{
-          background: '#07080D',
-          height: '64px',
-          paddingBottom: 'max(env(safe-area-inset-bottom), 0px)',
-          paddingTop: '8px',
-        }}
-      >
+    <nav className="fixed bottom-0 left-0 right-0 bg-cream border-t border-charcoal/10 pb-safe z-50">
+      <div className="flex items-center justify-around px-2 py-2">
         {NAV_ITEMS.map(item => {
           const isActive = pathname === item.href || (item.href !== '/profile' && pathname.startsWith(item.href))
           return (
             <button
               key={item.href}
               onClick={() => router.push(item.href)}
-              aria-current={isActive ? 'page' : undefined}
-              className="flex flex-1 flex-col items-center justify-center gap-1 transition-colors relative"
-              style={{
-                color: isActive ? '#F7F2EE' : '#8A8A8A',
-              }}
+              className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
+                isActive ? 'text-rose-500' : 'text-charcoal/40'
+              }`}
             >
               <span className="text-2xl">{item.icon}</span>
               <span className="text-[10px] font-medium">{item.label}</span>

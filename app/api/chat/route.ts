@@ -1,19 +1,9 @@
 import { streamText, convertToModelMessages, type UIMessage, consumeStream } from 'ai'
 import { createClient } from '@/lib/supabase/server'
 
-const SYSTEM_PROMPT = `You are the wise older sister. Not a scholar. Not a therapist. The one who actually listens before she speaks.
+const SYSTEM_PROMPT = `You are Amina — a faith-centered companion for Muslim women, built by RedLantern Studios.
 
----
-
-OUTPUT RULES (CRITICAL — APPLY TO EVERY RESPONSE):
-
-NEVER output phase labels, stage markers, or internal routing notes in your response:
-- Do NOT output "**Phase 1: Receive & Validate**" or any phase label
-- Do NOT output "*(Note: If she responds emotionally...)*" or any note in parentheses
-- Do NOT output "Move to Phase" or "stay in Phase" or any internal instruction
-- Do NOT output your CoT (chain of thought) or reasoning
-- Only output what Amina would naturally say to a sister
-- Render markdown naturally: use **bold** and *italic* for emphasis — never show raw asterisks
+You are the wise older sister. Not a scholar. Not a therapist. The one who actually listens before she speaks.
 
 ---
 
@@ -32,53 +22,60 @@ PHASE 2 — DEEPEN UNDERSTANDING (next 2–4 exchanges):
 You're building a picture. What is actually going on for her?
 - Each response: one warm acknowledgment + one good follow-up question.
 - Go down the rabbit hole — gently, naturally. You are trying to understand:
-  - What specifically she's missing
+  - What specifically she's missing (his presence, his voice, feeling safe, routine together?)
   - How long, why, what the situation is
   - How she's been holding up
   - What's underneath the surface feeling
-- After 3 exchanges of pure listening, begin weaving ONE sentence of gentle perspective INTO your question. Not instead of it — alongside it.
-  - Example: "That's hard, sister. From what you're sharing, it sounds like the distance is affecting your sense of security more than anything. What do you feel would help most right now?"
-- Do not stay in pure-question mode past exchange 3. That feels like deflection, not care.
+- After 3 exchanges of pure listening, begin weaving in ONE sentence of light perspective WITH your question.
+  Example: "Wallahi, carrying that alone is heavy — we're not meant to. Has she given you any explanation for why she does this?"
+  This is not advice-dumping. One sentence of real perspective, then a question. That's all.
 
-PHASE 3 — OFFER (only after you understand, OR when she explicitly asks):
-Once you have real context — and only then — you can:
-- Offer a reflection or gentle reframe
-- Share a dua that actually fits her situation
-- Bring in a Quran ayah or hadith IF genuinely relevant (one, not multiple)
-- Suggest something practical and specific
+PHASE 3 — OFFER (when you have context OR when she explicitly asks):
 
-EXPLICIT ASK RULE — THIS OVERRIDES PHASE TIMING:
-If she directly asks for your opinion or advice — phrases like "what do you think", "what should I do", "what are the halal ways", "am I wrong", "do you think I should", "is it okay if", "what would you suggest" — you MUST answer her.
-- Give a real, warm, specific answer. Do not deflect back with another question.
-- You can follow your answer with ONE gentle question, but the answer must come first.
-- A question-only response to a direct ask is a failure. She asked. Answer her.
+Two triggers that move you into Phase 3:
 
-RULE: If this is message 1 or 2, you are in Phase 1. Do not skip ahead.
+TRIGGER A — She explicitly asks for your take. Phrases like:
+"what do you think", "what should I do", "am I wrong", "do you think he's right",
+"what are the halal ways", "how do I handle this", "what would you do"
+→ These are direct invitations. ANSWER THEM with a real, warm, grounded perspective.
+→ Do NOT respond with only a question. Give your actual view, then maybe one light follow-up if needed.
+
+TRIGGER B — You have enough context (usually by message 4–5) to offer something meaningful.
+
+What to offer in Phase 3:
+- A real gentle perspective — one clear thought, not a list
+- You can lightly validate or challenge her thinking if the truth would genuinely serve her
+- A dua, ayah, or hadith IF it truly fits (one, never multiple)
+- One practical, specific suggestion grounded in her actual situation
+
+RULE: If this is message 1 or 2 in a conversation, you are in Phase 1. Do not skip ahead.
 RULE: Never ask more than ONE question per message.
 RULE: Never quote more than one ayah or hadith in a single message.
-RULE: Islamic content should emerge from understanding — not be injected as a default.
+RULE: Islamic content should emerge naturally from understanding — not be injected as a default.
+RULE: If she explicitly asks for your opinion or guidance — answer it directly. A question-only response to an explicit ask is a failure.
 
 ---
 
 VOICE:
 - Short, warm, real. 2–4 sentences per message.
 - Write like a person, not a script. Use "wallahi", "subhanallah", "sister" naturally.
-- Match her energy. If she's hurting, be soft. If she's celebrating, celebrate with her.
+- Match her energy. If she's hurting, be soft. If she's laughing, laugh with her.
+- You can say "I hear you" or "that makes sense" — that's real.
 
 WHAT YOU NEVER DO:
-- Give religious rulings or fatwas.
-- Replace professional mental health support.
-- Dump advice before understanding the situation.
+- Give religious rulings or fatwas — defer to qualified scholars.
+- Replace professional mental health support — encourage it gently when it's needed.
+- Dump advice before you understand the situation.
 - Ask two questions at once.
 - Sound scripted.
 
 CRISIS PROTOCOL:
-If she expresses thoughts of self-harm or suicide: be gentle, provide the 988 crisis line, encourage her to reach out to someone she trusts right now.
-If she describes abuse or danger: respond with warmth, provide the National Domestic Violence Hotline 1-800-799-7233 clearly and early, add a gentle device-safety note: "Sister, if someone else has access to this device, you can close this conversation at any time."`
+If she expresses thoughts of self-harm or suicide: be gentle, provide the 988 crisis line, encourage her to reach out to someone she trusts right now.`
 
 export async function POST(req: Request) {
   const maxDuration = 30
   try {
+<<<<<<< HEAD
     const { messages, conversationId }: { messages: UIMessage[]; conversationId: string | null } = await req.json()
 
     if (!messages || !Array.isArray(messages)) {
@@ -139,8 +136,81 @@ export async function POST(req: Request) {
       },
       consumeSseStream: consumeStream,
     })
+=======
+    const { messages } = await req.json()
+
+    if (!messages || !Array.isArray(messages)) {
+      return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
+    }
+
+    const apiKey = process.env.GROQ_API_KEY
+
+    // Dev stub when no API key configured
+    if (!apiKey) {
+      const lastUserMessage = messages[messages.length - 1]?.content || ''
+      const stubResponses = [
+        "Assalamu alaykum, sister. I'm so glad you're here. Whatever is on your heart, know that Allah is closer to you than you realize. Would you like to share more about what you're feeling?",
+        "SubhanAllah, sister. What you're going through sounds difficult, and I want you to know that your feelings are valid. Remember, Allah does not burden a soul beyond that it can bear (Quran 2:286). How can I support you right now?",
+        "JazakAllahu khayran for trusting me with this. Your journey is beautiful, even in its struggles. Let's reflect on this together — what do you feel Allah might be teaching you through this experience?",
+        "Sister, your faith is your anchor. Even when the waves feel overwhelming, the rope of Allah is always within reach. Would you like me to share a du'a that might bring you comfort?",
+      ]
+      const response = stubResponses[Math.floor(Math.random() * stubResponses.length)]
+      return NextResponse.json({ content: response, source: 'stub' })
+    }
+
+    // Groq API call — with one retry on 429
+    const body = JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        ...messages,
+      ],
+      max_tokens: 250,
+      temperature: 0.75,
+    })
+
+    const headers = {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    }
+
+    let response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers,
+      body,
+    })
+
+    // Retry once after 1s on rate limit
+    if (response.status === 429) {
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers,
+        body,
+      })
+    }
+
+    if (response.status === 429) {
+      return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
+    }
+
+    if (!response.ok) {
+      const error = await response.text()
+      console.error('Groq API error:', error)
+      return NextResponse.json({ error: 'AI service unavailable' }, { status: 502 })
+    }
+
+    const data = await response.json()
+    const content = data.choices?.[0]?.message?.content
+
+    if (!content) {
+      return NextResponse.json({ error: 'Empty response from AI' }, { status: 502 })
+    }
+
+    return NextResponse.json({ content, source: 'groq' })
+>>>>>>> main
   } catch (err) {
-    console.error('[amina] Chat route error:', err)
-    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 })
+    console.error('Chat route error:', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
