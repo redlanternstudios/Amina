@@ -1,13 +1,14 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
+import { Home, BookOpen, NotebookPen, Users, User } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { label: 'Home', icon: '🏠', href: '/home' },
-  { label: 'Guidance', icon: '📖', href: '/guidance' },
-  { label: 'Reflections', icon: '📝', href: '/reflections' },
-  { label: 'Circle', icon: '👥', href: '/circle' },
-  { label: 'Profile', icon: '👤', href: '/profile' },
+  { label: 'Home', icon: Home, href: '/home' },
+  { label: 'Guidance', icon: BookOpen, href: '/guidance' },
+  { label: 'Reflections', icon: NotebookPen, href: '/reflections' },
+  { label: 'Circle', icon: Users, href: '/circle' },
+  { label: 'Profile', icon: User, href: '/profile' },
 ]
 
 export default function BottomNav() {
@@ -15,24 +16,27 @@ export default function BottomNav() {
   const router = useRouter()
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-cream border-t border-charcoal/10 pb-safe z-50">
-      <div className="flex items-center justify-around px-2 py-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 flex justify-center px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-2 pointer-events-none">
+      <div
+        className="pointer-events-auto flex items-center justify-around gap-1 w-full max-w-md rounded-[28px] bg-ivory px-2 py-2"
+        style={{
+          border: '1px solid var(--amina-hairline)',
+          boxShadow: 'var(--amina-shadow-nav)',
+        }}
+      >
         {NAV_ITEMS.map(item => {
+          const Icon = item.icon
           const isActive = pathname.startsWith(item.href)
           return (
             <button
               key={item.href}
               onClick={() => router.push(item.href)}
-              className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
-                isActive ? 'text-rose-500' : 'text-charcoal/40'
-              }`}
+              aria-current={isActive ? 'page' : undefined}
+              className="flex flex-1 flex-col items-center gap-1 rounded-2xl py-1.5 transition-colors"
+              style={{ color: isActive ? 'var(--amina-primary-action)' : 'var(--amina-muted-text)' }}
             >
-              <span className="text-xl">{item.icon}</span>
-              <span className={`text-xs font-medium ${
-                isActive ? 'text-rose-500' : 'text-charcoal/40'
-              }`}>
-                {item.label}
-              </span>
+              <Icon size={22} strokeWidth={1.5} />
+              <span className="text-[11px] font-medium">{item.label}</span>
             </button>
           )
         })}

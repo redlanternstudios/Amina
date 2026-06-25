@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useRef, useEffect, Suspense } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
+import { ChevronLeft, MoreHorizontal, ArrowUp, Heart, Bell, HandHeart, BookOpen } from 'lucide-react'
+import AminaIcon from '@/components/brand/AminaIcon'
 
 interface Message {
   id: string
@@ -11,20 +13,32 @@ interface Message {
 }
 
 const QUICK_CHIPS = [
-  { id: 'reflect', label: '🧘 Help me reflect' },
-  { id: 'reminder', label: '🔔 Give me a reminder' },
-  { id: 'dua', label: '🤲 Make du‘a for me' },
-  { id: 'quran', label: '📖 Quranic guidance' },
+  { id: 'reflect', label: 'Help me reflect', icon: Heart, prompt: 'I need help reflecting on something.' },
+  { id: 'reminder', label: 'Give me a reminder', icon: Bell, prompt: 'Give me an Islamic reminder for today.' },
+  { id: 'dua', label: "Make du'a for me", icon: HandHeart, prompt: "Please make du'a for me." },
+  { id: 'quran', label: 'Quranic guidance', icon: BookOpen, prompt: 'I need Quranic guidance on something.' },
 ]
+
+function AminaAvatar({ size = 36 }: { size?: number }) {
+  return (
+    <div
+      className="flex items-center justify-center rounded-full bg-cream flex-shrink-0"
+      style={{ width: size, height: size, border: '1px solid var(--amina-hairline)' }}
+    >
+      <AminaIcon size={Math.round(size * 0.62)} />
+    </div>
+  )
+}
 
 function ChatInner() {
   const router = useRouter()
-  const params = useParams()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       role: 'assistant',
-      content: 'As-salamu alaykum, sister \u2665\ufe0f\nHow can I support you today?',
+      content: 'As-salamu alaykum, sister.\nHow can I support you today?',
       timestamp: new Date(),
     },
   ])
@@ -32,10 +46,22 @@ function ChatInner() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const autoSentRef = useRef(false)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  // Auto-send the ?q= param from home page on first mount
+  useEffect(() => {
+    const q = searchParams.get('q')
+    if (!q || autoSentRef.current) return
+    autoSentRef.current = true
+    // Clean the URL so a refresh doesn't re-send
+    router.replace(pathname, { scroll: false })
+    sendMessage(q)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   async function sendMessage(text: string) {
     if (!text.trim() || isLoading) return
@@ -79,38 +105,46 @@ function ChatInner() {
   return (
     <div className="flex flex-col min-h-dvh bg-cream">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 pt-4 pb-3 bg-cream border-b border-charcoal/5">
-        <button onClick={() => router.back()} className="text-charcoal/60 text-2xl">‹</button>
+      <div className="flex items-center gap-3 px-4 pt-4 pb-3 bg-cream" style={{ borderBottom: '1px solid var(--amina-hairline)' }}>
+        <button onClick={() => router.back()} aria-label="Back" className="text-secondary">
+          <ChevronLeft size={24} strokeWidth={1.5} />
+        </button>
         <div className="flex items-center gap-2 flex-1">
-          <div className="w-9 h-9 rounded-full bg-rose-amina flex items-center justify-center">
-            <span className="text-white">🌙</span>
-          </div>
+          <AminaAvatar size={36} />
           <div>
             <p className="font-semibold text-charcoal text-sm">Amina</p>
-            <p className="text-charcoal/40 text-xs">Faith companion</p>
+            <p className="text-muted text-xs">Faith companion</p>
           </div>
         </div>
-        <button className="text-charcoal/40">…</button>
+        <button aria-label="More options" className="text-muted">
+          <MoreHorizontal size={20} strokeWidth={1.5} />
+        </button>
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
         {messages.map(msg => (
-          <div key={msg.id} className={`flex ${ msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+          <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             {msg.role === 'assistant' && (
-              <div className="w-7 h-7 rounded-full bg-rose-amina flex items-center justify-center mr-2 flex-shrink-0 mt-1">
-                <span className="text-white text-xs">🌙</span>
+              <div className="mr-2 mt-1">
+                <AminaAvatar size={28} />
               </div>
             )}
-            <div className={`max-w-[78%] rounded-2xl px-4 py-3 ${
-              msg.role === 'user'
-                ? 'bg-rose-amina text-white rounded-tr-sm'
-                : 'bg-ivory text-charcoal rounded-tl-sm'
-            }`}>
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-              <p className={`text-xs mt-1 ${
-                msg.role === 'user' ? 'text-white/60' : 'text-charcoal/30'
-              }`}>
+            <div
+              className={`max-w-[78%] rounded-2xl px-4 py-3 ${
+                msg.role === 'user' ? 'text-white rounded-tr-sm bg-rose-amina' : 'bg-ivory text-charcoal rounded-tl-sm'
+              }`}
+            >
+              {msg.role === 'assistant' ? (
+                <div className="font-amina-voice text-[16px] leading-relaxed space-y-2">
+                  {msg.content.split(/\n\n+/).map((para, i) => (
+                    <p key={i} className="whitespace-pre-wrap">{para.trim()}</p>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+              )}
+              <p className={`text-xs mt-1 ${msg.role === 'user' ? 'text-white/60' : 'text-muted'}`}>
                 {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>
             </div>
@@ -119,8 +153,8 @@ function ChatInner() {
 
         {isLoading && (
           <div className="flex justify-start">
-            <div className="w-7 h-7 rounded-full bg-rose-amina flex items-center justify-center mr-2 flex-shrink-0">
-              <span className="text-white text-xs">🌙</span>
+            <div className="mr-2">
+              <AminaAvatar size={28} />
             </div>
             <div className="bg-ivory rounded-2xl rounded-tl-sm px-4 py-3">
               <div className="flex gap-1">
@@ -133,9 +167,9 @@ function ChatInner() {
         )}
 
         {error && (
-          <div className="bg-rose-amina/10 border border-rose-amina/20 rounded-xl px-4 py-3 text-center">
+          <div className="rounded-xl px-4 py-3 text-center" style={{ backgroundColor: 'var(--amina-rose-selected)' }}>
             <p className="text-rose-amina text-sm">{error}</p>
-            <button onClick={() => setError(null)} className="text-charcoal/40 text-xs mt-1">Dismiss</button>
+            <button onClick={() => setError(null)} className="text-muted text-xs mt-1">Dismiss</button>
           </div>
         )}
 
@@ -145,37 +179,41 @@ function ChatInner() {
       {/* Quick chips */}
       {messages.length <= 1 && (
         <div className="px-4 pb-2 flex gap-2 overflow-x-auto">
-          {QUICK_CHIPS.map(chip => (
-            <button
-              key={chip.id}
-              onClick={() => sendMessage(chip.label.replace(/^[\S]+ /, ''))}
-              className="chip flex-shrink-0 text-xs"
-            >
-              {chip.label}
-            </button>
-          ))}
+          {QUICK_CHIPS.map(chip => {
+            const Icon = chip.icon
+            return (
+              <button
+                key={chip.id}
+                onClick={() => sendMessage(chip.prompt)}
+                className="chip flex-shrink-0 text-xs"
+              >
+                <Icon size={14} strokeWidth={1.5} className="text-olive" /> {chip.label}
+              </button>
+            )
+          })}
         </div>
       )}
 
       {/* Input */}
-      <div className="px-4 pb-6 pt-2 border-t border-charcoal/5">
-        <div className="flex items-center gap-2 bg-ivory rounded-full px-4 py-2.5 border border-charcoal/10">
+      <div className="px-4 pb-6 pt-2" style={{ borderTop: '1px solid var(--amina-hairline)' }}>
+        <div className="flex items-center gap-2 rounded-full px-4 py-2.5 bg-ivory" style={{ border: '1px solid var(--amina-border)' }}>
           <input
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage(input)}
-            placeholder="Message Amina..."
-            className="flex-1 bg-transparent text-sm text-charcoal placeholder:text-charcoal/30 outline-none"
+            placeholder="Type your message..."
+            className="flex-1 bg-transparent text-sm text-charcoal placeholder:text-muted outline-none"
           />
           <button
             onClick={() => sendMessage(input)}
             disabled={!input.trim() || isLoading}
+            aria-label="Send message"
             className="w-8 h-8 rounded-full bg-rose-amina flex items-center justify-center disabled:opacity-40"
           >
-            <span className="text-white text-sm">↑</span>
+            <ArrowUp size={16} strokeWidth={2} className="text-white" />
           </button>
         </div>
-        <p className="text-center text-xs text-charcoal/30 mt-2">
+        <p className="text-center text-xs text-muted mt-2">
           Amina can make mistakes. Please review important information.
         </p>
       </div>
@@ -185,14 +223,16 @@ function ChatInner() {
 
 export default function ChatPage() {
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-dvh bg-cream">
-        <div className="flex flex-col items-center gap-3">
-          <span className="text-3xl animate-pulse">🌙</span>
-          <p className="text-charcoal/40 text-sm">Loading...</p>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-dvh bg-cream">
+          <div className="flex flex-col items-center gap-3">
+            <AminaIcon size={40} className="animate-pulse" />
+            <p className="text-muted text-sm">Loading...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <ChatInner />
     </Suspense>
   )

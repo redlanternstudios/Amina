@@ -1,4 +1,6 @@
-import BottomNav from '@/components/BottomNav'
+import { ChromeProvider } from '@/components/app/ChromeContext'
+import Sidebar from '@/components/app/Sidebar'
+import AminaBubble from '@/components/app/AminaBubble'
 
 export default function AppLayout({
   children,
@@ -6,11 +8,12 @@ export default function AppLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="min-h-dvh bg-cream flex flex-col">
-      <main className="flex-1 pb-20">
+    <ChromeProvider>
+      <div className="min-h-dvh bg-cream flex flex-col">
         {children}
-      </main>
-      <BottomNav />
-    </div>
+      </div>
+      <Sidebar />
+      <AminaBubble />
+    </ChromeProvider>
   )
 }

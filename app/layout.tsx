@@ -1,5 +1,31 @@
 import type { Metadata, Viewport } from 'next'
+import { Inter, Newsreader, Lora } from 'next/font/google'
+import { ThemeProvider } from '@/components/app/ThemeProvider'
 import './globals.css'
+
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600'],
+  variable: '--font-inter',
+  display: 'swap',
+})
+
+const newsreader = Newsreader({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  style: ['normal', 'italic'],
+  variable: '--font-display',
+  display: 'swap',
+})
+
+// Amina's voice font — warm, literary, unmistakably feminine
+const lora = Lora({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  style: ['normal', 'italic'],
+  variable: '--font-amina-voice',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'Amina — Faith-centered reflection for women',
@@ -17,7 +43,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#F7F2EB',
+  themeColor: '#F7F2E8',
 }
 
 export default function RootLayout({
@@ -26,13 +52,17 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      </head>
-      <body className="bg-cream text-charcoal antialiased">
-        {children}
+    <html lang="en" className={`${inter.variable} ${newsreader.variable} ${lora.variable} bg-cream`}>
+      <body className="bg-cream text-charcoal font-body antialiased">
+        {/* Runs synchronously before first paint — prevents flash of wrong theme */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{if(localStorage.getItem('amina-theme')==='dark'){document.documentElement.classList.add('dark')}}catch(e){}})()`,
+          }}
+        />
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   )
