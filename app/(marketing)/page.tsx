@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function LandingPage() {
   return (
@@ -69,14 +70,23 @@ export default function LandingPage() {
           </p>
         </div>
         <div className="relative">
-          <div className="aspect-square rounded-3xl bg-[#F2ECE4] flex items-center justify-center">
-            <div className="text-center p-8">
-              <div className="w-16 h-16 rounded-full bg-[#C9796A]/20 flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">✦</span>
-              </div>
-              <p className="font-display text-xl text-[#2C2926] mb-2">Amina is here to walk</p>
-              <p className="text-[#2C2926]/70">beside you on your beautiful journey of faith, growth, and healing.</p>
+          <div className="aspect-square rounded-3xl overflow-hidden shadow-lg">
+            <Image
+              src="/marketing/hero-woman.png"
+              alt="A woman in a hijab sitting peacefully at sunset, gazing over a misty mountain valley beside a glowing Moroccan lantern and olive branches"
+              width={1024}
+              height={1024}
+              priority
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="absolute -bottom-6 left-6 right-6 md:left-auto md:right-8 md:max-w-xs bg-[#F7F2EB]/95 backdrop-blur-sm rounded-2xl shadow-lg p-6 text-center">
+            <div className="w-12 h-12 rounded-full bg-[#C9796A]/20 flex items-center justify-center mx-auto mb-3">
+              <span className="text-xl text-[#C9796A]">✦</span>
             </div>
+            <p className="text-[#2C2926]/80 leading-relaxed">
+              Amina is here to walk beside you on your beautiful journey of faith, growth, and healing.
+            </p>
           </div>
         </div>
       </section>
@@ -109,10 +119,14 @@ export default function LandingPage() {
 
       {/* Access Gate */}
       <section id="access" className="max-w-6xl mx-auto px-6 py-20 grid md:grid-cols-2 gap-12 items-center">
-        <div className="bg-[#F2ECE4] rounded-3xl p-10 text-center">
-          <p className="font-display text-3xl text-[#8E9878] mb-2">أمينة</p>
-          <p className="text-[#2C2926]/60 italic">A faithful companion on your journey to Allah.</p>
-          <div className="mt-6 text-3xl">✦</div>
+        <div className="rounded-3xl overflow-hidden shadow-lg aspect-square">
+          <Image
+            src="/marketing/access-arch.png"
+            alt="A ceramic arch engraved with the Arabic name أمينة beside dried flowers and a glowing brass lantern"
+            width={1024}
+            height={1024}
+            className="w-full h-full object-cover"
+          />
         </div>
         <div>
           <p className="text-xs font-semibold tracking-widest text-[#C9796A] uppercase mb-4">Member Access</p>
