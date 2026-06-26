@@ -1,13 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowRight, Leaf } from 'lucide-react'
 import AminaWordmark from '@/components/brand/AminaWordmark'
 import AminaIcon from '@/components/brand/AminaIcon'
 import SignInForm from '@/components/auth/SignInForm'
 
-export default function SplashPage() {
+function AuthContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get('redirect') ?? '/home'
@@ -79,5 +79,13 @@ export default function SplashPage() {
         <p className="text-center text-xs text-charcoal/30 mt-2">by RedLantern Studios™</p>
       </div>
     </div>
+  )
+}
+
+export default function SplashPage() {
+  return (
+    <Suspense fallback={<div className="min-h-dvh bg-cream" />}>
+      <AuthContent />
+    </Suspense>
   )
 }

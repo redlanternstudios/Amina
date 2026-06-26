@@ -1,5 +1,7 @@
 import { type NextRequest } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 // ── Types ──
 
 interface PrayerTimes {
