@@ -14,7 +14,7 @@
     "@ai-sdk/react": "^3.0.210",
     "@capacitor/core": "^6.0.0",
     "@capacitor/ios": "^6.0.0",
-    "@supabase/ssr": "^0.1.0",
+    "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.39.0",
     "ai": "^6.0.208",
     "clsx": "^2.1.0",
