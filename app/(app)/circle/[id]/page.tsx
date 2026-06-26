@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowUp, MoreHorizontal } from 'lucide-react'
+import { ArrowUp, MessageCircle, MoreHorizontal } from 'lucide-react'
 import FaithReactions from '@/components/circle/FaithReactions'
 import ShareCard from '@/components/circle/ShareCard'
 
