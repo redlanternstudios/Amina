@@ -4,13 +4,13 @@ import { SignJWT } from 'jose'
 
 const SHARE_SECRET = new TextEncoder().encode(process.env.SHARE_JWT_SECRET || 'amina-share-secret-dev-only')
 
-// GET /api/circles/[circleId]/posts/[postId]/share
+// GET /api/circles/[id]/posts/[postId]/share
 // Returns share metadata — never reveals circle name or member info
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ circleId: string; postId: string }> }
+  { params }: { params: Promise<{ id: string; postId: string }> }
 ) {
-  const { circleId, postId } = await params
+  const { id, postId } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -19,7 +19,7 @@ export async function GET(
   const { data: membership } = await supabase
     .from('circle_group_members')
     .select('id')
-    .eq('circle_id', circleId)
+    .eq('circle_id', id)
     .eq('user_id', user.id)
     .maybeSingle()
   if (!membership) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -29,7 +29,7 @@ export async function GET(
     .from('circle_posts')
     .select('id, content_text, created_at, is_anonymous, user_id')
     .eq('id', postId)
-    .eq('circle_id', circleId)
+    .eq('circle_id', id)
     .single()
 
   if (!post) return NextResponse.json({ error: 'Post not found' }, { status: 404 })
@@ -38,14 +38,14 @@ export async function GET(
   const { data: authorMember } = await supabase
     .from('circle_group_members')
     .select('display_handle')
-    .eq('circle_id', circleId)
+    .eq('circle_id', id)
     .eq('user_id', post.user_id)
     .maybeSingle()
 
   // Generate share token (expires in 7 days)
   const token = await new SignJWT({
     postId: post.id,
-    circleId: circleId,
+    circleId: id,
     exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7,
   })
     .setProtectedHeader({ alg: 'HS256' })

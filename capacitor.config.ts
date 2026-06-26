@@ -1,11 +1,14 @@
 import type { CapacitorConfig } from '@capacitor/cli'
 
 const config: CapacitorConfig = {
-  appId: 'com.redlantern.amina',
-  appName: 'Amina',
+  appId: 'com.redlanternstudios.amina',
+  appName: 'Amina: Muslima Companion',
   webDir: 'out',
   server: {
     androidScheme: 'https',
+    // url set to live deployment for TestFlight
+    // url: 'https://YOUR_VERCEL_URL.vercel.app',
+    cleartext: false,
   },
   plugins: {
     SplashScreen: {

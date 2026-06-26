@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-// PATCH /api/circles/[circleId]/posts/[postId]/comments/[commentId]
+// PATCH /api/circles/[id]/posts/[postId]/comments/[commentId]
 // Soft delete — only the comment author can delete
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ circleId: string; postId: string; commentId: string }> }
+  { params }: { params: Promise<{ id: string; postId: string; commentId: string }> }
 ) {
-  const { circleId, postId, commentId } = await params
+  const { id, postId, commentId } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -18,7 +18,7 @@ export async function PATCH(
     .select('id, author_id')
     .eq('id', commentId)
     .eq('post_id', postId)
-    .eq('circle_id', circleId)
+    .eq('circle_id', id)
     .single()
 
   if (!comment) return NextResponse.json({ error: 'Comment not found' }, { status: 404 })
