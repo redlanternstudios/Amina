@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import Amina3DCharacter from '@/components/brand/Amina3DCharacter'
 
 export default function LandingPage() {
   return (

@@ -38,7 +38,7 @@ function timeLabel(dateStr: string): string {
   return `${Math.floor(hrs / 24)}d ago`
 }
 
-function PostBubble({ post, userId, circleId }: { post: Post; userId?: string; circleId?: string }) {
+function PostBubble({ post, userId, circleId, router }: { post: Post; userId?: string; circleId?: string; router: any }) {
   const [reactions, setReactions] = useState(post.reactions ?? [])
   const isAminaPost = post.is_amina_post || (AMINA_USER_ID && post.user_id === AMINA_USER_ID)
 
@@ -51,10 +51,7 @@ function PostBubble({ post, userId, circleId }: { post: Post; userId?: string; c
         <div className="flex items-center gap-2.5">
           <div
             className="w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-semibold flex-shrink-0"
-            style={{
-              background: 'var(--amina-rose-selected)',
-              color: 'var(--amina-primary-action)',
-            }}
+            style={{ background: 'var(--amina-rose-selected)', color: 'var(--amina-primary-action)' }}
           >
             {post.display_handle.charAt(0).toUpperCase()}
           </div>
@@ -70,20 +67,31 @@ function PostBubble({ post, userId, circleId }: { post: Post; userId?: string; c
             </p>
           </div>
         </div>
-        <button aria-label="Post options" style={{ color: 'rgba(44,41,38,0.3)' }}>
+        <button aria-label="Post options" style={{ color: 'rgba(44,41,38,0.3)' }} onClick={(e) => e.stopPropagation()}>
           <MoreHorizontal size={17} strokeWidth={1.5} />
         </button>
       </div>
       <p className="text-[14px] leading-relaxed text-charcoal mb-3 whitespace-pre-wrap">{post.content}</p>
       {userId && circleId && (
-        <FaithReactions
-          targetId={post.id}
-          targetType="post"
-          circleId={circleId}
-          existingReactions={reactions}
-          currentUserId={userId}
-          compact={true}
-        />
+        <div className="flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
+          <FaithReactions
+            targetId={post.id}
+            targetType="post"
+            circleId={circleId}
+            existingReactions={reactions}
+            currentUserId={userId}
+            compact={true}
+          />
+          <div className="flex items-center gap-3">
+            <button onClick={(e) => { e.stopPropagation(); router.push('/circle/' + circleId + '/posts/' + post.id) }} className="flex items-center gap-1 text-xs" style={{ color: 'rgba(44,41,38,0.3)' }}>
+              <MessageCircle size={14} strokeWidth={1.5} />
+              <span>Reply</span>
+            </button>
+            <div onClick={(e) => e.stopPropagation()}>
+              <ShareCard circleId={circleId} postId={post.id} />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
@@ -231,7 +239,7 @@ export default function CircleDetailPage() {
             </p>
           </div>
         ) : (
-          posts.map(post => <PostBubble key={post.id} post={post} userId={currentUserId} circleId={id} />)
+          posts.map(post => <PostBubble key={post.id} post={post} userId={currentUserId} circleId={id} router={router} />)
         )}
         <div ref={bottomRef} />
       </div>
