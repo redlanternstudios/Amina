@@ -106,3 +106,34 @@ export async function GET(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+// ─── DELETE /api/dua-wall/[id]/ameen ──────────────────────────────────
+// Explicitly remove ameen (page calls DELETE when toggling off).
+export async function DELETE(
+  _: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { error } = await supabase
+      .from('dua_ameens')
+      .delete()
+      .eq('dua_id', id)
+      .eq('user_id', user.id)
+
+    if (error) {
+      return NextResponse.json({ error: 'Failed to remove ameen' }, { status: 500 })
+    }
+
+    return NextResponse.json({ has_ameen: false })
+  } catch (err) {
+    console.error('Unexpected error in DELETE /api/dua-wall/[id]/ameen:', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

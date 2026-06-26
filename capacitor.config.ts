@@ -7,7 +7,7 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'https',
     // url set to live deployment for TestFlight
-    // url: 'https://YOUR_VERCEL_URL.vercel.app',
+    url: 'https://amina-muslima-companion.vercel.app',
     cleartext: false,
   },
   plugins: {

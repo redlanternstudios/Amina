@@ -54,18 +54,28 @@ export default function DuaWallPage() {
   }, [showSheet])
 
   const loadDuas = async (reset = false) => {
-    if (reset) setNextCursor(null)
+    const offset = reset ? 0 : duas.length
     const url = new URL('/api/dua-wall', window.location.origin)
-    if (!reset && nextCursor) url.searchParams.set('cursor', nextCursor)
     url.searchParams.set('limit', '20')
+    url.searchParams.set('offset', String(offset))
 
     setLoadingMore(true)
     const res = await fetch(url.toString())
     if (res.ok) {
       const data = await res.json()
-      if (reset) setDuas(data.duas)
-      else setDuas(prev => [...prev, ...data.duas])
-      setNextCursor(data.nextCursor)
+      // API returns { posts, total } — normalize to Dua shape
+      const normalized: Dua[] = (data.posts ?? []).map((p: any) => ({
+        id: p.id,
+        content: p.content,
+        is_answered: p.is_answered ?? false,
+        ameen_count: p.ameen_count ?? 0,
+        user_has_ameened: p.has_ameen ?? false,
+        created_at: p.created_at,
+      }))
+      if (reset) setDuas(normalized)
+      else setDuas(prev => [...prev, ...normalized])
+      // Show load more if we got a full page
+      setNextCursor(normalized.length === 20 ? String(offset + 20) : null)
     }
     setLoading(false)
     setLoadingMore(false)
@@ -115,7 +125,17 @@ export default function DuaWallPage() {
     })
     if (res.ok) {
       const data = await res.json()
-      setDuas(prev => [data.dua, ...prev])
+      // POST returns { post } — normalize to Dua shape
+      const p = data.post ?? data.dua
+      const newDua: Dua = {
+        id: p.id,
+        content: p.content,
+        is_answered: p.is_answered ?? false,
+        ameen_count: p.ameen_count ?? 0,
+        user_has_ameened: p.has_ameen ?? false,
+        created_at: p.created_at,
+      }
+      setDuas(prev => [newDua, ...prev])
       setNewDuaContent('')
       setShowSheet(false)
     }
