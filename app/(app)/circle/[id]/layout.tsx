@@ -1,7 +1,7 @@
 'use client'
 
 import { useParams, useRouter, usePathname } from 'next/navigation'
-import { ChevronLeft, MessageCircle, Users, Settings, BookOpen } from 'lucide-react'
+import { ChevronLeft, MessageCircle, Users, Settings, BookOpen, Share2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 type Circle = {
@@ -79,7 +79,13 @@ export default function CircleLayout({ children }: { children: React.ReactNode }
             <h1 className="text-[16px] font-semibold text-charcoal">{circle?.name || 'Circle'}</h1>
             <p className="text-[12px] mt-0.5" style={{ color: 'rgba(44,41,38,0.5)' }}>{circle?.topic_tag}</p>
           </div>
-          <div className="w-6" />
+          <button
+            onClick={() => router.push(`/circle/${id}/invite`)}
+            aria-label="Invite sisters"
+            className="w-6 h-6 flex items-center justify-center"
+          >
+            <Share2 size={20} strokeWidth={1.5} style={{ color: 'var(--amina-primary-action)' }} />
+          </button>
         </div>
 
         {/* Tabs */}

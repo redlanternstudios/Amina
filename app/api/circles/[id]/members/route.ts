@@ -53,7 +53,9 @@ export async function GET(
       is_creator: m.user_id === circle?.created_by,
     }))
 
-    return NextResponse.json({ members })
+    const isAdmin = circle?.created_by === user.id
+
+    return NextResponse.json({ members, isAdmin })
   } catch (err) {
     console.error('Unexpected error in GET /api/circles/[id]/members:', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

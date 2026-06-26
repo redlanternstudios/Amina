@@ -42,7 +42,7 @@ function CircleCard({ circle, onClick }: { circle: Circle; onClick: () => void }
   return (
     <button
       onClick={onClick}
-      className="text-left w-full flex flex-col gap-2 transition-all active:scale-[0.98] p-4"
+      className="text-left w-full flex flex-col gap-2 transition-all active:scale-[0.98] p-4 relative overflow-hidden h-full"
       style={{
         background: 'var(--amina-warm-ivory)',
         borderRadius: 16,
@@ -53,6 +53,19 @@ function CircleCard({ circle, onClick }: { circle: Circle; onClick: () => void }
         boxShadow: '0 1px 4px rgba(44,41,38,0.06)',
       }}
     >
+      {/* Muted Gold concentric arcs accent (top-right) */}
+      <svg
+        className="absolute top-2 right-2 opacity-20"
+        width="48"
+        height="48"
+        viewBox="0 0 64 64"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle cx="32" cy="32" r="20" fill="none" stroke="#D7BA82" strokeWidth="1" />
+        <circle cx="32" cy="32" r="28" fill="none" stroke="#D7BA82" strokeWidth="1" />
+        <circle cx="32" cy="32" r="36" fill="none" stroke="#D7BA82" strokeWidth="0.5" opacity="0.6" />
+      </svg>
+      
       <p className="font-display italic text-[18px] leading-tight text-charcoal line-clamp-1">
         {circle.name}
       </p>
@@ -139,11 +152,11 @@ export default function CirclePage() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
             {[1, 2, 3, 4].map(i => (
               <div
                 key={i}
-                className="rounded-2xl h-40 animate-pulse"
+                className="rounded-2xl h-40 w-60 flex-shrink-0 animate-pulse"
                 style={{ background: 'var(--amina-warm-ivory)', borderTop: '2px solid var(--amina-muted-gold)' }}
               />
             ))}
@@ -155,13 +168,14 @@ export default function CirclePage() {
           />
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-3 mb-6">
+            <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar mb-6">
               {circles.map(c => (
-                <CircleCard
-                  key={c.id}
-                  circle={c}
-                  onClick={() => router.push(`/circle/${c.id}`)}
-                />
+                <div key={c.id} className="flex-shrink-0 w-60">
+                  <CircleCard
+                    circle={c}
+                    onClick={() => router.push(`/circle/${c.id}`)}
+                  />
+                </div>
               ))}
             </div>
             <div className="flex gap-3 pb-2">

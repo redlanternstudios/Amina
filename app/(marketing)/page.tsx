@@ -120,10 +120,10 @@ export default function LandingPage() {
 
       {/* Access Gate */}
       <section id="access" className="max-w-6xl mx-auto px-6 py-20 grid md:grid-cols-2 gap-12 items-center">
-        <div className="rounded-3xl overflow-hidden shadow-lg aspect-square">
+        <div className="rounded-3xl overflow-hidden shadow-lg aspect-square bg-[#F2ECE4]">
           <Image
-            src="/marketing/access-arch.png"
-            alt="A ceramic arch engraved with the Arabic name أمينة beside dried flowers and a glowing brass lantern"
+            src="/marketing/access-arch-pattern.png"
+            alt="Clean Islamic geometric pattern with concentric circles and stars in cream and gold tones"
             width={1024}
             height={1024}
             className="w-full h-full object-cover"

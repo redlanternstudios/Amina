@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Search } from 'lucide-react'
 
 const TOPICS = ['All', 'Faith & Worship', 'Marriage & Family', 'Mental Health', 'Sisterhood', 'Quran Study', 'Life Transitions', 'New Muslims']
 
@@ -78,7 +78,9 @@ export default function BrowseCirclesPage() {
   const router = useRouter()
   const [activeTopic, setActiveTopic] = useState('All')
   const [circles, setCircles] = useState<Circle[]>([])
+  const [filteredCircles, setFilteredCircles] = useState<Circle[]>([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     setLoading(true)
@@ -87,9 +89,25 @@ export default function BrowseCirclesPage() {
       : `/api/circles/browse?topic=${encodeURIComponent(activeTopic)}`
     fetch(url)
       .then(r => r.json())
-      .then(d => setCircles(d.circles ?? []))
+      .then(d => {
+        const allCircles = d.circles ?? []
+        setCircles(allCircles)
+        filterCircles(allCircles, search)
+      })
       .finally(() => setLoading(false))
   }, [activeTopic])
+
+  useEffect(() => {
+    filterCircles(circles, search)
+  }, [search, circles])
+
+  function filterCircles(allCircles: Circle[], searchTerm: string) {
+    const filtered = allCircles.filter(c =>
+      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.intention.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    setFilteredCircles(filtered)
+  }
 
   function handleJoin(circle: Circle) {
     // Pre-fill the join page via URL — just navigate to join
@@ -110,11 +128,24 @@ export default function BrowseCirclesPage() {
         </button>
       </div>
 
-      <div className="px-4 mb-5">
+      <div className="px-4 mb-4">
         <h1 className="font-display italic text-[26px] text-charcoal leading-tight">Find a circle</h1>
         <p className="text-[14px] mt-1" style={{ color: 'rgba(44,41,38,0.55)' }}>
           These circles are open to new sisters.
         </p>
+      </div>
+
+      {/* Search box */}
+      <div className="px-4 mb-4 relative">
+        <Search size={16} className="absolute left-7 top-1/2 -translate-y-1/2" style={{ color: 'rgba(44,41,38,0.4)' }} />
+        <input
+          type="text"
+          placeholder="Search circles..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full pl-10 pr-4 py-2.5 rounded-xl border"
+          style={{ borderColor: 'var(--amina-hairline)', background: 'var(--amina-warm-ivory)' }}
+        />
       </div>
 
       {/* Topic filter — horizontal scroll */}
@@ -147,24 +178,26 @@ export default function BrowseCirclesPage() {
               />
             ))}
           </div>
-        ) : circles.length === 0 ? (
+        ) : filteredCircles.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <p className="font-display italic text-[20px] text-charcoal mb-2">
-              No open circles yet, sister.
+              {search ? 'No circles match your search.' : 'No open circles yet, sister.'}
             </p>
             <p className="text-[14px] mb-8" style={{ color: 'rgba(44,41,38,0.5)' }}>
-              Be the first to create one in this topic.
+              {search ? 'Try a different search term.' : 'Be the first to create one in this topic.'}
             </p>
-            <button
-              onClick={() => router.push('/circle/create')}
-              className="btn-primary"
-            >
-              Create a circle
-            </button>
+            {!search && (
+              <button
+                onClick={() => router.push('/circle/create')}
+                className="btn-primary"
+              >
+                Create a circle
+              </button>
+            )}
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            {circles.map(c => (
+            {filteredCircles.map(c => (
               <BrowseCard key={c.id} circle={c} onJoin={() => handleJoin(c)} />
             ))}
           </div>
