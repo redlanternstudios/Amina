@@ -16,9 +16,17 @@ export default function LandingPage() {
           <a href="#how" className="hover:text-[#C9796A] transition-colors">How It Works</a>
           <a href="#access" className="hover:text-[#C9796A] transition-colors">Access</a>
         </div>
-        <Link href="/auth" className="btn-primary text-sm px-5 py-2">
-          Get Started →
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/auth"
+            className="text-sm font-medium text-[#2C2926] hover:text-[#C9796A] transition-colors px-3 py-2"
+          >
+            Sign In
+          </Link>
+          <Link href="/welcome" className="btn-primary text-sm px-5 py-2">
+            Get Started →
+          </Link>
+        </div>
       </nav>
 
       {/* Hero */}
@@ -45,14 +53,20 @@ export default function LandingPage() {
               </li>
             ))}
           </ul>
-          <div className="flex gap-4">
-            <Link href="/auth" className="btn-primary">
+          <div className="flex flex-wrap gap-4 items-center">
+            <Link href="/welcome" className="btn-primary">
               Access Amina →
             </Link>
             <a href="#how" className="btn-secondary">
               Learn More
             </a>
           </div>
+          <p className="text-sm text-[#2C2926]/60 mt-4">
+            Already have an account?{' '}
+            <Link href="/auth" className="text-[#C9796A] font-medium hover:underline">
+              Sign in
+            </Link>
+          </p>
         </div>
         <div className="relative">
           <div className="aspect-square rounded-3xl bg-[#F2ECE4] flex items-center justify-center">
@@ -106,12 +120,12 @@ export default function LandingPage() {
           <p className="text-[#2C2926]/60 mb-8">
             Create your account and begin your journey with Amina — your private, faith-centered companion.
           </p>
-          <Link href="/auth" className="btn-primary w-full text-center block mb-4">
-            Access Amina →
+          <Link href="/welcome" className="btn-primary w-full text-center block mb-4">
+            Create your account →
           </Link>
           <p className="text-sm text-center text-[#2C2926]/50">
-            Not a member yet?{' '}
-            <a href="/auth" className="text-[#C9796A] hover:underline">Join The Circle</a>
+            Already have an account?{' '}
+            <Link href="/auth" className="text-[#C9796A] hover:underline">Sign in</Link>
           </p>
         </div>
       </section>
