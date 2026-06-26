@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState, useParams } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useRouter, useParams } from 'next/navigation'
 import { ChevronLeft, Copy, Check, Share2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
