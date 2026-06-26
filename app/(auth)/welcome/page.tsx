@@ -127,7 +127,7 @@ export default function WelcomePage() {
       </button>
       <p className="text-center text-sm text-charcoal/50">
         Already have an account?{' '}
-        <button onClick={() => router.push('/onboarding/intent')} className="text-rose-amina font-medium">
+        <button onClick={() => router.push('/auth')} className="text-rose-amina font-medium">
           Sign In
         </button>
       </p>

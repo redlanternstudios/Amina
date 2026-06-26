@@ -91,7 +91,7 @@ export async function moderateImageBuffer(
 
   try {
     const formData = new FormData()
-    formData.append('media', new Blob([new Uint8Array(buffer)], { type: mimeType }), filename)
+    formData.append('media', new Blob([buffer], { type: mimeType }), filename)
     formData.append('models', MODELS)
     formData.append('api_user', apiUser)
     formData.append('api_secret', apiSecret)

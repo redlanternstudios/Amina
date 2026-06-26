@@ -261,8 +261,8 @@ export default function CircleDetailPage() {
   // --- Loading state ---
   if (loading) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-8">
-        <div className="flex items-center justify-center py-20"><Spinner size="lg" /></div>
+      <div className="mx-auto max-w-4xl px-4 py-8 flex items-center justify-center min-h-48">
+        <Spinner size="lg" />
       </div>
     )
   }
