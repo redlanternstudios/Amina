@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import FaithReactions from '@/components/circle/FaithReactions'
 import CircleAvatar from '@/components/circle/CircleAvatar'
+import TinyAminaBubble from '@/components/amina/TinyAminaBubble'
 
 interface Message {
   id: string
@@ -133,8 +134,8 @@ export default function CircleChatPage() {
       <div className="flex-1 overflow-y-auto space-y-3 p-3">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <span className="text-3xl mb-2" role="img" aria-hidden="true">💬</span>
-            <p className="text-charcoal/50 text-sm">No messages yet</p>
+            <TinyAminaBubble />
+            <p className="text-charcoal/50 text-sm mt-3">No messages yet</p>
             <p className="text-charcoal/30 text-xs mt-1">Be the first to say something!</p>
           </div>
         ) : (

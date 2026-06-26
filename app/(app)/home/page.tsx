@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { StreakCounter } from '@/components/amina/StreakCounter'
+import TinyAminaBubble from '@/components/amina/TinyAminaBubble'
 import { useSession } from '@/lib/supabase/use-session'
 
 const QUICK_CHIPS = [
@@ -184,6 +185,11 @@ export default function HomePage() {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Tiny Amina character */}
+      <div className="flex justify-center pb-4">
+        <TinyAminaBubble />
       </div>
     </div>
   )
