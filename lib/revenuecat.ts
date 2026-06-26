@@ -53,7 +53,7 @@ export async function getOfferings() {
   if (!Purchases) return null
 
   try {
-    const { offerings } = await Purchases.getOfferings()
+    const offerings = await Purchases.getOfferings()
     return offerings.current ?? null
   } catch {
     return null

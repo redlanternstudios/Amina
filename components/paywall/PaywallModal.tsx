@@ -53,7 +53,7 @@ export default function PaywallModal({ onClose, onSuccess, trigger = 'general' }
       if (offering?.availablePackages?.length) {
         setPackages(offering.availablePackages)
         // Default select annual if available, otherwise first package
-        const annual = offering.availablePackages.find(p => p.packageType === 'ANNUAL')
+        const annual = offering.availablePackages.find((p: PurchasesPackage) => p.packageType === 'ANNUAL')
         setSelectedPkg(annual ?? offering.availablePackages[0])
       }
       setLoading(false)
