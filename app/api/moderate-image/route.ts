@@ -63,17 +63,17 @@ export async function POST(req: NextRequest) {
 
   // ── Log flagged/rejected items to moderation_queue ─────────────────────────
   if (result.verdict === 'flagged' || result.verdict === 'rejected') {
-    await supabase.from('moderation_queue').insert({
+    const { error: insertError } = await supabase.from('moderation_queue').insert({
       user_id: user.id,
       image_url: imageUrl,
       verdict: result.verdict,
       reasons: result.reasons,
       reviewed: false,
-    }).then(({ error: err }) => { if (err) {
-      // Log but don't fail the moderation response
-      console.error('[moderate-image] Failed to insert moderation_queue row', err.message)
-    }
     })
+    if (insertError) {
+      // Log but don't fail the moderation response
+      console.error('[moderate-image] Failed to insert moderation_queue row', insertError.message)
+    }
   }
 
   return NextResponse.json({

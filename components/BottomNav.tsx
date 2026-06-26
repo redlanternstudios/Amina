@@ -21,7 +21,7 @@ export default function BottomNav() {
     <nav className="fixed bottom-0 left-0 right-0 bg-cream border-t border-charcoal/10 pb-safe z-50">
       <div className="flex items-center justify-around px-2 py-2">
         {NAV_ITEMS.map(item => {
-          const isActive = pathname.startsWith(item.href)
+          const isActive = pathname === item.href || (item.href !== '/profile' && pathname.startsWith(item.href))
           return (
             <button
               key={item.href}
@@ -30,12 +30,20 @@ export default function BottomNav() {
                 isActive ? 'text-rose-500' : 'text-charcoal/40'
               }`}
             >
-              <span className="text-xl">{item.icon}</span>
-              <span className={`text-xs font-medium ${
-                isActive ? 'text-rose-500' : 'text-charcoal/40'
-              }`}>
-                {item.label}
-              </span>
+              <span className="text-2xl">{item.icon}</span>
+              <span className="text-[10px] font-medium">{item.label}</span>
+              {isActive && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: '-4px',
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    background: '#D92532',
+                  }}
+                />
+              )}
             </button>
           )
         })}

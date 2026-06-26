@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import Amina3DCharacter from '@/components/brand/Amina3DCharacter'
 
 export default function LandingPage() {
@@ -17,9 +18,17 @@ export default function LandingPage() {
           <a href="#how" className="hover:text-[#C9796A] transition-colors">How It Works</a>
           <a href="#access" className="hover:text-[#C9796A] transition-colors">Access</a>
         </div>
-        <Link href="/auth" className="btn-primary text-sm px-5 py-2">
-          Get Started →
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/auth"
+            className="text-sm font-medium text-[#2C2926] hover:text-[#C9796A] transition-colors px-3 py-2"
+          >
+            Sign In
+          </Link>
+          <Link href="/welcome" className="btn-primary text-sm px-5 py-2">
+            Get Started →
+          </Link>
+        </div>
       </nav>
 
       {/* Hero */}
@@ -46,30 +55,39 @@ export default function LandingPage() {
               </li>
             ))}
           </ul>
-          <div className="flex gap-4">
-            <Link href="/auth" className="btn-primary">
+          <div className="flex flex-wrap gap-4 items-center">
+            <Link href="/welcome" className="btn-primary">
               Access Amina →
             </Link>
             <a href="#how" className="btn-secondary">
               Learn More
             </a>
           </div>
+          <p className="text-sm text-[#2C2926]/60 mt-4">
+            Already have an account?{' '}
+            <Link href="/auth" className="text-[#C9796A] font-medium hover:underline">
+              Sign in
+            </Link>
+          </p>
         </div>
-        <div className="relative flex items-center justify-center">
-          <div className="relative rounded-3xl bg-gradient-to-b from-[#EDD9C8] to-[#F2ECE4] overflow-hidden flex items-end justify-center w-full" style={{ minHeight: 420 }}>
-            {/* Soft radial glow behind character */}
-            <div
-              className="absolute inset-0 rounded-3xl"
-              style={{
-                background: 'radial-gradient(ellipse 70% 60% at 50% 55%, #E8C4A8 0%, transparent 75%)',
-              }}
+        <div className="relative">
+          <div className="aspect-square rounded-3xl overflow-hidden shadow-lg">
+            <Image
+              src="/marketing/hero-woman.png"
+              alt="A woman in a hijab sitting peacefully at sunset, gazing over a misty mountain valley beside a glowing Moroccan lantern and olive branches"
+              width={1024}
+              height={1024}
+              priority
+              className="w-full h-full object-cover"
             />
-            {/* Subtle Islamic arch motif */}
-            <div
-              className="absolute top-8 left-1/2 -translate-x-1/2 w-40 h-40 rounded-t-full opacity-10"
-              style={{ border: '2px solid #C9796A' }}
-            />
-            <Amina3DCharacter variant="full" size={310} className="relative z-10 drop-shadow-xl" />
+          </div>
+          <div className="absolute -bottom-6 left-6 right-6 md:left-auto md:right-8 md:max-w-xs bg-[#F7F2EB]/95 backdrop-blur-sm rounded-2xl shadow-lg p-6 text-center">
+            <div className="w-12 h-12 rounded-full bg-[#C9796A]/20 flex items-center justify-center mx-auto mb-3">
+              <span className="text-xl text-[#C9796A]">✦</span>
+            </div>
+            <p className="text-[#2C2926]/80 leading-relaxed">
+              Amina is here to walk beside you on your beautiful journey of faith, growth, and healing.
+            </p>
           </div>
         </div>
       </section>
@@ -102,10 +120,14 @@ export default function LandingPage() {
 
       {/* Access Gate */}
       <section id="access" className="max-w-6xl mx-auto px-6 py-20 grid md:grid-cols-2 gap-12 items-center">
-        <div className="bg-[#F2ECE4] rounded-3xl p-10 text-center">
-          <p className="font-display text-3xl text-[#8E9878] mb-2">أمينة</p>
-          <p className="text-[#2C2926]/60 italic">A faithful companion on your journey to Allah.</p>
-          <div className="mt-6 text-3xl">✦</div>
+        <div className="rounded-3xl overflow-hidden shadow-lg aspect-square">
+          <Image
+            src="/marketing/access-arch.png"
+            alt="A ceramic arch engraved with the Arabic name أمينة beside dried flowers and a glowing brass lantern"
+            width={1024}
+            height={1024}
+            className="w-full h-full object-cover"
+          />
         </div>
         <div>
           <p className="text-xs font-semibold tracking-widest text-[#C9796A] uppercase mb-4">Member Access</p>
@@ -113,11 +135,12 @@ export default function LandingPage() {
           <p className="text-[#2C2926]/60 mb-8">
             Create your account and begin your journey with Amina — your private, faith-centered companion.
           </p>
-          <Link href="/auth" className="btn-primary w-full text-center block mb-4">
-            Access Amina →
+          <Link href="/welcome" className="btn-primary w-full text-center block mb-4">
+            Create your account →
           </Link>
           <p className="text-sm text-center text-[#2C2926]/50">
-            Join a growing community of sisters on their faith journey.
+            Already have an account?{' '}
+            <Link href="/auth" className="text-[#C9796A] hover:underline">Sign in</Link>
           </p>
         </div>
       </section>

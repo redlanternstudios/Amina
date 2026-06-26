@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { streamText, convertToModelMessages, type UIMessage, consumeStream } from 'ai'
+import { createClient } from '@/lib/supabase/server'
 
 const SYSTEM_PROMPT = `You are Amina — a faith-centered companion for Muslim women, built by RedLantern Studios.
 
@@ -69,83 +70,76 @@ WHAT YOU NEVER DO:
 - Sound scripted.
 
 CRISIS PROTOCOL:
-If she expresses thoughts of self-harm or suicide: be gentle, provide the 988 crisis line, encourage her to reach out to someone she trusts right now.`
+If she expresses thoughts of self-harm or suicide: be gentle, provide the 988 crisis line, encourage her to reach out to someone she trusts right now.
 
-export async function POST(req: NextRequest) {
+MOSQUE FINDER:
+If she asks about finding a mosque, masjid, prayer space, or Friday/Jummah prayer, the app shows her an interactive mosque-finder card right below your message. Warmly let her know she can use the card below to find a mosque near her (she can share her location for nearby results). Keep it to one short, warm sentence — the card does the rest.`
+
+export async function POST(req: Request) {
+  const maxDuration = 30
   try {
-    const { messages } = await req.json()
+    const { messages, conversationId }: { messages: UIMessage[]; conversationId: string | null } = await req.json()
 
     if (!messages || !Array.isArray(messages)) {
-      return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
+      return new Response(JSON.stringify({ error: 'messages array required' }), { status: 400 })
     }
 
-    const apiKey = process.env.GROQ_API_KEY
+    // Filter out greeting message and convert UIMessages to ModelMessages
+    const conversationMessages = messages.filter(m => !m.id?.startsWith('__'))
+    
+    // Determine the last user message for DB persistence
+    const lastUserMsg = [...conversationMessages].reverse().find(m => m.role === 'user')
+    const lastUserText = lastUserMsg?.parts
+      ?.filter((p): p is { type: 'text'; text: string } => p.type === 'text')
+      .map(p => p.text)
+      .join('') ?? ''
 
-    // Dev stub when no API key configured
-    if (!apiKey) {
-      const lastUserMessage = messages[messages.length - 1]?.content || ''
-      const stubResponses = [
-        "Assalamu alaykum, sister. I'm so glad you're here. Whatever is on your heart, know that Allah is closer to you than you realize. Would you like to share more about what you're feeling?",
-        "SubhanAllah, sister. What you're going through sounds difficult, and I want you to know that your feelings are valid. Remember, Allah does not burden a soul beyond that it can bear (Quran 2:286). How can I support you right now?",
-        "JazakAllahu khayran for trusting me with this. Your journey is beautiful, even in its struggles. Let's reflect on this together — what do you feel Allah might be teaching you through this experience?",
-        "Sister, your faith is your anchor. Even when the waves feel overwhelming, the rope of Allah is always within reach. Would you like me to share a du'a that might bring you comfort?",
-      ]
-      const response = stubResponses[Math.floor(Math.random() * stubResponses.length)]
-      return NextResponse.json({ content: response, source: 'stub' })
-    }
-
-    // Groq API call — with one retry on 429
-    const body = JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        ...messages,
-      ],
-      max_tokens: 250,
+    const result = streamText({
+      model: 'anthropic/claude-opus-4-1-20250805',
+      system: SYSTEM_PROMPT,
+      messages: await convertToModelMessages(conversationMessages),
+      maxOutputTokens: 350,
       temperature: 0.75,
+      abortSignal: req.signal,
     })
 
-    const headers = {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    }
+    return result.toUIMessageStreamResponse({
+      originalMessages: messages,
+      onFinish: async ({ messages: allMessages, isAborted }) => {
+        if (isAborted || !conversationId) return
+        try {
+          const supabase = await createClient()
+          const { data: { user } } = await supabase.auth.getUser()
+          if (!user) return
 
-    let response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers,
-      body,
+          // Save all messages from this exchange
+          for (const msg of allMessages) {
+            if (!msg.id?.startsWith('__')) {
+              // Don't save the greeting message
+              const msgText = msg.parts
+                ?.filter((p): p is { type: 'text'; text: string } => p.type === 'text')
+                .map(p => p.text)
+                .join('') ?? ''
+              
+              if (msgText) {
+                await supabase.from('amina_messages').insert({
+                  conversation_id: conversationId,
+                  user_id: user.id,
+                  role: msg.role,
+                  content: msgText,
+                })
+              }
+            }
+          }
+        } catch (err) {
+          console.error('[amina] Failed to persist messages:', err)
+          // Non-blocking — persistence failure should not break the response
+        }
+      },
+      consumeSseStream: consumeStream,
     })
-
-    // Retry once after 1s on rate limit
-    if (response.status === 429) {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers,
-        body,
-      })
-    }
-
-    if (response.status === 429) {
-      return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
-    }
-
-    if (!response.ok) {
-      const error = await response.text()
-      console.error('Groq API error:', error)
-      return NextResponse.json({ error: 'AI service unavailable' }, { status: 502 })
-    }
-
-    const data = await response.json()
-    const content = data.choices?.[0]?.message?.content
-
-    if (!content) {
-      return NextResponse.json({ error: 'Empty response from AI' }, { status: 502 })
-    }
-
-    return NextResponse.json({ content, source: 'groq' })
   } catch (err) {
     console.error('Chat route error:', err)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 })
   }
 }

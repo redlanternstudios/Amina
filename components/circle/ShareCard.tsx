@@ -23,7 +23,7 @@ export default function ShareCard({ circleId, postId, postContent, className = '
       const data = await res.json()
 
       // Try native share API first
-      if (navigator.share && navigator.canShare) {
+      if (navigator.share && typeof navigator.canShare === 'function') {
         // Create a canvas share card
         const cardHtml = `
           <div style="
