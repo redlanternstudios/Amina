@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, Suspense } from 'react'
+import { useEffect, useRef, useState, Suspense } from 'react'
 import { useRouter, useSearchParams, usePathname, useParams } from 'next/navigation'
 import { ChevronLeft, MoreHorizontal, ArrowUp, Heart, Bell, HandHeart, BookOpen } from 'lucide-react'
 import { useChat } from '@ai-sdk/react'
@@ -8,6 +8,15 @@ import { DefaultChatTransport, type UIMessage } from 'ai'
 import AminaIcon from '@/components/brand/AminaIcon'
 import { loadMessages, type DBMessage } from '@/lib/supabase/chat'
 import { stripPhaseLabels, renderMarkdown } from '@/lib/amina-response-utils'
+import {
+  MosqueCard,
+  MosqueCardSkeleton,
+  MosqueCardError,
+  MosqueSearchPrompt,
+  MosqueEmptyState,
+  type Mosque,
+} from '@/components/chat/MosqueCard'
+import { isFeatureEnabled } from '@/lib/feature-flags'
 
 const QUICK_CHIPS = [
   { id: 'reflect', label: 'Help me reflect', icon: Heart, prompt: 'I need help reflecting on something.' },
@@ -30,6 +39,20 @@ const GREETING: UIMessage = {
   parts: [{ type: 'text', text: "Salam, sister.\nI'm so glad you're here.\nWhat's on your heart today?" }],
 }
 
+// Detect when a message is asking to find a mosque/masjid nearby.
+const MOSQUE_INTENT = /\b(mosque|masjid|musalla|prayer\s*(space|room|hall)|jummah|jumu['’]?ah|friday\s*prayer)\b/i
+function isMosqueIntent(text: string): boolean {
+  return MOSQUE_INTENT.test(text)
+}
+
+type MosqueState =
+  | { status: 'idle' }
+  | { status: 'prompt' }
+  | { status: 'loading' }
+  | { status: 'results'; mosques: Mosque[] }
+  | { status: 'empty' }
+  | { status: 'error' }
+
 function AminaAvatar({ size = 32 }: { size?: number }) {
   return (
     <div
@@ -51,6 +74,39 @@ function ChatInner() {
   const bottomRef = useRef<HTMLDivElement>(null)
   const autoSentRef = useRef(false)
   const historyLoadedRef = useRef(false)
+
+  const mosqueEnabled = isFeatureEnabled('MOSQUE_FINDER')
+  const [mosqueState, setMosqueState] = useState<MosqueState>({ status: 'idle' })
+
+  async function fetchMosques(coords?: { lat: number; lng: number }) {
+    setMosqueState({ status: 'loading' })
+    try {
+      const params = new URLSearchParams()
+      if (coords) {
+        params.set('lat', String(coords.lat))
+        params.set('lng', String(coords.lng))
+      }
+      const res = await fetch(`/api/mosques?${params.toString()}`)
+      if (!res.ok) throw new Error('request failed')
+      const data: { mosques: Mosque[] } = await res.json()
+      setMosqueState(data.mosques.length > 0 ? { status: 'results', mosques: data.mosques } : { status: 'empty' })
+    } catch {
+      setMosqueState({ status: 'error' })
+    }
+  }
+
+  function handleShareLocation() {
+    if (!('geolocation' in navigator)) {
+      void fetchMosques()
+      return
+    }
+    setMosqueState({ status: 'loading' })
+    navigator.geolocation.getCurrentPosition(
+      pos => void fetchMosques({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => void fetchMosques(),
+      { timeout: 8000 }
+    )
+  }
 
   const { messages, sendMessage, status, setMessages } = useChat({
     messages: [GREETING],
@@ -94,6 +150,9 @@ function ChatInner() {
     autoSentRef.current = true
     router.replace(pathname, { scroll: false })
     sendMessage({ text: q }, { body: { conversationId: conversationId ?? null } })
+    if (mosqueEnabled && isMosqueIntent(q)) {
+      setMosqueState({ status: 'prompt' })
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -104,6 +163,9 @@ function ChatInner() {
   function handleSend(text: string) {
     if (!text.trim() || isLoading) return
     sendMessage({ text }, { body: { conversationId: conversationId ?? null } })
+    if (mosqueEnabled && isMosqueIntent(text)) {
+      setMosqueState({ status: 'prompt' })
+    }
   }
 
   const userMessageCount = messages.filter(m => m.role === 'user').length
@@ -180,6 +242,50 @@ function ChatInner() {
                 ))}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Mosque finder widget — rendered inline alongside Amina's reply */}
+        {mosqueState.status !== 'idle' && (
+          <div className="flex flex-col gap-2 items-start w-full">
+            {mosqueState.status === 'prompt' && (
+              <div className="w-full max-w-[82%]">
+                <MosqueSearchPrompt
+                  onShareLocation={handleShareLocation}
+                  onSkip={() => void fetchMosques()}
+                />
+              </div>
+            )}
+            {mosqueState.status === 'loading' && (
+              <div className="w-full max-w-[82%] flex flex-col gap-2">
+                <MosqueCardSkeleton />
+                <MosqueCardSkeleton />
+              </div>
+            )}
+            {mosqueState.status === 'results' && (
+              <div className="w-full max-w-[82%] flex flex-col gap-2">
+                {mosqueState.mosques.map(m => (
+                  <MosqueCard
+                    key={m.id}
+                    mosque={m}
+                    onDirections={(lat, lng) =>
+                      window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank', 'noopener,noreferrer')
+                    }
+                    onSelect={m.phone ? () => window.open(`tel:${m.phone}`, '_self') : undefined}
+                  />
+                ))}
+              </div>
+            )}
+            {mosqueState.status === 'empty' && (
+              <div className="w-full max-w-[82%]">
+                <MosqueEmptyState />
+              </div>
+            )}
+            {mosqueState.status === 'error' && (
+              <div className="w-full max-w-[82%]">
+                <MosqueCardError onRetry={() => setMosqueState({ status: 'prompt' })} />
+              </div>
+            )}
           </div>
         )}
 

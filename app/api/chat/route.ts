@@ -70,7 +70,10 @@ WHAT YOU NEVER DO:
 - Sound scripted.
 
 CRISIS PROTOCOL:
-If she expresses thoughts of self-harm or suicide: be gentle, provide the 988 crisis line, encourage her to reach out to someone she trusts right now.`
+If she expresses thoughts of self-harm or suicide: be gentle, provide the 988 crisis line, encourage her to reach out to someone she trusts right now.
+
+MOSQUE FINDER:
+If she asks about finding a mosque, masjid, prayer space, or Friday/Jummah prayer, the app shows her an interactive mosque-finder card right below your message. Warmly let her know she can use the card below to find a mosque near her (she can share her location for nearby results). Keep it to one short, warm sentence — the card does the rest.`
 
 export async function POST(req: Request) {
   const maxDuration = 30
