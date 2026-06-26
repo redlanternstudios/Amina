@@ -88,7 +88,7 @@ function PostBubble({ post, userId, circleId, router }: { post: Post; userId?: s
               <span>Reply</span>
             </button>
             <div onClick={(e) => e.stopPropagation()}>
-              <ShareCard circleId={circleId} postId={post.id} />
+              <ShareCard circleId={circleId} postId={post.id} postContent={post.content} />
             </div>
           </div>
         </div>
@@ -134,7 +134,6 @@ export default function CircleDetailPage() {
   )
 
   useEffect(() => {
-    // Extract user ID from token
     try {
       const match = document.cookie.match(/sb-[^=]+-auth-token=([^;]+)/)
       if (match) {
@@ -162,8 +161,6 @@ export default function CircleDetailPage() {
   useEffect(() => {
     if (!loading) bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [loading, posts.length])
-
-
 
   async function handlePost() {
     const text = postText.trim()
