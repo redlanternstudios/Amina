@@ -1,12 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { useParams } from 'next/navigation'
-import { ArrowUp } from 'lucide-react'
+import { useParams, useRouter } from 'next/navigation'
+import { ArrowUp, MoreHorizontal } from 'lucide-react'
 import FaithReactions from '@/components/circle/FaithReactions'
 import ShareCard from '@/components/circle/ShareCard'
-import { useRouter as useNavRouter } from 'next/navigation'
-import { MessageSquare } from 'lucide-react'
 
 type Post = {
   id: string

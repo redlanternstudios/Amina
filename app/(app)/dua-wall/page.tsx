@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import CircleDetailSkeleton from '@/components/circle/CircleDetailSkeleton'
+import { createClient } from '@/lib/supabase/client'
+import { CircleDetailSkeleton } from '@/components/circle/CircleDetailSkeleton'
 
 interface Dua {
   id: string
@@ -25,7 +25,7 @@ function timeAgo(date: string) {
 }
 
 export default function DuaWallPage() {
-  const supabase = createClientComponentClient()
+  const supabase = createClient()
   const [duas, setDuas] = useState<Dua[]>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)

@@ -32,9 +32,9 @@ export async function POST(req: NextRequest) {
     {
       cookies: {
         getAll() { return cookieStore.getAll() },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
           cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
+            cookieStore.set(name, value, options as Parameters<typeof cookieStore.set>[2])
           )
         },
       },
@@ -63,16 +63,17 @@ export async function POST(req: NextRequest) {
 
   // ── Log flagged/rejected items to moderation_queue ─────────────────────────
   if (result.verdict === 'flagged' || result.verdict === 'rejected') {
-    await supabase.from('moderation_queue').insert({
+    const { error: insertError } = await supabase.from('moderation_queue').insert({
       user_id: user.id,
       image_url: imageUrl,
       verdict: result.verdict,
       reasons: result.reasons,
       reviewed: false,
-    }).throwOnError().catch((err: Error) => {
-      // Log but don't fail the moderation response
-      console.error('[moderate-image] Failed to insert moderation_queue row', err.message)
     })
+    if (insertError) {
+      // Log but don't fail the moderation response
+      console.error('[moderate-image] Failed to insert moderation_queue row', insertError.message)
+    }
   }
 
   return NextResponse.json({

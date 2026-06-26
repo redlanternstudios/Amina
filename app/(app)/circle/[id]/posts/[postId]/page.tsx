@@ -2,10 +2,10 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/lib/supabase/client'
 import CircleAvatar from '@/components/circle/CircleAvatar'
 import FaithReactions from '@/components/circle/FaithReactions'
-import CircleDetailSkeleton from '@/components/circle/CircleDetailSkeleton'
+import { CircleDetailSkeleton } from '@/components/circle/CircleDetailSkeleton'
 
 interface Comment {
   id: string
@@ -45,7 +45,7 @@ export default function PostDetailPage() {
   const router = useRouter()
   const circleId = params.id as string
   const postId = params.postId as string
-  const supabase = createClientComponentClient()
+  const supabase = createClient()
 
   const [post, setPost] = useState<Post | null>(null)
   const [comments, setComments] = useState<Comment[]>([])
@@ -179,7 +179,7 @@ export default function PostDetailPage() {
         )}
         <div className="flex items-center gap-2 mt-1">
           <CircleAvatar
-            handle={post.author_profile?.display_handle ?? 'A Sister'}
+            name={post.author_profile?.display_handle ?? 'A Sister'}
             size="sm"
           />
           <span className="text-xs font-medium text-charcoal">
@@ -196,7 +196,7 @@ export default function PostDetailPage() {
             targetType="post"
             circleId={circleId}
             existingReactions={post.reactions}
-            currentUserId={currentUserId}
+            currentUserId={currentUserId ?? undefined}
             compact={false}
           />
         </div>
@@ -250,7 +250,7 @@ export default function PostDetailPage() {
           </div>
         )}
         <div className="flex items-center gap-3">
-          <CircleAvatar handle={currentUserId ?? 'U'} size="sm" />
+          <CircleAvatar name={currentUserId ?? 'U'} size="sm" />
           <input
             type="text"
             value={commentBody}
@@ -286,7 +286,7 @@ function CommentCard({
 }) {
   return (
     <article className="flex gap-3">
-      <CircleAvatar handle={comment.author_profile?.display_handle ?? 'A Sister'} size="sm" />
+      <CircleAvatar name={comment.author_profile?.display_handle ?? 'A Sister'} size="sm" />
       <div className="flex-1 min-w-0">
         <p className="text-xs font-medium text-charcoal">
           {comment.author_profile?.display_handle ?? 'A Sister'}
