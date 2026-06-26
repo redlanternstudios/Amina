@@ -110,7 +110,8 @@ export default function LandingPage() {
             Access Amina →
           </Link>
           <p className="text-sm text-center text-[#2C2926]/50">
-            Join a growing community of sisters on their faith journey.
+            Not a member yet?{' '}
+            <a href="/auth" className="text-[#C9796A] hover:underline">Join The Circle</a>
           </p>
         </div>
       </section>
