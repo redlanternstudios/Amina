@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Amina3DCharacter from '@/components/brand/Amina3DCharacter'
 
 export default function LandingPage() {
   return (
@@ -54,15 +55,21 @@ export default function LandingPage() {
             </a>
           </div>
         </div>
-        <div className="relative">
-          <div className="aspect-square rounded-3xl bg-[#F2ECE4] flex items-center justify-center">
-            <div className="text-center p-8">
-              <div className="w-16 h-16 rounded-full bg-[#C9796A]/20 flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">✦</span>
-              </div>
-              <p className="font-display text-xl text-[#2C2926] mb-2">Amina is here to walk</p>
-              <p className="text-[#2C2926]/70">beside you on your beautiful journey of faith, growth, and healing.</p>
-            </div>
+        <div className="relative flex items-center justify-center">
+          <div className="relative rounded-3xl bg-gradient-to-b from-[#EDD9C8] to-[#F2ECE4] overflow-hidden flex items-end justify-center w-full" style={{ minHeight: 420 }}>
+            {/* Soft radial glow behind character */}
+            <div
+              className="absolute inset-0 rounded-3xl"
+              style={{
+                background: 'radial-gradient(ellipse 70% 60% at 50% 55%, #E8C4A8 0%, transparent 75%)',
+              }}
+            />
+            {/* Subtle Islamic arch motif */}
+            <div
+              className="absolute top-8 left-1/2 -translate-x-1/2 w-40 h-40 rounded-t-full opacity-10"
+              style={{ border: '2px solid #C9796A' }}
+            />
+            <Amina3DCharacter variant="full" size={310} className="relative z-10 drop-shadow-xl" />
           </div>
         </div>
       </section>

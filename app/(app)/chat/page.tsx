@@ -2,7 +2,7 @@
 
 import { useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import AminaIcon from '@/components/brand/AminaIcon'
+import Amina3DCharacter from '@/components/brand/Amina3DCharacter'
 import { getOrCreateDefaultConversation } from '@/lib/supabase/chat'
 
 function ChatRedirectInner() {
@@ -26,7 +26,7 @@ function ChatRedirectInner() {
 
   return (
     <div className="flex items-center justify-center min-h-dvh" style={{ background: 'var(--amina-soft-cream)' }}>
-      <AminaIcon size={44} className="animate-pulse" />
+      <Amina3DCharacter variant="avatar" size={80} className="animate-pulse opacity-80" />
     </div>
   )
 }
@@ -36,7 +36,7 @@ export default function ChatPage() {
     <Suspense
       fallback={
         <div className="flex items-center justify-center min-h-dvh" style={{ background: 'var(--amina-soft-cream)' }}>
-          <AminaIcon size={44} className="animate-pulse" />
+          <Amina3DCharacter variant="avatar" size={80} className="animate-pulse opacity-80" />
         </div>
       }
     >

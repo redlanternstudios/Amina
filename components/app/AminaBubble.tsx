@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
 import { X, ArrowUp, Sparkles } from 'lucide-react'
 import { usePathname } from 'next/navigation'
+import Amina3DCharacter from '@/components/brand/Amina3DCharacter'
 import { useChrome, type ChatMessage } from './ChromeContext'
 
 const BUBBLE_HIDDEN_PATHS = ['/home']
@@ -113,7 +114,7 @@ export default function AminaBubble() {
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           aria-label="Chat with Amina"
-          className="fixed z-[55] w-14 h-14 rounded-full overflow-hidden select-none touch-none"
+          className="fixed z-[55] w-14 h-14 rounded-full overflow-hidden select-none touch-none bg-gradient-to-b from-[#EDD9C8] to-[#F2ECE4]"
           style={{
             left: pos.x,
             top: pos.y,
@@ -121,12 +122,7 @@ export default function AminaBubble() {
             cursor: 'grab',
           }}
         >
-          <img
-            src="/images/amina-logo.png"
-            alt="Open Amina chat"
-            className="w-full h-full object-cover"
-            draggable={false}
-          />
+          <Amina3DCharacter variant="avatar" size={56} className="w-full h-full" />
         </button>
       )}
 
@@ -159,12 +155,9 @@ export default function AminaBubble() {
           style={{ borderBottom: '1px solid var(--amina-hairline)' }}
         >
           <div className="flex items-center gap-2.5">
-            <img
-              src="/images/amina-logo.png"
-              alt=""
-              aria-hidden
-              className="w-10 h-10 rounded-full object-cover"
-            />
+            <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-b from-[#EDD9C8] to-[#F2ECE4] flex-shrink-0">
+              <Amina3DCharacter variant="avatar" size={40} />
+            </div>
             <div>
               <p className="font-amina-voice italic text-[18px] leading-tight text-charcoal">Amina</p>
               <p className="text-[11px] text-charcoal/50">Here to walk with you</p>
