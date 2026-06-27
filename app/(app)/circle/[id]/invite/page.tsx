@@ -18,10 +18,10 @@ type Member = {
   user_id: string
   display_handle: string
   joined_at: string
-  profiles?: {
+  profiles?: Array<{
     display_name?: string
     avatar_url?: string | null
-  }
+  }>
 }
 
 export default function CircleInvitePage() {
@@ -196,12 +196,12 @@ export default function CircleInvitePage() {
                     style={{ background: 'var(--amina-rose-selected)' }}
                   >
                     <span className="text-[12px] font-semibold" style={{ color: 'var(--amina-primary-action)' }}>
-                      {(m.display_handle || m.profiles?.display_name || 'S')[0].toUpperCase()}
+                      {(m.display_handle || m.profiles?.[0]?.display_name || 'S')[0].toUpperCase()}
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[14px] font-medium text-charcoal truncate">
-                      {m.display_handle || m.profiles?.display_name || 'Sister'}
+                      {m.display_handle || m.profiles?.[0]?.display_name || 'Sister'}
                     </p>
                     <p className="text-[11px]" style={{ color: 'rgba(44,41,38,0.4)' }}>
                       Joined {new Date(m.joined_at).toLocaleDateString()}

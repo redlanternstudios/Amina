@@ -49,9 +49,21 @@ export default function HomePage() {
       {/* Arch hero + greeting */}
       <div className="relative px-4 pb-4">
         <div className="relative rounded-3xl overflow-hidden bg-ivory min-h-[160px] flex flex-col justify-end p-5">
-          {/* Arch bg visual */}
-          <div className="absolute inset-0 flex items-center justify-end opacity-20">
-            <div className="w-32 h-40 rounded-t-full border-4 border-gold mr-4" />
+          {/* Arch window — video motion */}
+          <div className="absolute top-0 right-0 w-32 h-44 overflow-hidden rounded-bl-3xl rounded-tr-3xl">
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover opacity-80"
+              src="/videos/amina-arch.mp4"
+            >
+              {/* Fallback: decorative arch when video not available */}
+              <div className="w-full h-full bg-gradient-to-b from-gold/20 to-rose-amina/10 flex items-center justify-center">
+                <div className="w-16 h-24 rounded-t-full border-2 border-gold/40" />
+              </div>
+            </video>
           </div>
           <h2 className="font-display text-2xl text-charcoal">
             Assalamu alaykum, <span className="text-rose-amina">Sister</span>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { CircleDetailSkeleton } from '@/components/circle/CircleDetailSkeleton'
 import AppHeader from '@/components/app/AppHeader'
@@ -26,7 +26,10 @@ function timeAgo(date: string) {
 }
 
 export default function DuaWallPage() {
-  const supabase = createClient()
+  // useMemo prevents a fresh Supabase client being created on every render,
+  // which caused the `a` (duas) closure to be shadowed in minified output
+  // and read as undefined during concurrent re-renders.
+  const supabase = useMemo(() => createClient(), [])
   const [duas, setDuas] = useState<Dua[]>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -55,21 +58,34 @@ export default function DuaWallPage() {
   }, [showSheet])
 
   const loadDuas = async (reset = false) => {
-    if (reset) setNextCursor(null)
+    const currentLength = reset ? 0 : duas.length
     const url = new URL('/api/dua-wall', window.location.origin)
-    if (!reset && nextCursor) url.searchParams.set('cursor', nextCursor)
     url.searchParams.set('limit', '20')
+    url.searchParams.set('offset', String(currentLength))
 
     setLoadingMore(true)
-    const res = await fetch(url.toString())
-    if (res.ok) {
-      const data = await res.json()
-      if (reset) setDuas(data.duas)
-      else setDuas(prev => [...prev, ...data.duas])
-      setNextCursor(data.nextCursor)
+    try {
+      const res = await fetch(url.toString())
+      if (res.ok) {
+        const data = await res.json()
+        const normalized: Dua[] = (data.posts ?? []).map((p: any) => ({
+          id: p.id,
+          content: p.content,
+          is_answered: p.is_answered ?? false,
+          ameen_count: p.ameen_count ?? 0,
+          user_has_ameened: p.has_ameen ?? false,
+          created_at: p.created_at,
+        }))
+        if (reset) setDuas(normalized)
+        else setDuas(prev => [...(prev ?? []), ...normalized])
+        setNextCursor(normalized.length === 20 ? String(currentLength + 20) : null)
+      }
+    } catch (err) {
+      console.error('loadDuas error:', err)
+    } finally {
+      setLoading(false)
+      setLoadingMore(false)
     }
-    setLoading(false)
-    setLoadingMore(false)
   }
 
   const toggleAmeen = async (duaId: string) => {
@@ -116,7 +132,17 @@ export default function DuaWallPage() {
     })
     if (res.ok) {
       const data = await res.json()
-      setDuas(prev => [data.dua, ...prev])
+      // POST returns { post } — normalize to Dua shape
+      const p = data.post ?? data.dua
+      const newDua: Dua = {
+        id: p.id,
+        content: p.content,
+        is_answered: p.is_answered ?? false,
+        ameen_count: p.ameen_count ?? 0,
+        user_has_ameened: p.has_ameen ?? false,
+        created_at: p.created_at,
+      }
+      setDuas(prev => [newDua, ...prev])
       setNewDuaContent('')
       setShowSheet(false)
     }
@@ -152,7 +178,7 @@ export default function DuaWallPage() {
         </article>
 
         {/* Empty state */}
-        {duas.length === 0 && (
+        {(duas ?? []).length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 gap-4">
             <p className="text-4xl">🤲</p>
             <p className="font-display italic text-xl text-charcoal">No du'as yet</p>
@@ -169,7 +195,7 @@ export default function DuaWallPage() {
         )}
 
         {/* Du'a feed */}
-        {duas.map(dua => (
+        {(duas ?? []).map(dua => (
           <article key={dua.id} className="bg-ivory rounded-2xl p-4 shadow-soft">
             <p className="text-xs text-charcoal/40 mb-2">
               A sister from the community · {timeAgo(dua.created_at)}
