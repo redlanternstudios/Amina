@@ -20,13 +20,9 @@ export default function AppLayout({
       <div className={`min-h-dvh bg-cream flex flex-col${isChat ? '' : ' pb-20'}`}>
         {children}
       </div>
-      {!isChat && (
-        <>
-          <Sidebar />
-          <AminaBubble />
-          <BottomNav />
-        </>
-      )}
+      {!isChat && <Sidebar />}
+      {!isChat && <AminaBubble />}
+      {!isChat && <BottomNav />}
     </ChromeProvider>
   )
 }
