@@ -127,10 +127,13 @@ export default function ReflectionsPage() {
             </p>
             {activeFilter !== 'Favorites' && (
               <button
-                onClick={() => router.push('/home')}
+                onClick={() => {
+                  const id = crypto.randomUUID()
+                  router.push(`/chat/${id}?q=${encodeURIComponent('Help me reflect on something today.')}`)
+                }}
                 className="btn-primary mt-4"
               >
-                Talk to Amina
+                Start a reflection
               </button>
             )}
           </div>
