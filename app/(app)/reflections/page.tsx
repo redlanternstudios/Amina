@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, Heart, NotebookPen } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -29,16 +29,32 @@ function timeLabel(dateStr: string): string {
 
 export default function ReflectionsPage() {
   const router = useRouter()
+  const supabase = createClient()
+  const sheetRef = useRef<HTMLDivElement>(null)
   const [activeFilter, setActiveFilter] = useState('All')
   const [reflections, setReflections] = useState<Reflection[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const supabase = createClient()
+  const [showSheet, setShowSheet] = useState(false)
+  const [newTitle, setNewTitle] = useState('')
+  const [newSummary, setNewSummary] = useState('')
+  const [newTag, setNewTag] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     loadReflections()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (sheetRef.current && !sheetRef.current.contains(e.target as Node)) {
+        setShowSheet(false)
+      }
+    }
+    if (showSheet) document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showSheet])
 
   async function loadReflections() {
     setLoading(true)
@@ -61,6 +77,34 @@ export default function ReflectionsPage() {
     await supabase.from('reflections').update({ favorited: !current }).eq('id', id)
   }
 
+  async function submitReflection() {
+    if (!newTitle.trim() || submitting) return
+    setSubmitting(true)
+    try {
+      const { data, error } = await supabase
+        .from('reflections')
+        .insert({
+          title: newTitle.trim(),
+          summary: newSummary.trim() || null,
+          tag: newTag.trim() || null,
+          favorited: false,
+        })
+        .select()
+      if (error) throw error
+      if (data && data[0]) {
+        setReflections(prev => [data[0], ...prev])
+        setNewTitle('')
+        setNewSummary('')
+        setNewTag('')
+        setShowSheet(false)
+      }
+    } catch (error) {
+      console.error('[v0] Error creating reflection:', error)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   const filtered = reflections.filter(r => {
     if (search && !r.title.toLowerCase().includes(search.toLowerCase())) return false
     if (activeFilter === 'Favorites') return r.favorited
@@ -69,7 +113,18 @@ export default function ReflectionsPage() {
 
   return (
     <div className="flex flex-col min-h-dvh bg-cream">
-      <AppHeader title="Reflections" />
+      <AppHeader 
+        title="Reflections"
+        right={
+          <button
+            onClick={() => setShowSheet(true)}
+            className="w-9 h-9 rounded-full bg-rose-amina flex items-center justify-center flex-shrink-0"
+            aria-label="Add reflection"
+          >
+            <span className="text-white text-sm font-bold">+</span>
+          </button>
+        }
+      />
 
       {/* Filter chips */}
       <div className="flex gap-2 px-4 pt-4 overflow-x-auto pb-2">
@@ -123,17 +178,14 @@ export default function ReflectionsPage() {
             <p className="text-muted text-sm mt-1">
               {activeFilter === 'Favorites'
                 ? 'Heart a reflection to save it here.'
-                : 'Start a conversation with Amina to save your first reflection.'}
+                : 'Create your first reflection to capture your spiritual journey.'}
             </p>
             {activeFilter !== 'Favorites' && (
               <button
-                onClick={() => {
-                  const id = crypto.randomUUID()
-                  router.push(`/chat/${id}?q=${encodeURIComponent('Help me reflect on something today.')}`)
-                }}
+                onClick={() => setShowSheet(true)}
                 className="btn-primary mt-4"
               >
-                Start a reflection
+                Add Reflection
               </button>
             )}
           </div>
@@ -175,6 +227,67 @@ export default function ReflectionsPage() {
           ))
         )}
       </div>
+
+      {/* Add Reflection Sheet */}
+      {showSheet && (
+        <div className="fixed inset-0 z-50 bg-black/20" onClick={() => setShowSheet(false)}>
+          <div
+            ref={sheetRef}
+            className="absolute bottom-0 left-0 right-0 bg-cream rounded-t-3xl p-6 animate-slide-up"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="font-display text-xl text-charcoal">New Reflection</h2>
+              <button onClick={() => setShowSheet(false)} className="text-charcoal/40 text-lg">×</button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-charcoal/70 block mb-1">Title</label>
+                <input
+                  value={newTitle}
+                  onChange={e => setNewTitle(e.target.value)}
+                  placeholder="What's on your heart?"
+                  className="w-full bg-ivory rounded-xl p-3 text-sm text-charcoal placeholder:text-charcoal/30 outline-none"
+                  maxLength={100}
+                />
+                <span className="text-xs text-charcoal/40 mt-1">{newTitle.length}/100</span>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-charcoal/70 block mb-1">Reflection (optional)</label>
+                <textarea
+                  value={newSummary}
+                  onChange={e => setNewSummary(e.target.value)}
+                  placeholder="Share your thoughts, feelings, or insights..."
+                  className="w-full bg-ivory rounded-xl p-3 text-sm text-charcoal placeholder:text-charcoal/30 outline-none resize-none h-24"
+                  maxLength={500}
+                />
+                <span className="text-xs text-charcoal/40">{newSummary.length}/500</span>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-charcoal/70 block mb-1">Tag (optional)</label>
+                <input
+                  value={newTag}
+                  onChange={e => setNewTag(e.target.value)}
+                  placeholder="e.g., Gratitude, Learning, Faith..."
+                  className="w-full bg-ivory rounded-xl p-3 text-sm text-charcoal placeholder:text-charcoal/30 outline-none"
+                  maxLength={20}
+                />
+              </div>
+
+              <button
+                onClick={submitReflection}
+                disabled={!newTitle.trim() || submitting}
+                className="w-full px-6 py-3 bg-rose-amina text-white rounded-xl text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {submitting ? 'Saving...' : 'Save Reflection'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

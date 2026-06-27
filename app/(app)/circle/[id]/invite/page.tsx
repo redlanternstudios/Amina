@@ -26,8 +26,8 @@ type Member = {
 
 export default function CircleInvitePage() {
   const router = useRouter()
-  const params = useParams()
-  const circleId = Array.isArray(params.id) ? params.id[0] : params.id
+  const params = useParams<{ id: string }>()
+  const circleId = params.id
 
   const [circle, setCircle] = useState<Circle | null>(null)
   const [members, setMembers] = useState<Member[]>([])

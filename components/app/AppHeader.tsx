@@ -5,6 +5,7 @@ import { Menu, ChevronLeft, Home } from 'lucide-react'
 import { ReactNode } from 'react'
 import { useChrome } from './ChromeContext'
 import ThemeToggle from './ThemeToggle'
+import TinyAminaBubble from '@/components/amina/TinyAminaBubble'
 
 type AppHeaderProps = {
   title?: string
@@ -77,6 +78,7 @@ export default function AppHeader({ title, brand, right }: AppHeaderProps) {
       {/* Right slot (kept same width as left for centering balance) */}
       <div className="flex items-center justify-end gap-1 flex-shrink-0">
         {right}
+        <TinyAminaBubble />
         <ThemeToggle />
       </div>
     </header>
