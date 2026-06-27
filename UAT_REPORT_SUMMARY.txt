@@ -1,0 +1,195 @@
+================================================================================
+                    AMINA UAT REPORT - iOS SCREENSHOTS
+================================================================================
+
+Generated: June 27, 2025
+Project: Amina - Faith-centered reflection for women
+Branch: v0/redlanternstudios-079e70d1
+Platform: iOS Testing
+
+================================================================================
+CRITICAL ISSUES IDENTIFIED (MUST FIX BEFORE iOS RELEASE)
+================================================================================
+
+🔴 CRITICAL
+  1. Bottom navigation unresponsive from home page
+     → Cannot navigate to Circle, Reflections, Du'a Wall
+     → Blocks access to all main features
+  
+  2. Create Circle button broken
+     → Essential feature disabled
+     → Users cannot create communities
+  
+  3. Join with Code button broken
+     → Cannot join existing circles via invite codes
+     → Community access completely blocked
+
+🟠 HIGH PRIORITY
+  4. Submit buttons hidden behind bottom nav
+     → Reflection and Du'a submit buttons not accessible
+     → Users cannot save their content
+  
+  5. Circle membership check failing
+     → Access control not working properly
+     → Potential security issue
+  
+  6. Profile shows fake placeholder data
+     → Shows "Sister / sister@example.com" instead of real user
+     → Major trust issue for production
+
+🟡 MEDIUM PRIORITY
+  7. Back button in chat is broken
+     → Users trapped in chat flows
+     → Cannot navigate back to main views
+  
+  8. Hamburger menu non-functional
+     → Sidebar menu button doesn't work
+     → Menu navigation inaccessible
+  
+  9. Notification bell broken
+     → Icon appears but is non-functional
+     → User updates not accessible
+
+================================================================================
+SCREENSHOTS CAPTURED (6 total)
+================================================================================
+
+1. Public Landing Page & Sign In
+   - Shows Amina tagline and sign in form
+   - File: 01-login.png (355 KB)
+
+2. Onboarding Welcome Screen
+   - Feature highlights: Faith Centered, Reflect & Grow, Private & Safe
+   - File: 02-onboarding.png (43 KB)
+
+3. Feature Selection During Onboarding
+   - Shows carousel: AI Companion, Guidance Library, The Circle
+   - File: 03-onboarding-account.png (49 KB)
+
+4. Account Setup Screen
+   - Part of onboarding flow
+   - File: 04-home.png (27 KB)
+
+5. Sign Up Flow
+   - Signup process screens
+   - File: 05-signup.png (43 KB)
+
+6. Authenticated App Home
+   - Main dashboard with navigation
+   - File: 06-home.png (27 KB)
+
+================================================================================
+iOS TESTING CHECKLIST
+================================================================================
+
+DEVICE TESTING
+  ☐ iPhone SE (test bottom nav responsiveness)
+  ☐ iPhone 14 (standard screen size)
+  ☐ iPhone 15 Pro (large screen, edge cases)
+  ☐ Landscape orientation on all devices
+  ☐ iOS keyboard interaction
+  ☐ Touch responsiveness
+
+CRITICAL USER FLOWS
+  ☐ Sign up / Create account
+  ☐ Email verification
+  ☐ Complete onboarding
+  ☐ Navigate between tabs (CURRENTLY BROKEN)
+  ☐ Create circle (BROKEN)
+  ☐ Join circle with code (BROKEN)
+  ☐ Create reflection
+  ☐ Submit reflection (BUTTON HIDDEN)
+  ☐ Create du'a
+  ☐ Submit du'a (BUTTON HIDDEN)
+  ☐ View circle messages
+  ☐ Send message in circle
+  ☐ Access profile (SHOWS FAKE DATA)
+  ☐ Sign out
+
+UI/UX VERIFICATION
+  ☐ Bottom nav responsive at all sizes
+  ☐ No buttons hidden off-screen
+  ☐ All buttons clickable
+  ☐ Form inputs display properly
+  ☐ Real user data shown
+  ☐ Images load correctly
+  ☐ Animations smooth
+  ☐ No console errors
+  ☐ Data persists after refresh
+  ☐ Real-time updates working
+
+================================================================================
+MUST FIX BEFORE iOS RELEASE
+================================================================================
+
+1. BOTTOM NAVIGATION
+   Status: CRITICAL
+   Issue: Unresponsive navigation
+   Solution: Debug why nav clicks aren't working, test on iOS devices
+   
+2. CREATE CIRCLE
+   Status: CRITICAL
+   Issue: Button broken or disabled
+   Solution: Enable button, verify API endpoint works
+   
+3. JOIN WITH CODE
+   Status: CRITICAL
+   Issue: Feature not functional
+   Solution: Implement or enable code-based circle joining
+   
+4. SUBMIT BUTTONS
+   Status: HIGH
+   Issue: Hidden behind bottom nav
+   Solution: Adjust layout/padding, ensure buttons are visible and clickable
+   
+5. PLACEHOLDER DATA
+   Status: HIGH
+   Issue: Profile shows fake data (Sister / sister@example.com)
+   Solution: Load and display actual user profile information
+   
+6. BACK BUTTON
+   Status: HIGH
+   Issue: Navigation broken in some flows
+   Solution: Fix navigation stack management
+
+================================================================================
+APPLICATION DETAILS
+================================================================================
+
+Framework: Next.js 16 + React 19.2
+Database: Supabase PostgreSQL
+Authentication: Email + Password with JWT
+UI Library: Tailwind CSS v4
+Real-time: Supabase subscriptions
+
+Key Features:
+  • 1:1 AI Companion (chat with Amina)
+  • The Circle (community for Muslim women)
+  • Personal Reflections (journaling)
+  • Du'a Wall (shared prayer requests)
+  • Streaks (engagement tracking)
+  • User Profile & Settings
+
+================================================================================
+SUMMARY
+================================================================================
+
+The Amina application has excellent design and features, but critical UI/UX 
+issues must be resolved before iOS release:
+
+✓ Working: Authentication, Onboarding, Styling, Layout
+✗ Broken: Navigation, Create/Join circles, Submit buttons, Real user data
+
+All issues are solvable with focused development work. The foundation is solid.
+
+Priority: Fix all 9 issues documented above, especially the 3 CRITICAL items.
+
+Repository: https://github.com/redlanternstudios/Amina
+Branch: v0/redlanternstudios-079e70d1
+
+================================================================================
+                            END OF REPORT
+================================================================================
+
+Report Generated: June 27, 2025
+For iOS Testing Purposes Only
