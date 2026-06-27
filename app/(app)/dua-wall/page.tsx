@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { CircleDetailSkeleton } from '@/components/circle/CircleDetailSkeleton'
+import AppHeader from '@/components/app/AppHeader'
 
 interface Dua {
   id: string
@@ -125,24 +126,21 @@ export default function DuaWallPage() {
   if (loading) return <CircleDetailSkeleton />
 
   return (
-    <div className="min-h-screen bg-cream">
-      {/* Header */}
-      <header className="sticky top-0 z-10 bg-cream px-4 py-4 border-b border-charcoal/5">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-2xl text-charcoal">Du'a Wall</h1>
-            <p className="text-xs text-charcoal/50 mt-0.5">Lift each other in prayer.</p>
-          </div>
+    <div className="min-h-screen bg-cream flex flex-col">
+      <AppHeader 
+        title="Du'a Wall"
+        right={
           <button
             onClick={() => setShowSheet(true)}
-            className="w-10 h-10 rounded-full bg-[#C9796A] flex items-center justify-center"
+            className="w-9 h-9 rounded-full bg-rose-amina flex items-center justify-center flex-shrink-0"
+            aria-label="Make a du'a"
           >
-            <span className="text-white text-lg">🤲</span>
+            <span className="text-white text-sm">🤲</span>
           </button>
-        </div>
-      </header>
+        }
+      />
 
-      <div className="px-4 py-4 space-y-4">
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
         {/* Amina weekly du'a */}
         <article className="bg-ivory rounded-2xl p-4 border-l-4 border-gold shadow-soft">
           <span className="text-xs font-medium text-gold uppercase tracking-wide">✦ From Amina</span>
