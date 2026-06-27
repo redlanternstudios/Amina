@@ -21,9 +21,9 @@ export async function GET() {
     .from('amina_streaks')
     .select('current_streak, longest_streak, last_reflection_date')
     .eq('user_id', user.id)
-    .single()
+    .maybeSingle()
 
-  if (error && error.code !== 'PGRST116') {
+  if (error) {
     // PGRST116 = row not found — new user with no reflections yet, return zeroes below
     console.error('[streak] db error:', error.code)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
