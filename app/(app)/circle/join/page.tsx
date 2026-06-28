@@ -82,6 +82,8 @@ function JoinCircleInner() {
         if (m) token = JSON.parse(decodeURIComponent(m[1]))?.access_token ?? ''
       } catch { /* ignore */ }
 
+      console.log("[v0] Join button clicked:", { code, hasToken: !!token })
+
       const res = await fetch('/api/circles/join', {
         method: 'POST',
         headers: {
@@ -94,12 +96,16 @@ function JoinCircleInner() {
         }),
       })
       const data = await res.json()
+      
+      console.log("[v0] Join response:", { status: res.status, data })
+      
       if (res.status === 401) {
         // Not signed in — send to auth and return here with the code pre-filled
         router.push(`/auth?redirect=/circle/join&code=${encodeURIComponent(code)}`)
         return
       }
       if (data.circle) {
+        console.log("[v0] Join successful, redirecting to circle", data.circle.id)
         router.push(`/circle/${data.circle.id}`)
       } else {
         setError(data.error ?? 'Something went wrong, sister. Please try again.')
