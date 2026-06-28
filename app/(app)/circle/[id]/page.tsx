@@ -147,12 +147,29 @@ export default function CircleDetailPage() {
 
   useEffect(() => {
     fetch(`/api/circles/${id}`, { headers: authHeaders() })
-      .then(r => r.json())
+      .then(r => {
+        if (r.status === 401 || r.status === 403) {
+          setNotMember(true)
+          setLoading(false)
+          return null
+        }
+        return r.json()
+      })
       .then(d => {
-        if (d.error === 'Not a member' || d.error === 'Unauthorized') { setNotMember(true); return }
+        if (!d) return
+        if (d.error) {
+          console.log("[v0] Circle API error:", d.error)
+          setNotMember(true)
+          return
+        }
+        console.log("[v0] Circle loaded successfully:", d.circle?.name)
         setCircle(d.circle)
         setPosts(d.posts ?? [])
         setMemberCount(d.member_count ?? 0)
+      })
+      .catch(err => {
+        console.error("[v0] Circle fetch error:", err)
+        setNotMember(true)
       })
       .finally(() => setLoading(false))
   // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -4,11 +4,20 @@ import { getApiUser } from '@/lib/supabase/api-client'
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const { user, client } = await getApiUser(req.headers.get('Authorization'))
-  if (!user || !client) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!user || !client) {
+    console.log("[v0] Unauthorized: user or client missing")
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
-  const { data: membership } = await client
+  const { data: membership, error: memberErr } = await client
     .from('circle_group_members').select('id').eq('circle_id', id).eq('user_id', user.id).single()
-  if (!membership) return NextResponse.json({ error: 'Not a member' }, { status: 403 })
+  
+  console.log(`[v0] Membership check for user ${user.id} in circle ${id}:`, { membership, memberErr })
+  
+  if (!membership) {
+    console.log("[v0] User not a member - returning 403")
+    return NextResponse.json({ error: 'Not a member' }, { status: 403 })
+  }
 
   const [circleRes, postsRes, memberCountRes, membersRes] = await Promise.all([
     client.from('circle_groups').select('id, name, intention, topic_tag, invite_code, max_members').eq('id', id).single(),
